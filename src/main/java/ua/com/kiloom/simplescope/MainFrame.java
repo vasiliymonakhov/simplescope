@@ -6,14 +6,15 @@
 package ua.com.kiloom.simplescope;
 
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import jssc.SerialPortException;
+import jssc.SerialPortList;
 
 /**
  *
@@ -21,44 +22,106 @@ import jssc.SerialPortException;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    private DeviceController dc;
-
     /**
      * Creates new form MainFrame
      */
     public MainFrame() {
         initComponents();
-        jPanel1.add(sp);
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    dc = new DeviceController("/dev/ttyACM0", new Runnable() {
-                        @Override
-                        public void run() {
-                            // System.exit(0);
-                        }
-                    });
-                    ScopeRenderer sr = new ScopeRenderer();
-                    dc.open();
-                    for (;;) {
-                        Rectangle r = sp.getBounds();
-                        if (r.width > 32 && r.height > 32) {
-                            sp.image = sr.render(r.width, r.height, dc.getADCResult());
-                        } else {
-                            dc.getADCResult();
-                        }
-                        sp.repaint();
-                    }
-                } catch (SerialPortException | InterruptedException ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
-                }
-            }
-        });
-        t.start();
+        scopeParentPanel.add(sp);
+        searchPorts();
     }
 
-    private ScopePanel sp = new ScopePanel();
+    private void searchPorts() {
+        portsComboBox.removeAllItems();
+        String[] portNames = SerialPortList.getPortNames();
+        if (portNames.length != 0) {
+            for (String portName : portNames) {
+                portsComboBox.addItem(portName);
+            }
+            startButton.setEnabled(true);
+        } else {
+            startButton.setEnabled(false);
+        }
+    }
+
+    private final DeviceController dc = new DeviceController(new Runnable() {
+        @Override
+        public void run() {
+            startButton.setEnabled(true);
+            portsComboBox.setEnabled(true);
+            searchPortsButton.setEnabled(true);
+            stopButton.setEnabled(false);
+        }
+    });
+
+    private final ScopeRenderer sr = new ScopeRenderer();
+
+    private Thread workThread;
+
+    void enableStepButtons(boolean enable) {
+        stepButton.setEnabled(enable);
+        pngButton.setEnabled(enable);
+        txtButton.setEnabled(enable);
+    }
+
+    private BufferedImage currentImage;
+
+    private DeviceController.ADCResult currentADCResult;
+
+    private void run() {
+        if (portsComboBox.getSelectedIndex() != -1) {
+            try {
+                startButton.setEnabled(false);
+                portsComboBox.setEnabled(false);
+                searchPortsButton.setEnabled(false);
+                stopButton.setEnabled(true);
+                if (workThread == null) {
+                    workThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                while (true) {
+                                    Rectangle r = sp.getBounds();
+                                    if (continuousMode) {
+                                        sp.image = sr.render(r.width, r.height, dc.getADCResult());
+                                        sp.repaint();
+                                    } else {
+                                        if (makeStep) {
+                                            makeStep = false;
+                                            currentADCResult = dc.getADCResult();
+                                            currentImage = sr.render(r.width, r.height, currentADCResult);
+                                            sp.image = currentImage;
+                                            sp.repaint();
+                                            enableStepButtons(true);
+                                            continue;
+                                        }
+                                        dc.getADCResult();
+                                    }
+                                }
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
+                            }
+                        }
+                    });
+                    workThread.start();
+                }
+                dc.open((String) portsComboBox.getSelectedItem());
+            } catch (SerialPortException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка запуска", ex);
+            }
+        }
+    }
+
+    private void stop() {
+        stopButton.setEnabled(false);
+        try {
+            dc.close();
+        } catch (SerialPortException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка останова устройства", ex);
+        }
+    }
+
+    private final ScopePanel sp = new ScopePanel();
 
     private int inputMode;
     private int synchMode;
@@ -151,44 +214,55 @@ public class MainFrame extends javax.swing.JFrame {
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
         buttonGroup3 = new javax.swing.ButtonGroup();
-        jPanel1 = new javax.swing.JPanel();
+        scopeParentPanel = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
-        jComboBox2 = new javax.swing.JComboBox();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        rangeComboBox = new javax.swing.JComboBox();
+        decRangeButton = new javax.swing.JButton();
+        incRangeButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
-        jComboBox1 = new javax.swing.JComboBox();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        timeComboBox = new javax.swing.JComboBox();
+        decTimeButton = new javax.swing.JButton();
+        incTimeButton = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
-        jRadioButton1 = new javax.swing.JRadioButton();
-        jRadioButton2 = new javax.swing.JRadioButton();
-        jRadioButton3 = new javax.swing.JRadioButton();
+        inputAcRadioButton = new javax.swing.JRadioButton();
+        inputGndRadioButton = new javax.swing.JRadioButton();
+        inputDcRadioButton = new javax.swing.JRadioButton();
         jPanel7 = new javax.swing.JPanel();
-        jRadioButton5 = new javax.swing.JRadioButton();
-        jRadioButton4 = new javax.swing.JRadioButton();
-        jRadioButton8 = new javax.swing.JRadioButton();
+        syncAutoRadioButton = new javax.swing.JRadioButton();
+        synchNoneRadioButton = new javax.swing.JRadioButton();
+        synchManualRadioButton = new javax.swing.JRadioButton();
         jPanel8 = new javax.swing.JPanel();
-        jRadioButton7 = new javax.swing.JRadioButton();
-        jRadioButton6 = new javax.swing.JRadioButton();
+        synchFrontRadioButton = new javax.swing.JRadioButton();
+        synchCutRadioButton = new javax.swing.JRadioButton();
         jPanel2 = new javax.swing.JPanel();
-        jSlider1 = new javax.swing.JSlider();
+        synchLevelSlider = new javax.swing.JSlider();
         jPanel9 = new javax.swing.JPanel();
-        jSlider2 = new javax.swing.JSlider();
+        dcOffsetSlider = new javax.swing.JSlider();
+        jPanel10 = new javax.swing.JPanel();
+        startButton = new javax.swing.JButton();
+        stopButton = new javax.swing.JButton();
+        portsComboBox = new javax.swing.JComboBox();
+        searchPortsButton = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        continuousCheckBox = new javax.swing.JCheckBox();
+        jPanel11 = new javax.swing.JPanel();
+        stepButton = new javax.swing.JButton();
+        pngButton = new javax.swing.JButton();
+        txtButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        jPanel1.setLayout(new java.awt.GridLayout());
+        scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        getContentPane().add(jPanel1, gridBagConstraints);
+        getContentPane().add(scopeParentPanel, gridBagConstraints);
 
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel3.setLayout(new java.awt.GridBagLayout());
@@ -196,10 +270,10 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Предел измерения"));
         jPanel4.setLayout(new java.awt.GridBagLayout());
 
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10mV", "20mV", "50mV", "100mV", "200mV", "500mV", "1V", "2V", "5V", "10V", "20V" }));
-        jComboBox2.addActionListener(new java.awt.event.ActionListener() {
+        rangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "50mV", "100mV", "250mV", "500mV", "1V", "2.5V", "5V", "10V", "20V", "50V", "100V" }));
+        rangeComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox2ActionPerformed(evt);
+                rangeComboBoxActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -207,35 +281,38 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        jPanel4.add(jComboBox2, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel4.add(rangeComboBox, gridBagConstraints);
 
-        jButton1.setText("-");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        decRangeButton.setText("-");
+        decRangeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                decRangeButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        jPanel4.add(jButton1, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel4.add(decRangeButton, gridBagConstraints);
 
-        jButton2.setText("+");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        incRangeButton.setText("+");
+        incRangeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                incRangeButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        jPanel4.add(jButton2, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel4.add(incRangeButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel4, gridBagConstraints);
@@ -243,11 +320,11 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Период развёртки"));
         jPanel5.setLayout(new java.awt.GridBagLayout());
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1µS", "2µS", "5µS", "10µS", "20µS", "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS" }));
-        jComboBox1.setToolTipText("");
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+        timeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10µS", "20µS", "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS", "1s", "2s", "5s" }));
+        timeComboBox.setToolTipText("");
+        timeComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox1ActionPerformed(evt);
+                timeComboBoxActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -255,180 +332,143 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        jPanel5.add(jComboBox1, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel5.add(timeComboBox, gridBagConstraints);
 
-        jButton3.setText("-");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        decTimeButton.setText("-");
+        decTimeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                decTimeButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        jPanel5.add(jButton3, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel5.add(decTimeButton, gridBagConstraints);
 
-        jButton4.setText("+");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        incTimeButton.setText("+");
+        incTimeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                incTimeButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        jPanel5.add(jButton4, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel5.add(incTimeButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel5, gridBagConstraints);
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Вход"));
-        jPanel6.setLayout(new java.awt.GridBagLayout());
+        jPanel6.setLayout(new java.awt.GridLayout(1, 0));
 
-        buttonGroup1.add(jRadioButton1);
-        jRadioButton1.setSelected(true);
-        jRadioButton1.setText("AC");
-        jRadioButton1.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup1.add(inputAcRadioButton);
+        inputAcRadioButton.setSelected(true);
+        inputAcRadioButton.setText("AC");
+        inputAcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton1ActionPerformed(evt);
+                inputAcRadioButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel6.add(jRadioButton1, gridBagConstraints);
+        jPanel6.add(inputAcRadioButton);
 
-        buttonGroup1.add(jRadioButton2);
-        jRadioButton2.setText("GND");
-        jRadioButton2.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup1.add(inputGndRadioButton);
+        inputGndRadioButton.setText("GND");
+        inputGndRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton2ActionPerformed(evt);
+                inputGndRadioButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel6.add(jRadioButton2, gridBagConstraints);
+        jPanel6.add(inputGndRadioButton);
 
-        buttonGroup1.add(jRadioButton3);
-        jRadioButton3.setText("DC");
-        jRadioButton3.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup1.add(inputDcRadioButton);
+        inputDcRadioButton.setText("DC");
+        inputDcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton3ActionPerformed(evt);
+                inputDcRadioButtonActionPerformed(evt);
             }
         });
+        jPanel6.add(inputDcRadioButton);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel6.add(jRadioButton3, gridBagConstraints);
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel6, gridBagConstraints);
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Синхронизация"));
-        jPanel7.setLayout(new java.awt.GridBagLayout());
+        jPanel7.setLayout(new java.awt.GridLayout(1, 0));
 
-        buttonGroup2.add(jRadioButton5);
-        jRadioButton5.setText("Manual");
-        jRadioButton5.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup2.add(syncAutoRadioButton);
+        syncAutoRadioButton.setSelected(true);
+        syncAutoRadioButton.setText("Auto");
+        syncAutoRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton5ActionPerformed(evt);
+                syncAutoRadioButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 7;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel7.add(jRadioButton5, gridBagConstraints);
+        jPanel7.add(syncAutoRadioButton);
 
-        buttonGroup2.add(jRadioButton4);
-        jRadioButton4.setSelected(true);
-        jRadioButton4.setText("Auto");
-        jRadioButton4.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup2.add(synchNoneRadioButton);
+        synchNoneRadioButton.setText("None");
+        synchNoneRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton4ActionPerformed(evt);
+                synchNoneRadioButtonActionPerformed(evt);
             }
         });
+        jPanel7.add(synchNoneRadioButton);
+
+        buttonGroup2.add(synchManualRadioButton);
+        synchManualRadioButton.setText("Manual");
+        synchManualRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                synchManualRadioButtonActionPerformed(evt);
+            }
+        });
+        jPanel7.add(synchManualRadioButton);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel7.add(jRadioButton4, gridBagConstraints);
-
-        buttonGroup2.add(jRadioButton8);
-        jRadioButton8.setText("None");
-        jRadioButton8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton8ActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 6;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel7.add(jRadioButton8, gridBagConstraints);
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel7, gridBagConstraints);
 
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder("Триггер"));
-        jPanel8.setLayout(new java.awt.GridBagLayout());
+        jPanel8.setLayout(new java.awt.GridLayout(1, 0));
 
-        buttonGroup3.add(jRadioButton7);
-        jRadioButton7.setText("Cutoff");
-        jRadioButton7.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup3.add(synchFrontRadioButton);
+        synchFrontRadioButton.setSelected(true);
+        synchFrontRadioButton.setText("Front");
+        synchFrontRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton7ActionPerformed(evt);
+                synchFrontRadioButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 9;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel8.add(jRadioButton7, gridBagConstraints);
+        jPanel8.add(synchFrontRadioButton);
 
-        buttonGroup3.add(jRadioButton6);
-        jRadioButton6.setSelected(true);
-        jRadioButton6.setText("Front");
-        jRadioButton6.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup3.add(synchCutRadioButton);
+        synchCutRadioButton.setText("Cutoff");
+        synchCutRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jRadioButton6ActionPerformed(evt);
+                synchCutRadioButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 8;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel8.add(jRadioButton6, gridBagConstraints);
+        jPanel8.add(synchCutRadioButton);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 6;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel8, gridBagConstraints);
@@ -436,27 +476,28 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Синхронизация"));
         jPanel2.setLayout(new java.awt.GridBagLayout());
 
-        jSlider1.setMajorTickSpacing(50);
-        jSlider1.setMaximum(200);
-        jSlider1.setMinorTickSpacing(10);
-        jSlider1.setOrientation(javax.swing.JSlider.VERTICAL);
-        jSlider1.setPaintLabels(true);
-        jSlider1.setPaintTicks(true);
-        jSlider1.setValue(100);
-        jSlider1.addChangeListener(new javax.swing.event.ChangeListener() {
+        synchLevelSlider.setMajorTickSpacing(50);
+        synchLevelSlider.setMaximum(200);
+        synchLevelSlider.setMinorTickSpacing(10);
+        synchLevelSlider.setOrientation(javax.swing.JSlider.VERTICAL);
+        synchLevelSlider.setPaintLabels(true);
+        synchLevelSlider.setPaintTicks(true);
+        synchLevelSlider.setValue(100);
+        synchLevelSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSlider1StateChanged(evt);
+                synchLevelSliderStateChanged(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        jPanel2.add(jSlider1, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel2.add(synchLevelSlider, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 7;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
@@ -465,31 +506,169 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Смещение"));
         jPanel9.setLayout(new java.awt.GridBagLayout());
 
-        jSlider2.setMajorTickSpacing(50);
-        jSlider2.setMaximum(250);
-        jSlider2.setMinorTickSpacing(10);
-        jSlider2.setOrientation(javax.swing.JSlider.VERTICAL);
-        jSlider2.setPaintLabels(true);
-        jSlider2.setPaintTicks(true);
-        jSlider2.setValue(125);
-        jSlider2.addChangeListener(new javax.swing.event.ChangeListener() {
+        dcOffsetSlider.setMajorTickSpacing(50);
+        dcOffsetSlider.setMaximum(250);
+        dcOffsetSlider.setMinorTickSpacing(10);
+        dcOffsetSlider.setOrientation(javax.swing.JSlider.VERTICAL);
+        dcOffsetSlider.setPaintLabels(true);
+        dcOffsetSlider.setPaintTicks(true);
+        dcOffsetSlider.setValue(125);
+        dcOffsetSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSlider2StateChanged(evt);
+                dcOffsetSliderStateChanged(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        jPanel9.add(jSlider2, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel9.add(dcOffsetSlider, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 7;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         jPanel3.add(jPanel9, gridBagConstraints);
+
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder("Устройство"));
+        jPanel10.setLayout(new java.awt.GridBagLayout());
+
+        startButton.setText("Старт");
+        startButton.setEnabled(false);
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel10.add(startButton, gridBagConstraints);
+
+        stopButton.setText("Стоп");
+        stopButton.setEnabled(false);
+        stopButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stopButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 0.5;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel10.add(stopButton, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
+        jPanel10.add(portsComboBox, gridBagConstraints);
+
+        searchPortsButton.setText("?");
+        searchPortsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchPortsButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
+        jPanel10.add(searchPortsButton, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel3.add(jPanel10, gridBagConstraints);
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Режим работы"));
+        jPanel1.setLayout(new java.awt.GridBagLayout());
+
+        continuousCheckBox.setSelected(true);
+        continuousCheckBox.setText("Непрерывно");
+        continuousCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                continuousCheckBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel1.add(continuousCheckBox, gridBagConstraints);
+
+        jPanel11.setLayout(new java.awt.GridBagLayout());
+
+        stepButton.setText("Шаг");
+        stepButton.setEnabled(false);
+        stepButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stepButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel11.add(stepButton, gridBagConstraints);
+
+        pngButton.setText("PNG");
+        pngButton.setEnabled(false);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel11.add(pngButton, gridBagConstraints);
+
+        txtButton.setText("TXT");
+        txtButton.setEnabled(false);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel11.add(txtButton, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel1.add(jPanel11, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel3.add(jPanel1, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -497,89 +676,115 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         getContentPane().add(jPanel3, gridBagConstraints);
 
-        setSize(new java.awt.Dimension(602, 448));
+        setSize(new java.awt.Dimension(835, 662));
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jRadioButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton1ActionPerformed
+    private void inputAcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputAcRadioButtonActionPerformed
         setInputMode(0);
-    }//GEN-LAST:event_jRadioButton1ActionPerformed
+    }//GEN-LAST:event_inputAcRadioButtonActionPerformed
 
-    private void jRadioButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton2ActionPerformed
+    private void inputGndRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputGndRadioButtonActionPerformed
         setInputMode(1);
-    }//GEN-LAST:event_jRadioButton2ActionPerformed
+    }//GEN-LAST:event_inputGndRadioButtonActionPerformed
 
-    private void jRadioButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton3ActionPerformed
+    private void inputDcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDcRadioButtonActionPerformed
         setInputMode(2);
-    }//GEN-LAST:event_jRadioButton3ActionPerformed
+    }//GEN-LAST:event_inputDcRadioButtonActionPerformed
 
-    private void jRadioButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton4ActionPerformed
+    private void syncAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncAutoRadioButtonActionPerformed
         setSynchMode(0);
-    }//GEN-LAST:event_jRadioButton4ActionPerformed
+    }//GEN-LAST:event_syncAutoRadioButtonActionPerformed
 
-    private void jRadioButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton5ActionPerformed
+    private void synchManualRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchManualRadioButtonActionPerformed
         setSynchMode(2);
-    }//GEN-LAST:event_jRadioButton5ActionPerformed
+    }//GEN-LAST:event_synchManualRadioButtonActionPerformed
 
-    private void jRadioButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton8ActionPerformed
+    private void synchNoneRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchNoneRadioButtonActionPerformed
         setSynchMode(1);
-    }//GEN-LAST:event_jRadioButton8ActionPerformed
+    }//GEN-LAST:event_synchNoneRadioButtonActionPerformed
 
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
-        setTime(jComboBox1.getSelectedIndex());
-    }//GEN-LAST:event_jComboBox1ActionPerformed
+    private void timeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timeComboBoxActionPerformed
+        setTime(timeComboBox.getSelectedIndex());
+    }//GEN-LAST:event_timeComboBoxActionPerformed
 
-    private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
-        setVoltage(jComboBox2.getSelectedIndex());
-    }//GEN-LAST:event_jComboBox2ActionPerformed
+    private void rangeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rangeComboBoxActionPerformed
+        setVoltage(rangeComboBox.getSelectedIndex());
+    }//GEN-LAST:event_rangeComboBoxActionPerformed
 
-    private void jSlider2StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSlider2StateChanged
-        setDcOffset(jSlider2.getValue());
-    }//GEN-LAST:event_jSlider2StateChanged
+    private void dcOffsetSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dcOffsetSliderStateChanged
+        setDcOffset(dcOffsetSlider.getValue());
+    }//GEN-LAST:event_dcOffsetSliderStateChanged
 
-    private void jRadioButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton6ActionPerformed
+    private void synchFrontRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchFrontRadioButtonActionPerformed
         setTriggerMode(true);
-    }//GEN-LAST:event_jRadioButton6ActionPerformed
+    }//GEN-LAST:event_synchFrontRadioButtonActionPerformed
 
-    private void jRadioButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButton7ActionPerformed
+    private void synchCutRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchCutRadioButtonActionPerformed
         setTriggerMode(false);
-    }//GEN-LAST:event_jRadioButton7ActionPerformed
+    }//GEN-LAST:event_synchCutRadioButtonActionPerformed
 
-    private void jSlider1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSlider1StateChanged
-        setTriggerLevel(jSlider1.getValue());
-    }//GEN-LAST:event_jSlider1StateChanged
+    private void synchLevelSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_synchLevelSliderStateChanged
+        setTriggerLevel(synchLevelSlider.getValue());
+    }//GEN-LAST:event_synchLevelSliderStateChanged
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        int idx = jComboBox2.getSelectedIndex();
-        if (idx > 0)
-        jComboBox2.setSelectedIndex(idx - 1);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void decRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decRangeButtonActionPerformed
+        int idx = rangeComboBox.getSelectedIndex();
+        if (idx > 0) {
+            rangeComboBox.setSelectedIndex(idx - 1);
+        }
+    }//GEN-LAST:event_decRangeButtonActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        int idx = jComboBox2.getSelectedIndex();
-        if (idx < 10)
-        jComboBox2.setSelectedIndex(idx + 1);
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void incRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incRangeButtonActionPerformed
+        int idx = rangeComboBox.getSelectedIndex();
+        if (idx < 10) {
+            rangeComboBox.setSelectedIndex(idx + 1);
+        }
+    }//GEN-LAST:event_incRangeButtonActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        int idx = jComboBox1.getSelectedIndex();
-        if (idx > 0)
-        jComboBox1.setSelectedIndex(idx - 1);
-    }//GEN-LAST:event_jButton3ActionPerformed
+    private void decTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decTimeButtonActionPerformed
+        int idx = timeComboBox.getSelectedIndex();
+        if (idx > 0) {
+            timeComboBox.setSelectedIndex(idx - 1);
+        }
+    }//GEN-LAST:event_decTimeButtonActionPerformed
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        int idx = jComboBox1.getSelectedIndex();
-        if (idx < 17)
-        jComboBox1.setSelectedIndex(idx + 1);
-    }//GEN-LAST:event_jButton4ActionPerformed
+    private void incTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incTimeButtonActionPerformed
+        int idx = timeComboBox.getSelectedIndex();
+        if (idx < 17) {
+            timeComboBox.setSelectedIndex(idx + 1);
+        }
+    }//GEN-LAST:event_incTimeButtonActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+    private void searchPortsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchPortsButtonActionPerformed
+        searchPorts();
+    }//GEN-LAST:event_searchPortsButtonActionPerformed
+
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        run();
+    }//GEN-LAST:event_startButtonActionPerformed
+
+    private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
+        stop();
+    }//GEN-LAST:event_stopButtonActionPerformed
+
+    private boolean continuousMode = true;
+
+    private volatile boolean makeStep;
+
+    private void continuousCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_continuousCheckBoxActionPerformed
+        continuousMode = continuousCheckBox.isSelected();
+        enableStepButtons(!continuousMode);
+    }//GEN-LAST:event_continuousCheckBoxActionPerformed
+
+    private void stepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepButtonActionPerformed
+        makeStep = true;
+        enableStepButtons(false);
+    }//GEN-LAST:event_stepButtonActionPerformed
+
     public static void main(String args[]) {
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
+        EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
                 new MainFrame().setVisible(true);
@@ -591,13 +796,18 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JComboBox jComboBox1;
-    private javax.swing.JComboBox jComboBox2;
+    private javax.swing.JCheckBox continuousCheckBox;
+    private javax.swing.JSlider dcOffsetSlider;
+    private javax.swing.JButton decRangeButton;
+    private javax.swing.JButton decTimeButton;
+    private javax.swing.JButton incRangeButton;
+    private javax.swing.JButton incTimeButton;
+    private javax.swing.JRadioButton inputAcRadioButton;
+    private javax.swing.JRadioButton inputDcRadioButton;
+    private javax.swing.JRadioButton inputGndRadioButton;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -606,16 +816,22 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JRadioButton jRadioButton1;
-    private javax.swing.JRadioButton jRadioButton2;
-    private javax.swing.JRadioButton jRadioButton3;
-    private javax.swing.JRadioButton jRadioButton4;
-    private javax.swing.JRadioButton jRadioButton5;
-    private javax.swing.JRadioButton jRadioButton6;
-    private javax.swing.JRadioButton jRadioButton7;
-    private javax.swing.JRadioButton jRadioButton8;
-    private javax.swing.JSlider jSlider1;
-    private javax.swing.JSlider jSlider2;
+    private javax.swing.JButton pngButton;
+    private javax.swing.JComboBox portsComboBox;
+    private javax.swing.JComboBox rangeComboBox;
+    private javax.swing.JPanel scopeParentPanel;
+    private javax.swing.JButton searchPortsButton;
+    private javax.swing.JButton startButton;
+    private javax.swing.JButton stepButton;
+    private javax.swing.JButton stopButton;
+    private javax.swing.JRadioButton syncAutoRadioButton;
+    private javax.swing.JRadioButton synchCutRadioButton;
+    private javax.swing.JRadioButton synchFrontRadioButton;
+    private javax.swing.JSlider synchLevelSlider;
+    private javax.swing.JRadioButton synchManualRadioButton;
+    private javax.swing.JRadioButton synchNoneRadioButton;
+    private javax.swing.JComboBox timeComboBox;
+    private javax.swing.JButton txtButton;
     // End of variables declaration//GEN-END:variables
 
     private class ScopePanel extends JPanel {

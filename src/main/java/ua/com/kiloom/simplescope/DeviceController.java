@@ -2,6 +2,7 @@ package ua.com.kiloom.simplescope;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jssc.SerialPort;
@@ -20,76 +21,103 @@ public class DeviceController {
     /**
      * Последовательный порт для работы с устройством
      */
-    private final SerialPort port;
+    private SerialPort port;
 
+    /**
+     * Что вызвать при завершении потока считывания от устройства
+     */
     private final Runnable onStop;
 
     /**
      * Создаёт объект для работы с устройством
      *
-     * @param portName имя порта
      * @param onStop что вызвать по завершении потока считывания и обработки
      * данных
      */
-    DeviceController(String portName, Runnable onStop) {
-        port = new SerialPort(portName);
+    DeviceController(Runnable onStop) {
         this.onStop = onStop;
     }
 
+    /**
+     * Очередь для байтов от АЦП
+     */
     private final BlockingQueue<byte[]> bytesQueue = new LinkedBlockingQueue<>();
 
+    /**
+     * Очередь обработанных данных от АЦП
+     */
     private final BlockingQueue<ADCResult> adcQueue = new LinkedBlockingQueue<>();
 
-    static int BLOCK_SIZE = 2000;
+    /**
+     * Размер блока данных в байтах в одном периоде
+     */
+    private static final int BYTES_BLOCK_SIZE = 2000;
 
+    /**
+     * Размер выборки для чтения из АЦП
+     */
+    private static final int ADC_DATA_BLOCK_SIZE = BYTES_BLOCK_SIZE / 2;
+
+    /**
+     * Флажок для остановки получения данных от устройства
+     */
     private boolean stop;
 
     /**
      * Открыть устройство
      *
+     * @param portName имя порта
      * @throws SerialPortException
      */
-    void open() throws SerialPortException {
+    void open(String portName) throws SerialPortException {
+        port = new SerialPort(portName);
         port.openPort();
         port.setParams(SerialPort.BAUDRATE_115200,
                 SerialPort.DATABITS_8,
                 SerialPort.STOPBITS_1,
                 SerialPort.PARITY_NONE);
-
         port.addEventListener(new SerialPortEventListener() {
-
             @Override
             public void serialEvent(SerialPortEvent event) {
-                if (event.getEventValue() > BLOCK_SIZE) {
+                if (event.getEventValue() > BYTES_BLOCK_SIZE) {
                     try {
                         byte[] data = port.readBytes();
                         bytesQueue.add(data);
                     } catch (SerialPortException ex) {
-                        Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Error reading data from device!", ex);
+                        Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка чтения данных из устройства!", ex);
                     }
                 }
             }
         }, SerialPort.MASK_RXCHAR);
+        stop = false;
         // поток, обрабатывающий данные от АЦП
         Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
-                    try {
-                        while (!stop) {
-                            ADCResult r;
-                            if ((r = processAdcData()) != null) {
-                                adcQueue.add(r);
-                            }
+                try {
+                    while (!stop) {
+                        // бесконечный цикл получения данных
+                        ADCResult r;
+                        if ((r = processAdcData()) != null) {
+                            adcQueue.add(r);
                         }
-                        if (port.isOpened()) {
-                            port.closePort();
-                        }
-                        onStop.run();
-                        break;
-                    } catch (InterruptedException | SerialPortException th) {
-                        Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Error processing data from device!", th);
                     }
+                } catch (InterruptedException th) {
+                    Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка обработки данных от устройства!", th);
+                } finally {
+                    // закрыть за собой порт
+                    if (port.isOpened()) {
+                        try {
+                            port.closePort();
+                        } catch (SerialPortException ex) {
+                            Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка закрытия порта", ex);
+                        }
+                    }
+                    // очистить очереди с данными
+                    bytesQueue.clear();
+                    adcQueue.clear();
+                    // отрапортавать о завершении работы
+                    onStop.run();
                 }
             }
         });
@@ -132,120 +160,128 @@ public class DeviceController {
     }
 
     /**
-     * Пределы вольт/клетка
+     * Блокировка для переключений времени развёртки и пределов напряжений
      */
-    private final static double[] VOLTAGES = {0.01d, 0.02d, 0.05d, 0.1d, 0.2d, 0.5d, 1d, 2d, 5d, 10d, 20d};
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
-     * Строки с обозначением предела
+     * текущий предел измерений напряжения
+     */
+    private int currentVoltageIndex;
+
+    /**
+     * Пределы вольт
+     */
+    private final static double[] VOLTAGES = {0.05d, 0.1d, 0.25d, 0.5d, 1d, 2.5d, 5d, 10d, 25d, 50d, 100d};
+
+    /**
+     * Напряжение на клетку
+     */
+    private final static int[] VOLTAGE_PER_CELL = {
+        10, 20, 50, 100, 200, 500, 1, 2, 5, 10, 20};
+
+    /**
+     * Строки с обозначением величины единиц измерения предела
      */
     private final static String[] VOLTAGE_STRINGS = {
-        "10mV", "20mV", "50mV", "100mV", "200mV", "500mV", "1V", "2V", "5V", "10V", "20V"};
+        "mV", "mV", "mV", "mV", "mV", "mV", "V", "V", "V", "V", "V"};
 
     /**
      * Сменить предел напряжения
      *
      * @param voltageIndex индекс предела напряжения
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchVoltage(int voltageIndex) throws SerialPortException {
-        if (port.isOpened()) {
+    void switchVoltage(int voltageIndex) throws SerialPortException {
+        try {
+            lock.lock();
             port.writeByte((byte) 0xAA);
             port.writeByte((byte) 0xAB);
             port.writeByte((byte) (50 + voltageIndex));
-            return true;
+            currentVoltageIndex = voltageIndex;
+        } finally {
+            lock.unlock();
         }
-        return false;
     }
 
     /**
-     * Время развёртки/клетка, сек
+     * Текущее время развёртки
      */
-    private final static double[] TIMES = {0.000001d, 0.000002d, 0.000005d, 0, 00001d,
-        0.00002d, 0.00005d, 0.0001d, 0.0002d, 0.0005d, 0, 001d, 0, 002d, 0, 005d, 0.01d, 0.02d, 0.05d,
-        0.1d, 0.2d, 0.5d};
+    private int currentTimeIndex;
+
+    /**
+     * Время развёртки, сек
+     */
+    private final static double[] TIMES = {0.00001d, 0.00002d, 0.00005d, 0.0001d,
+        0.0002d, 0.0005d, 0.001d, 0.002d, 0.005d, 0.01d, 0.02d, 0.05d, 0.1d, 0.2d, 0.5d,
+        1d, 2d, 5d};
+
+    /**
+     * Время на клетку
+     */
+    private final static int[] TIME_PER_CELL = {1, 2, 5, 10, 20, 50, 100, 200, 500, 1, 2, 5, 10, 20, 50, 100, 200, 500};
 
     /**
      * Строки с времемем развёртки
      */
-    private final static String[] TIME_STRINGS = {"1µS", "2µS", "5µS", "10µS", "20µS",
-        "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS"};
+    private final static String[] TIME_STRINGS = {"µS", "µS", "µS", "µS", "µS",
+        "µS", "µS", "µS", "µS", "mS", "mS", "mS", "mS", "mS", "mS", "mS", "mS", "mS"};
 
     /**
      * Переключение времени развёртки
      *
      * @param timeIndex индекс времени развёртки
-     * @return true если успешно
      */
-    boolean switchTime(int timeIndex) throws SerialPortException {
-        if (port.isOpened()) {
+    void switchTime(int timeIndex) throws SerialPortException {
+        try {
+            lock.lock();
             port.writeByte((byte) 0xAC);
             port.writeByte((byte) 0xAD);
             port.writeByte((byte) (20 + timeIndex));
-            return true;
+            currentTimeIndex = timeIndex;
+        } finally {
+            lock.unlock();
         }
-        return false;
     }
 
     /**
      * Переключает вход на постоянное напряжение
      *
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchInputToDc() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xBE);
-            port.writeByte((byte) 0xBF);
-            return true;
-        }
-        return false;
+    void switchInputToDc() throws SerialPortException {
+        port.writeByte((byte) 0xBE);
+        port.writeByte((byte) 0xBF);
     }
 
     /**
      * Переключает вход на переменное напряжение
      *
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchInputToAc() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xBA);
-            port.writeByte((byte) 0xBB);
-            return true;
-        }
-        return false;
+    void switchInputToAc() throws SerialPortException {
+        port.writeByte((byte) 0xBA);
+        port.writeByte((byte) 0xBB);
     }
 
     /**
      * Переключает вход на землю
      *
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchInputToGnd() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xBC);
-            port.writeByte((byte) 0xBD);
-            return true;
-        }
-        return false;
+    void switchInputToGnd() throws SerialPortException {
+        port.writeByte((byte) 0xBC);
+        port.writeByte((byte) 0xBD);
     }
 
     /**
      * Переключает в режим осциллоскопа
      *
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchModeToOscilloscope() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xDF);
-            port.writeByte((byte) 0xEA);
-            return true;
-        }
-        return false;
+    void switchModeToOscilloscope() throws SerialPortException {
+        port.writeByte((byte) 0xDF);
+        port.writeByte((byte) 0xEA);
     }
 
     /**
@@ -254,45 +290,31 @@ public class DeviceController {
      * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchModeToLogger() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xDC);
-            port.writeByte((byte) 0xDE);
-            return true;
-        }
-        return false;
+    void switchModeToLogger() throws SerialPortException {
+        port.writeByte((byte) 0xDC);
+        port.writeByte((byte) 0xDE);
     }
 
     /**
      * Отключить синхронизацию
      *
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchSyncToNone() throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xCE);
-            port.writeByte((byte) 0xCF);
-            return true;
-        }
-        return false;
+    void switchSyncToNone() throws SerialPortException {
+        port.writeByte((byte) 0xCE);
+        port.writeByte((byte) 0xCF);
     }
 
     /**
      * Включить автосинхронизацию
      *
      * @param edge по фронту (true) или по спаду (false) сигнала
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchSyncToAuto(boolean edge) throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xCA);
-            port.writeByte((byte) 0xCB);
-            port.writeByte((byte) (edge ? 0x10 : 0x20));
-            return true;
-        }
-        return false;
+    void switchSyncToAuto(boolean edge) throws SerialPortException {
+        port.writeByte((byte) 0xCA);
+        port.writeByte((byte) 0xCB);
+        port.writeByte((byte) (edge ? 0x10 : 0x20));
     }
 
     /**
@@ -300,41 +322,54 @@ public class DeviceController {
      *
      * @param level уровень 0-200
      * @param edge по фронту (true) или по спаду (false) сигнала
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean switchSyncToLevel(int level, boolean edge) throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xCC);
-            port.writeByte((byte) 0xCD);
-            port.writeByte((byte) (level & 0xFF));
-            port.writeByte((byte) (edge ? 0x10 : 0x20));
-            return true;
-        }
-        return false;
+    void switchSyncToLevel(int level, boolean edge) throws SerialPortException {
+        port.writeByte((byte) 0xCC);
+        port.writeByte((byte) 0xCD);
+        port.writeByte((byte) (level & 0xFF));
+        port.writeByte((byte) (edge ? 0x10 : 0x20));
     }
 
     /**
      * Установить уровень смещения нуля
      *
      * @param level уровень
-     * @return true если успешно
      * @throws SerialPortException
      */
-    boolean setZeroLevel(int level) throws SerialPortException {
-        if (port.isOpened()) {
-            port.writeByte((byte) 0xDA);
-            port.writeByte((byte) 0xDB);
-            port.writeByte((byte) ((byte) level & 0xFF));
-            return true;
-        }
-        return false;
+    void setZeroLevel(int level) throws SerialPortException {
+        port.writeByte((byte) 0xDA);
+        port.writeByte((byte) 0xDB);
+        port.writeByte((byte) ((byte) level & 0xFF));
     }
 
+    /**
+     * Результат измерений АЦП
+     */
     class ADCResult {
-        private final int[] adcData = new int[BLOCK_SIZE / 2];
-        private int adcMinValue;
-        private int adcMaxValue;
+
+        /**
+         * непосредственно отсчёты
+         */
+        private final int[] adcData = new int[ADC_DATA_BLOCK_SIZE];
+
+        /**
+         * Индекс предела измерения напряжения на момент фиксации данных
+         */
+        private int currentVoltageIndex;
+
+        /**
+         * Индекс периода развёртки на момент фиксации данных
+         */
+        private int currentTimeIndex;
+
+        private double vMax;
+
+        private double vMin;
+
+        private double vRms;
+
+        private final double[] voltages = new double[ADC_DATA_BLOCK_SIZE];
 
         /**
          * @return the adcData
@@ -344,18 +379,26 @@ public class DeviceController {
         }
 
         /**
-         * @return the adcMinValue
+         * @return the vMax
          */
-        int getAdcMinValue() {
-            return adcMinValue;
+        double getVMax() {
+            return vMax;
         }
 
         /**
-         * @return the adcMaxValue
+         * @return the vMin
          */
-        int getAdcMaxValue() {
-            return adcMaxValue;
+        double getVMin() {
+            return vMin;
         }
+
+        /**
+         * @return the vRms
+         */
+        double getVRms() {
+            return vRms;
+        }
+
     }
 
     private ADCResult processAdcData() throws InterruptedException {
@@ -367,24 +410,49 @@ public class DeviceController {
             }
         }
         byte[] newBlock = bytesQueue.take();
-        int j = 0;
-        ADCResult r = new ADCResult();
-        r.adcMinValue = Integer.MAX_VALUE;
-        r.adcMaxValue = Integer.MIN_VALUE;
-        for (int i = 0; i < BLOCK_SIZE - 1;) {
-            int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
-            if (value < 0 || value > 4095) {
-                return null;
+        try {
+            lock.lock();
+            int j = 0;
+            ADCResult r = new ADCResult();
+            double minVoltage = Double.POSITIVE_INFINITY;
+            double maxVoltage = Double.NEGATIVE_INFINITY;
+            double squareVoltage = 0;
+            for (int i = 0; i < BYTES_BLOCK_SIZE - 1;) {
+                // преобразовать байты данныех в значение АЦП
+                int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
+                // проверить значение на допустимость
+                if (value < 0 || value > 4095) {
+                    // очевидно, что там какой-то мусор и этот блок стоит забраковать
+                    return null;
+                }
+                // запись сырых данных от АЦП для построения графика
+                r.adcData[j] = value;
+                // вычислим мгновенное значение напряжения
+                double voltage = ((value - 2048) * VOLTAGES[currentVoltageIndex]) / 2048;
+                // запишем в массив
+                r.voltages[j] = voltage;
+                // найдём минимум и максимум
+                if (minVoltage > voltage) {
+                    minVoltage = voltage;
+                }
+                if (maxVoltage < voltage) {
+                    maxVoltage = voltage;
+                }
+                // подсчёт суммы квадратов всех значений
+                squareVoltage = squareVoltage + voltage * voltage;
+                j++;
             }
-            r.adcData[j++] = value;
-            if (value > r.getAdcMaxValue()) {
-                r.adcMaxValue = value;
-            }
-            if (value < r.getAdcMinValue()) {
-                r.adcMinValue = value;
-            }
+            // запись параметров выборки
+            r.currentTimeIndex = currentTimeIndex;
+            r.currentVoltageIndex = currentVoltageIndex;
+            r.vMin = minVoltage;
+            r.vMax = maxVoltage;
+            // и среднеквадратического напряжения
+            r.vRms = Math.sqrt(squareVoltage / ADC_DATA_BLOCK_SIZE);
+            return r;
+        } finally {
+            lock.unlock();
         }
-        return r;
     }
 
 }
