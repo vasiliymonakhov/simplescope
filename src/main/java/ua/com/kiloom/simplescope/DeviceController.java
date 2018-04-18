@@ -130,8 +130,16 @@ public class DeviceController {
      *
      * @throws SerialPortException
      */
-    void close() throws SerialPortException {
+    void close() {
         stop = true;
+    }
+
+    /**
+     * Можно ли работать с устройством
+     * @return 
+     */
+    boolean isOpen() {
+        return !stop && port != null && port.isOpened();
     }
 
     /**
@@ -363,15 +371,28 @@ public class DeviceController {
          */
         private int currentTimeIndex;
 
+        /**
+         * Максимальное нампряжение
+         */
         private double vMax;
 
+        /**
+         * Минимальное напряжение
+         */
         private double vMin;
 
+        /**
+         * Среднеквадратическое напряжение
+         */
         private double vRms;
 
+        /**
+         * Отсчёты ввиде напряжения
+         */
         private final double[] voltages = new double[ADC_DATA_BLOCK_SIZE];
 
         /**
+         * Возвращает сырые данные АЦП для рисования графика
          * @return the adcData
          */
         int[] getAdcData() {
@@ -379,6 +400,7 @@ public class DeviceController {
         }
 
         /**
+         * Возвращает максимальное напряжение
          * @return the vMax
          */
         double getVMax() {
@@ -386,6 +408,7 @@ public class DeviceController {
         }
 
         /**
+         * Возвращает минимальное напряжение
          * @return the vMin
          */
         double getVMin() {
@@ -393,14 +416,52 @@ public class DeviceController {
         }
 
         /**
+         * Возвращает среднеквадратическое напряжение
          * @return the vRms
          */
         double getVRms() {
             return vRms;
         }
 
+        /**
+         * Возвращает величину времени на клетку
+         * @return
+         */
+        int getTimePerCell() {
+            return TIME_PER_CELL[currentTimeIndex];
+        }
+
+        /**
+         * Возращает единицу времени на клетку
+         * @return
+         */
+        String getTimeString() {
+            return TIME_STRINGS[currentTimeIndex];
+        }
+
+        /**
+         * Возвращает величину напряжения на клетку
+         * @return
+         */
+        int getVoltagePerCell() {
+            return VOLTAGE_PER_CELL[currentVoltageIndex];
+        }
+
+        /**
+         * Возвращает единцу напряжения на клетку
+         * @return
+         */
+        String getVoltageString() {
+            return VOLTAGE_STRINGS[currentVoltageIndex];
+        }
+
     }
 
+    /**
+     * Обрабатывает данные от ЦАП
+     * @return объект с результатами обработки
+     * @throws InterruptedException
+     */
     private ADCResult processAdcData() throws InterruptedException {
         int size = bytesQueue.size();
         if (size > 1) {

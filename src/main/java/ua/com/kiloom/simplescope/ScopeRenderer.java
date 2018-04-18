@@ -166,6 +166,7 @@ class ScopeRenderer {
      * Размер шрифта для шкалы
      */
     private final static int fontSize = 14;
+    private final Font scopeFont = new Font("Arial", 0, fontSize);
 
     /**
      * Рисует график сигнала
@@ -176,11 +177,11 @@ class ScopeRenderer {
      * @return отрисованное изображение
      */
     BufferedImage render(int imageWidth, int imageHeight, DeviceController.ADCResult adcResult) {
-
         BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setFont(scopeFont);
 
         // залить цветом фона
         g.setColor(colorScheme.backgroundColor);
@@ -192,17 +193,32 @@ class ScopeRenderer {
         // вычислить координаты левого верхнего угла графика
         int x_pos = (imageWidth - width) / 2;
         int y_pos = (imageHeight - height) / 2;
+
+        // нарисовать сетку
+
+        int time = 0;
+        int dtime = adcResult.getTimePerCell();
+        String timeStr = adcResult.getTimeString();
+        for (int i = 0; i <= width; i += width / 10) {
+            g.setColor(colorScheme.gridColor);
+            g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
+            drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + V_GAP / 2,colorScheme.textColor);
+            time += dtime;
+        }
+
+        int dvoltage = adcResult.getVoltagePerCell();
+        int voltage = 5 * dvoltage;
+        String voltageStr = adcResult.getVoltageString();
+        for (int i = 0; i <= height; i += height / 10) {
+            g.setColor(colorScheme.gridColor);
+            g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
+            drawCenteredString(g, String.format("%d%s", voltage, voltageStr), x_pos - H_GAP / 2, y_pos + i, colorScheme.textColor);
+            voltage -= dvoltage;
+        }
+
         // нарисовать рамку
         g.setColor(colorScheme.borderColor);
         g.drawRect(x_pos, y_pos, width, height);
-        // нарисовать сетку
-        g.setColor(colorScheme.gridColor);
-        for (int i = 0; i < width; i += width / 10) {
-            g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
-        }
-        for (int i = 0; i < height; i += height / 10) {
-            g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
-        }
 
         // Нарисовать луч
         g.setColor(colorScheme.rayColor);
@@ -217,7 +233,6 @@ class ScopeRenderer {
         }
 
         // Нарисовать напряжения
-        g.setFont(new Font("Arial", 0, fontSize));
         int dx = imageWidth / 5;
         int tx = 0;
         drawCenteredString(g, "Vmin = " + voltageToString(adcResult.getVMin()), tx += dx, V_GAP / 2, colorScheme.textColor);

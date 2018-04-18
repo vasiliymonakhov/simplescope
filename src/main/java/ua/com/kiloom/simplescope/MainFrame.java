@@ -97,6 +97,7 @@ public class MainFrame extends javax.swing.JFrame {
                                         }
                                         dc.getADCResult();
                                     }
+                                    updateDeviceSettings();
                                 }
                             } catch (InterruptedException ex) {
                                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
@@ -114,11 +115,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void stop() {
         stopButton.setEnabled(false);
-        try {
-            dc.close();
-        } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка останова устройства", ex);
-        }
+        dc.close();
     }
 
     private final ScopePanel sp = new ScopePanel();
@@ -126,12 +123,11 @@ public class MainFrame extends javax.swing.JFrame {
     private int inputMode;
     private int synchMode;
     private boolean triggerMode;
-    private int triggerLevel;
-    private int dcLevel;
+    private int triggerLevel = 100;
+    private int dcLevel = 125;
 
-    private void setInputMode(int mode) {
+    private void updateInputMode() {
         try {
-            inputMode = mode;
             switch (inputMode) {
                 case 0:
                     dc.switchInputToAc();
@@ -146,6 +142,10 @@ public class MainFrame extends javax.swing.JFrame {
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены входа", ex);
         }
+    }
+
+    private void setInputMode(int mode) {
+        inputMode = mode;
     }
 
     private void updateSynchro() {
@@ -168,42 +168,64 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void setSynchMode(int mode) {
         synchMode = mode;
-        updateSynchro();
     }
 
     private void setTriggerMode(boolean mode) {
         triggerMode = mode;
-        updateSynchro();
     }
 
-    private void setTime(int time) {
+    private void setTriggerLevel(int level) {
+        triggerLevel = level;
+    }
+
+    private int currentTime;
+
+    private void updateTime() {
         try {
-            dc.switchTime(time);
+            dc.switchTime(currentTime);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены времени развёртки", ex);
         }
     }
 
-    private void setVoltage(int volt) {
+    private void setTime(int time) {
+        currentTime = time;
+    }
+
+    private int currentVoltage;
+
+    private void updateVoltage() {
         try {
-            dc.switchVoltage(volt);
+            dc.switchVoltage(currentVoltage);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены предела измерений", ex);
         }
     }
 
-    private void setDcOffset(int offset) {
+    private void setVoltage(int volt) {
+        currentVoltage = volt;
+    }
+
+    void updateDcOffset() {
         try {
-            dcLevel = offset;
             dc.setZeroLevel(dcLevel);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка изменения смещения", ex);
         }
     }
 
-    private void setTriggerLevel(int level) {
-        triggerLevel = level;
-        updateSynchro();
+    private void setDcOffset(int offset) {
+        dcLevel = offset;
+    }
+
+    private void updateDeviceSettings() {
+        if (dc.isOpen()) {
+            updateTime();
+            updateVoltage();
+            updateSynchro();
+            updateInputMode();
+            updateDcOffset();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -768,7 +790,7 @@ public class MainFrame extends javax.swing.JFrame {
         stop();
     }//GEN-LAST:event_stopButtonActionPerformed
 
-    private boolean continuousMode = true;
+    private volatile boolean continuousMode = true;
 
     private volatile boolean makeStep;
 
@@ -838,14 +860,10 @@ public class MainFrame extends javax.swing.JFrame {
 
         private BufferedImage image;
 
-        private Color backgroungColor;
-
         @Override
         public void paint(Graphics g) {
-            g.setColor(backgroungColor);
             int w = this.getWidth();
             int h = this.getHeight();
-            g.fillRect(0, 0, w, h);
             if (image != null) {
                 int x = (w - image.getWidth()) / 2;
                 int y = (h - image.getHeight()) / 2;
