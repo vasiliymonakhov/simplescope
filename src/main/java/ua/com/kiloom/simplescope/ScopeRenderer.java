@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
@@ -137,7 +136,7 @@ class ScopeRenderer {
      * @param adcResult резултаты измерения сигнала АЦП устроства
      * @return массив точек графика сигнала для отрисовки
      */
-    private Point[] convertAdcResultToScopePoints(int x_pos, int y_pos, int width, int height, DeviceController.ADCResult adcResult) {
+    private Point[] convertAdcResultToScopePoints(int x_pos, int y_pos, int width, int height, ADCResult adcResult) {
         int length = adcResult.getAdcData().length;
         Point[] points = new Point[length];
         // вычислить масштаб по оси абцисс в зависимости от ширины области рисования
@@ -176,7 +175,7 @@ class ScopeRenderer {
      * @param adcResult набор данных от АЦП устройства
      * @return отрисованное изображение
      */
-    BufferedImage render(int imageWidth, int imageHeight, DeviceController.ADCResult adcResult) {
+    BufferedImage render(int imageWidth, int imageHeight, ADCResult adcResult) {
         BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -195,14 +194,13 @@ class ScopeRenderer {
         int y_pos = (imageHeight - height) / 2;
 
         // нарисовать сетку
-
         int time = 0;
         int dtime = adcResult.getTimePerCell();
         String timeStr = adcResult.getTimeString();
         for (int i = 0; i <= width; i += width / 10) {
             g.setColor(colorScheme.gridColor);
             g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
-            drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + V_GAP / 2,colorScheme.textColor);
+            drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + V_GAP / 2, colorScheme.textColor);
             time += dtime;
         }
 
@@ -244,9 +242,9 @@ class ScopeRenderer {
         return image;
     }
 
-
     /**
      * Рисует строку
+     *
      * @param g графический контекст
      * @param str строка
      * @param centerX координата оси абцисс центра надписи
@@ -261,8 +259,10 @@ class ScopeRenderer {
     }
 
     /**
-     * Преобразует напряжение в строку с точностью 2 знака после запятой. Если абсолютная величина напряжения менее 1В, то
-     * результат выводится в милливольтах, иначе в вольтах
+     * Преобразует напряжение в строку с точностью 2 знака после запятой. Если
+     * абсолютная величина напряжения менее 1В, то результат выводится в
+     * милливольтах, иначе в вольтах
+     *
      * @param voltage напряжение
      * @return результирующая строка
      */

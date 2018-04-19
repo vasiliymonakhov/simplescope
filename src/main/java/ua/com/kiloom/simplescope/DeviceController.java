@@ -11,7 +11,9 @@ import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 
 /**
- * Класс для работы с устройством
+ * Класс для работы с устройством. Осуществляет выбор режимов работы а также
+ * циклическое получение данных от АЦП, вычисление напряжений, обработку и
+ * накопление данных в очереди.
  *
  * @author coolbassnik
  * @author Vasiliy Monakhov
@@ -24,7 +26,9 @@ public class DeviceController {
     private SerialPort port;
 
     /**
-     * Что вызвать при завершении потока считывания от устройства
+     * Что вызвать при завершении потока считывания от устройства. Когда поток
+     * остановится, вызывается этот код и приложение может понять что устройство
+     * прекратило работу
      */
     private final Runnable onStop;
 
@@ -39,32 +43,28 @@ public class DeviceController {
     }
 
     /**
-     * Очередь для байтов от АЦП
+     * Очередь для байтов от АЦП. Сюда обработчик прерывания от
+     * последовательного порта помещает массивы байтов.
      */
     private final BlockingQueue<byte[]> bytesQueue = new LinkedBlockingQueue<>();
 
     /**
-     * Очередь обработанных данных от АЦП
+     * Очередь обработанных данных от АЦП. Сюда помещаются вычисленные значения.
      */
     private final BlockingQueue<ADCResult> adcQueue = new LinkedBlockingQueue<>();
 
     /**
-     * Размер блока данных в байтах в одном периоде
-     */
-    private static final int BYTES_BLOCK_SIZE = 2000;
-
-    /**
-     * Размер выборки для чтения из АЦП
-     */
-    private static final int ADC_DATA_BLOCK_SIZE = BYTES_BLOCK_SIZE / 2;
-
-    /**
-     * Флажок для остановки получения данных от устройства
+     * Флажок-сигнал для остановки получения данных от устройства. Чтобы
+     * остановить поток обработки данных от АЦП нужно взвести этот флажок и
+     * дождаться вызова onStop.run();
+     *
+     * @see onStop
      */
     private boolean stop;
 
     /**
-     * Открыть устройство
+     * Открыть устройство. Устанавливает связь с портом и запускает поток
+     * обработки данных от АЦП.
      *
      * @param portName имя порта
      * @throws SerialPortException
@@ -79,9 +79,9 @@ public class DeviceController {
         port.addEventListener(new SerialPortEventListener() {
             @Override
             public void serialEvent(SerialPortEvent event) {
-                if (event.getEventValue() > BYTES_BLOCK_SIZE) {
+                if (event.getEventValue() >= Const.BYTES_BLOCK_SIZE) {
                     try {
-                        byte[] data = port.readBytes();
+                        byte[] data = port.readBytes(Const.BYTES_BLOCK_SIZE);
                         bytesQueue.add(data);
                     } catch (SerialPortException ex) {
                         Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка чтения данных из устройства!", ex);
@@ -135,8 +135,10 @@ public class DeviceController {
     }
 
     /**
-     * Можно ли работать с устройством
-     * @return 
+     * Можно ли работать с устройством. Порт должен быть открыт и не должен быть
+     * послан сигнал остановить поток обарботки данных.
+     *
+     * @return
      */
     boolean isOpen() {
         return !stop && port != null && port.isOpened();
@@ -161,14 +163,10 @@ public class DeviceController {
     }
 
     /**
-     * Очищает очередь результатов считывания
-     */
-    void clearADCQueue() {
-        adcQueue.clear();
-    }
-
-    /**
-     * Блокировка для переключений времени развёртки и пределов напряжений
+     * Блокировка для переключений времени развёртки и пределов напряжений.
+     * Важно не давать изменять пределы измерений и время развёртки пока
+     * происходит вычисление напряжений, иначе данные будут неправильно
+     * интерпретированы.
      */
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -176,23 +174,6 @@ public class DeviceController {
      * текущий предел измерений напряжения
      */
     private int currentVoltageIndex;
-
-    /**
-     * Пределы вольт
-     */
-    private final static double[] VOLTAGES = {0.05d, 0.1d, 0.25d, 0.5d, 1d, 2.5d, 5d, 10d, 25d, 50d, 100d};
-
-    /**
-     * Напряжение на клетку
-     */
-    private final static int[] VOLTAGE_PER_CELL = {
-        10, 20, 50, 100, 200, 500, 1, 2, 5, 10, 20};
-
-    /**
-     * Строки с обозначением величины единиц измерения предела
-     */
-    private final static String[] VOLTAGE_STRINGS = {
-        "mV", "mV", "mV", "mV", "mV", "mV", "V", "V", "V", "V", "V"};
 
     /**
      * Сменить предел напряжения
@@ -216,24 +197,6 @@ public class DeviceController {
      * Текущее время развёртки
      */
     private int currentTimeIndex;
-
-    /**
-     * Время развёртки, сек
-     */
-    private final static double[] TIMES = {0.00001d, 0.00002d, 0.00005d, 0.0001d,
-        0.0002d, 0.0005d, 0.001d, 0.002d, 0.005d, 0.01d, 0.02d, 0.05d, 0.1d, 0.2d, 0.5d,
-        1d, 2d, 5d};
-
-    /**
-     * Время на клетку
-     */
-    private final static int[] TIME_PER_CELL = {1, 2, 5, 10, 20, 50, 100, 200, 500, 1, 2, 5, 10, 20, 50, 100, 200, 500};
-
-    /**
-     * Строки с времемем развёртки
-     */
-    private final static String[] TIME_STRINGS = {"µS", "µS", "µS", "µS", "µS",
-        "µS", "µS", "µS", "µS", "mS", "mS", "mS", "mS", "mS", "mS", "mS", "mS", "mS"};
 
     /**
      * Переключение времени развёртки
@@ -352,113 +315,8 @@ public class DeviceController {
     }
 
     /**
-     * Результат измерений АЦП
-     */
-    class ADCResult {
-
-        /**
-         * непосредственно отсчёты
-         */
-        private final int[] adcData = new int[ADC_DATA_BLOCK_SIZE];
-
-        /**
-         * Индекс предела измерения напряжения на момент фиксации данных
-         */
-        private int currentVoltageIndex;
-
-        /**
-         * Индекс периода развёртки на момент фиксации данных
-         */
-        private int currentTimeIndex;
-
-        /**
-         * Максимальное нампряжение
-         */
-        private double vMax;
-
-        /**
-         * Минимальное напряжение
-         */
-        private double vMin;
-
-        /**
-         * Среднеквадратическое напряжение
-         */
-        private double vRms;
-
-        /**
-         * Отсчёты ввиде напряжения
-         */
-        private final double[] voltages = new double[ADC_DATA_BLOCK_SIZE];
-
-        /**
-         * Возвращает сырые данные АЦП для рисования графика
-         * @return the adcData
-         */
-        int[] getAdcData() {
-            return adcData;
-        }
-
-        /**
-         * Возвращает максимальное напряжение
-         * @return the vMax
-         */
-        double getVMax() {
-            return vMax;
-        }
-
-        /**
-         * Возвращает минимальное напряжение
-         * @return the vMin
-         */
-        double getVMin() {
-            return vMin;
-        }
-
-        /**
-         * Возвращает среднеквадратическое напряжение
-         * @return the vRms
-         */
-        double getVRms() {
-            return vRms;
-        }
-
-        /**
-         * Возвращает величину времени на клетку
-         * @return
-         */
-        int getTimePerCell() {
-            return TIME_PER_CELL[currentTimeIndex];
-        }
-
-        /**
-         * Возращает единицу времени на клетку
-         * @return
-         */
-        String getTimeString() {
-            return TIME_STRINGS[currentTimeIndex];
-        }
-
-        /**
-         * Возвращает величину напряжения на клетку
-         * @return
-         */
-        int getVoltagePerCell() {
-            return VOLTAGE_PER_CELL[currentVoltageIndex];
-        }
-
-        /**
-         * Возвращает единцу напряжения на клетку
-         * @return
-         */
-        String getVoltageString() {
-            return VOLTAGE_STRINGS[currentVoltageIndex];
-        }
-
-    }
-
-    /**
      * Обрабатывает данные от ЦАП
+     *
      * @return объект с результатами обработки
      * @throws InterruptedException
      */
@@ -478,7 +336,7 @@ public class DeviceController {
             double minVoltage = Double.POSITIVE_INFINITY;
             double maxVoltage = Double.NEGATIVE_INFINITY;
             double squareVoltage = 0;
-            for (int i = 0; i < BYTES_BLOCK_SIZE - 1;) {
+            for (int i = 0; i < Const.BYTES_BLOCK_SIZE - 1;) {
                 // преобразовать байты данныех в значение АЦП
                 int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
                 // проверить значение на допустимость
@@ -487,11 +345,11 @@ public class DeviceController {
                     return null;
                 }
                 // запись сырых данных от АЦП для построения графика
-                r.adcData[j] = value;
+                r.getAdcData()[j] = value;
                 // вычислим мгновенное значение напряжения
-                double voltage = ((value - 2048) * VOLTAGES[currentVoltageIndex]) / 2048;
+                double voltage = ((value - 2048) * Const.VOLTAGES[currentVoltageIndex]) / 2048;
                 // запишем в массив
-                r.voltages[j] = voltage;
+                r.getVoltages()[j] = voltage;
                 // найдём минимум и максимум
                 if (minVoltage > voltage) {
                     minVoltage = voltage;
@@ -504,12 +362,12 @@ public class DeviceController {
                 j++;
             }
             // запись параметров выборки
-            r.currentTimeIndex = currentTimeIndex;
-            r.currentVoltageIndex = currentVoltageIndex;
-            r.vMin = minVoltage;
-            r.vMax = maxVoltage;
+            r.setCurrentTimeIndex(currentTimeIndex);
+            r.setCurrentVoltageIndex(currentVoltageIndex);
+            r.setVMin(minVoltage);
+            r.setVMax(maxVoltage);
             // и среднеквадратического напряжения
-            r.vRms = Math.sqrt(squareVoltage / ADC_DATA_BLOCK_SIZE);
+            r.setVRms(Math.sqrt(squareVoltage / Const.ADC_DATA_BLOCK_SIZE));
             return r;
         } finally {
             lock.unlock();

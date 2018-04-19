@@ -5,7 +5,6 @@
  */
 package ua.com.kiloom.simplescope;
 
-import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -62,13 +61,45 @@ public class MainFrame extends javax.swing.JFrame {
         stepButton.setEnabled(enable);
         pngButton.setEnabled(enable);
         txtButton.setEnabled(enable);
+        htmlButton.setEnabled(enable);
     }
 
     private BufferedImage currentImage;
 
-    private DeviceController.ADCResult currentADCResult;
+    private ADCResult currentADCResult;
 
-    private void run() {
+    private final Runnable runer = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    Rectangle r = sp.getBounds();
+                    if (continuousMode) {
+                        currentADCResult = dc.getADCResult();
+                        autoDcModeAdjust();
+                        sp.image = sr.render(r.width, r.height, currentADCResult);
+                        sp.repaint();
+                    } else {
+                        if (makeStep) {
+                            makeStep = false;
+                            currentADCResult = dc.getADCResult();
+                            currentImage = sr.render(r.width, r.height, currentADCResult);
+                            sp.image = currentImage;
+                            sp.repaint();
+                            enableStepButtons(true);
+                            continue;
+                        }
+                        dc.getADCResult();
+                    }
+                    updateDeviceSettings();
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
+            }
+        }
+    };
+
+    private void start() {
         if (portsComboBox.getSelectedIndex() != -1) {
             try {
                 startButton.setEnabled(false);
@@ -76,34 +107,7 @@ public class MainFrame extends javax.swing.JFrame {
                 searchPortsButton.setEnabled(false);
                 stopButton.setEnabled(true);
                 if (workThread == null) {
-                    workThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                while (true) {
-                                    Rectangle r = sp.getBounds();
-                                    if (continuousMode) {
-                                        sp.image = sr.render(r.width, r.height, dc.getADCResult());
-                                        sp.repaint();
-                                    } else {
-                                        if (makeStep) {
-                                            makeStep = false;
-                                            currentADCResult = dc.getADCResult();
-                                            currentImage = sr.render(r.width, r.height, currentADCResult);
-                                            sp.image = currentImage;
-                                            sp.repaint();
-                                            enableStepButtons(true);
-                                            continue;
-                                        }
-                                        dc.getADCResult();
-                                    }
-                                    updateDeviceSettings();
-                                }
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
-                            }
-                        }
-                    });
+                    workThread = new Thread(runer);
                     workThread.start();
                 }
                 dc.open((String) portsComboBox.getSelectedItem());
@@ -228,6 +232,35 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    private int autoDcSteps;
+
+    private double autoDcVoltage;
+
+    private void autoDcModeAdjust() {
+        if (autoDcMode) {
+            if (currentADCResult != null) {
+                double vmin = currentADCResult.getVMin();
+                double vmax = currentADCResult.getVMax();
+                autoDcVoltage += (vmin + vmax) / 2;
+                autoDcSteps++;
+                if (autoDcSteps == 10) {
+                    autoDcSteps = 0;
+                    int sl = dcOffsetSlider.getValue();
+                    if (autoDcVoltage > 0) {
+                        if (sl > dcOffsetSlider.getMinimum()) {
+                            dcOffsetSlider.setValue(sl - 1);
+                        }
+                    } else {
+                        if (sl < dcOffsetSlider.getMaximum()) {
+                            dcOffsetSlider.setValue(sl + 1);
+                        }
+                    }
+                    autoDcVoltage = 0;
+                }
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -261,6 +294,7 @@ public class MainFrame extends javax.swing.JFrame {
         synchLevelSlider = new javax.swing.JSlider();
         jPanel9 = new javax.swing.JPanel();
         dcOffsetSlider = new javax.swing.JSlider();
+        autoDcCheckBox = new javax.swing.JCheckBox();
         jPanel10 = new javax.swing.JPanel();
         startButton = new javax.swing.JButton();
         stopButton = new javax.swing.JButton();
@@ -268,10 +302,12 @@ public class MainFrame extends javax.swing.JFrame {
         searchPortsButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         continuousCheckBox = new javax.swing.JCheckBox();
-        jPanel11 = new javax.swing.JPanel();
         stepButton = new javax.swing.JButton();
+        jPanel12 = new javax.swing.JPanel();
+        jPanel11 = new javax.swing.JPanel();
         pngButton = new javax.swing.JButton();
         txtButton = new javax.swing.JButton();
+        htmlButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
@@ -334,8 +370,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel4, gridBagConstraints);
 
@@ -385,8 +420,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 4;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel5, gridBagConstraints);
 
@@ -395,7 +429,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         buttonGroup1.add(inputAcRadioButton);
         inputAcRadioButton.setSelected(true);
-        inputAcRadioButton.setText("AC");
+        inputAcRadioButton.setText("Закр.");
         inputAcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputAcRadioButtonActionPerformed(evt);
@@ -404,7 +438,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel6.add(inputAcRadioButton);
 
         buttonGroup1.add(inputGndRadioButton);
-        inputGndRadioButton.setText("GND");
+        inputGndRadioButton.setText("Земля");
         inputGndRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputGndRadioButtonActionPerformed(evt);
@@ -413,7 +447,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel6.add(inputGndRadioButton);
 
         buttonGroup1.add(inputDcRadioButton);
-        inputDcRadioButton.setText("DC");
+        inputDcRadioButton.setText("Откр.");
         inputDcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputDcRadioButtonActionPerformed(evt);
@@ -423,8 +457,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel6, gridBagConstraints);
 
@@ -433,7 +466,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         buttonGroup2.add(syncAutoRadioButton);
         syncAutoRadioButton.setSelected(true);
-        syncAutoRadioButton.setText("Auto");
+        syncAutoRadioButton.setText("Авто");
         syncAutoRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 syncAutoRadioButtonActionPerformed(evt);
@@ -442,7 +475,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel7.add(syncAutoRadioButton);
 
         buttonGroup2.add(synchNoneRadioButton);
-        synchNoneRadioButton.setText("None");
+        synchNoneRadioButton.setText("Нет");
         synchNoneRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchNoneRadioButtonActionPerformed(evt);
@@ -451,7 +484,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel7.add(synchNoneRadioButton);
 
         buttonGroup2.add(synchManualRadioButton);
-        synchManualRadioButton.setText("Manual");
+        synchManualRadioButton.setText("Ручн.");
         synchManualRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchManualRadioButtonActionPerformed(evt);
@@ -461,8 +494,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 7;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel7, gridBagConstraints);
 
@@ -471,7 +503,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         buttonGroup3.add(synchFrontRadioButton);
         synchFrontRadioButton.setSelected(true);
-        synchFrontRadioButton.setText("Front");
+        synchFrontRadioButton.setText("Фронт");
         synchFrontRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchFrontRadioButtonActionPerformed(evt);
@@ -480,7 +512,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel8.add(synchFrontRadioButton);
 
         buttonGroup3.add(synchCutRadioButton);
-        synchCutRadioButton.setText("Cutoff");
+        synchCutRadioButton.setText("Спад");
         synchCutRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchCutRadioButtonActionPerformed(evt);
@@ -490,19 +522,16 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 6;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel8, gridBagConstraints);
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Синхронизация"));
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Уровень синхронизации"));
         jPanel2.setLayout(new java.awt.GridBagLayout());
 
         synchLevelSlider.setMajorTickSpacing(50);
         synchLevelSlider.setMaximum(200);
         synchLevelSlider.setMinorTickSpacing(10);
-        synchLevelSlider.setOrientation(javax.swing.JSlider.VERTICAL);
-        synchLevelSlider.setPaintLabels(true);
         synchLevelSlider.setPaintTicks(true);
         synchLevelSlider.setValue(100);
         synchLevelSlider.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -518,21 +547,18 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel2.add(synchLevelSlider, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 9;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
         jPanel3.add(jPanel2, gridBagConstraints);
 
-        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Смещение"));
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Смещение входа"));
         jPanel9.setLayout(new java.awt.GridBagLayout());
 
         dcOffsetSlider.setMajorTickSpacing(50);
         dcOffsetSlider.setMaximum(250);
         dcOffsetSlider.setMinorTickSpacing(10);
-        dcOffsetSlider.setOrientation(javax.swing.JSlider.VERTICAL);
-        dcOffsetSlider.setPaintLabels(true);
         dcOffsetSlider.setPaintTicks(true);
         dcOffsetSlider.setValue(125);
         dcOffsetSlider.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -541,18 +567,32 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel9.add(dcOffsetSlider, gridBagConstraints);
 
+        autoDcCheckBox.setText("Авто");
+        autoDcCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                autoDcCheckBoxActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel9.add(autoDcCheckBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 6;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
         jPanel3.add(jPanel9, gridBagConstraints);
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder("Устройство"));
@@ -616,7 +656,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel10, gridBagConstraints);
@@ -635,11 +674,8 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         jPanel1.add(continuousCheckBox, gridBagConstraints);
-
-        jPanel11.setLayout(new java.awt.GridBagLayout());
 
         stepButton.setText("Шаг");
         stepButton.setEnabled(false);
@@ -649,18 +685,40 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel11.add(stepButton, gridBagConstraints);
+        jPanel1.add(stepButton, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel3.add(jPanel1, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel3.add(jPanel12, gridBagConstraints);
+
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Сохранить"));
+        jPanel11.setLayout(new java.awt.GridBagLayout());
 
         pngButton.setText("PNG");
         pngButton.setEnabled(false);
+        pngButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pngButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
@@ -669,28 +727,27 @@ public class MainFrame extends javax.swing.JFrame {
         txtButton.setText("TXT");
         txtButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel11.add(txtButton, gridBagConstraints);
 
+        htmlButton.setText("HTML");
+        htmlButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        jPanel1.add(jPanel11, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel11.add(htmlButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        jPanel3.add(jPanel1, gridBagConstraints);
+        jPanel3.add(jPanel11, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -704,14 +761,18 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void inputAcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputAcRadioButtonActionPerformed
         setInputMode(0);
+        autoDcCheckBox.setEnabled(true);
     }//GEN-LAST:event_inputAcRadioButtonActionPerformed
 
     private void inputGndRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputGndRadioButtonActionPerformed
         setInputMode(1);
+        autoDcCheckBox.setEnabled(true);
     }//GEN-LAST:event_inputGndRadioButtonActionPerformed
 
     private void inputDcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDcRadioButtonActionPerformed
         setInputMode(2);
+        autoDcCheckBox.setEnabled(false);
+        autoDcCheckBox.setSelected(false);
     }//GEN-LAST:event_inputDcRadioButtonActionPerformed
 
     private void syncAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncAutoRadioButtonActionPerformed
@@ -783,7 +844,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_searchPortsButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        run();
+        start();
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
@@ -804,6 +865,16 @@ public class MainFrame extends javax.swing.JFrame {
         enableStepButtons(false);
     }//GEN-LAST:event_stepButtonActionPerformed
 
+    private volatile boolean autoDcMode;
+
+    private void autoDcCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoDcCheckBoxActionPerformed
+        autoDcMode = autoDcCheckBox.isSelected();
+    }//GEN-LAST:event_autoDcCheckBoxActionPerformed
+
+    private void pngButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pngButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_pngButtonActionPerformed
+
     public static void main(String args[]) {
 
         EventQueue.invokeLater(new Runnable() {
@@ -815,6 +886,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox autoDcCheckBox;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
@@ -822,6 +894,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JSlider dcOffsetSlider;
     private javax.swing.JButton decRangeButton;
     private javax.swing.JButton decTimeButton;
+    private javax.swing.JButton htmlButton;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;
     private javax.swing.JRadioButton inputAcRadioButton;
@@ -830,6 +903,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
+    private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
