@@ -94,7 +94,7 @@ class ScopeRenderer {
     private final static Color LIGHT_GREEN = new Color(128, 255, 128);
 
     static {
-        GREEN_MONO_SCHEME = new ColorScheme(BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
+        GREEN_MONO_SCHEME = new ColorScheme(BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, DARK_GREEN);
     }
 
     /**
@@ -103,9 +103,22 @@ class ScopeRenderer {
     private ColorScheme colorScheme = GREEN_MONO_SCHEME;
 
     /**
-     * Нажим для ристования луча
+     * Нажим для рисования прямых
      */
-    private final Stroke rayStroke = new BasicStroke(2);
+    private final Stroke normalStroke = new BasicStroke(1);
+
+    /**
+     * Нажим для рисования сетки
+     */
+    private final static float[] dashingPattern1 = {3f, 3f};
+
+    private final Stroke gridStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
+        BasicStroke.JOIN_MITER, 1.0f, dashingPattern1, 2.0f);
+
+    /**
+     * Нажим для рисования луча
+     */
+    private final Stroke rayStroke = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND);
 
     /**
      * Точка на экране
@@ -158,7 +171,7 @@ class ScopeRenderer {
         // вычислить все точки графика
         for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
             int x = (int) Math.round(xScale * i + x_pos);
-            int y = (int) Math.round(yScale * (Const.ADC_MAX - adcResult.getAdcData()[i]) + y_pos);
+            int y = (int) Math.round(yScale * (Const.ADC_MAX - result.getAdcData()[i]) + y_pos);
             points[i] = new Point(x, y);
         }
         return points;
@@ -189,18 +202,17 @@ class ScopeRenderer {
 
     int y_pos;
 
-    private ADCResult adcResult;
+    private Result result;
 
     /**
      * Рисует график сигнала
      *
      * @param imageWidth ширина области рисования
      * @param imageHeight высота области рисования
-     * @param adcResult набор данных от АЦП устройства
-     * @return отрисованное изображение
+     * @param result набор данных от АЦП устройства
      */
-    BufferedImage render(int imageWidth, int imageHeight, ADCResult adcResult) throws InterruptedException {
-        this.adcResult = adcResult;
+    void renderAndUpdateRulers(int imageWidth, int imageHeight, Result result) throws InterruptedException {
+        this.result = result;
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -219,9 +231,10 @@ class ScopeRenderer {
         y_pos = (imageHeight - height) / 2;
 
         // нарисовать сетку
+        g.setStroke(gridStroke);
         int time = 0;
-        int dtime = adcResult.getTimePerCell();
-        String timeStr = adcResult.getTimeString();
+        int dtime = result.getTimePerCell();
+        String timeStr = result.getTimeString();
         for (int i = 0; i <= width; i += width / 10) {
             g.setColor(colorScheme.gridColor);
             g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
@@ -229,9 +242,9 @@ class ScopeRenderer {
             time += dtime;
         }
 
-        int dvoltage = adcResult.getVoltagePerCell();
+        int dvoltage = result.getVoltagePerCell();
         int voltage = 5 * dvoltage;
-        String voltageStr = adcResult.getVoltageString();
+        String voltageStr = result.getVoltageString();
         for (int i = 0; i <= height; i += height / 10) {
             g.setColor(colorScheme.gridColor);
             g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
@@ -239,6 +252,7 @@ class ScopeRenderer {
             voltage -= dvoltage;
         }
 
+        g.setStroke(normalStroke);
         // нарисовать линейки
         drawRulers(g);
 
@@ -259,7 +273,7 @@ class ScopeRenderer {
         }
 
         g.dispose();
-        return image;
+        result.setImage(image);
     }
 
     /**
@@ -392,19 +406,22 @@ class ScopeRenderer {
         g.drawLine(x_pos, yUpperRuler, x_pos + width, yUpperRuler);
         g.drawLine(x_pos, yLowerRuler, x_pos + width, yLowerRuler);
 
-        drawCenteredString(g,hRulerToString(leftRuler), xLeftRuler, V_GAP / 2, colorScheme.textColor);
-        drawCenteredString(g,hRulerToString(rightRuler), xRightRuler, V_GAP / 2, colorScheme.textColor);
+        drawCenteredString(g, hRulerToString(leftRuler), xLeftRuler, V_GAP / 2, colorScheme.textColor);
+        drawCenteredString(g, hRulerToString(rightRuler), xRightRuler, V_GAP / 2, colorScheme.textColor);
 
-        drawCenteredString(g,vRulerToString(upperRuler), x_pos + width + H_GAP / 2, yUpperRuler, colorScheme.textColor);
-        drawCenteredString(g,vRulerToString(lowerRuler), x_pos + width + H_GAP / 2, yLowerRuler, colorScheme.textColor);
+        drawCenteredString(g, vRulerToString(upperRuler), x_pos + width + H_GAP / 2, yUpperRuler, colorScheme.textColor);
+        drawCenteredString(g, vRulerToString(lowerRuler), x_pos + width + H_GAP / 2, yLowerRuler, colorScheme.textColor);
+
+        result.setDeltaT(leftRuler, rightRuler);
+        result.setDeltaV(upperRuler, lowerRuler);
     }
 
     private String vRulerToString(int ruler) {
-        return Utils.voltageToString(adcResult.adcValueToVoltage(ruler));
+        return Utils.voltageToString(result.adcValueToVoltage(ruler));
     }
 
     private String hRulerToString(int ruler) {
-        return Utils.timeToString(adcResult.adcTimeToRealTime(ruler));
+        return Utils.timeToString(result.adcTimeToRealTime(ruler));
     }
 
 }

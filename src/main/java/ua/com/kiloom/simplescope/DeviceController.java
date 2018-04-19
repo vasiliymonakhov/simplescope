@@ -51,7 +51,7 @@ public class DeviceController {
     /**
      * Очередь обработанных данных от АЦП. Сюда помещаются вычисленные значения.
      */
-    private final BlockingQueue<ADCResult> adcQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Result> adcQueue = new LinkedBlockingQueue<>();
 
     /**
      * Флажок-сигнал для остановки получения данных от устройства. Чтобы
@@ -97,7 +97,7 @@ public class DeviceController {
                 try {
                     while (!stop) {
                         // бесконечный цикл получения данных
-                        ADCResult r;
+                        Result r;
                         if ((r = processAdcData()) != null) {
                             adcQueue.add(r);
                         }
@@ -150,7 +150,7 @@ public class DeviceController {
      * @return результат очередного считывания
      * @throws InterruptedException
      */
-    ADCResult getADCResult() throws InterruptedException {
+    Result getADCResult() throws InterruptedException {
         int size = adcQueue.size();
         if (size > 1) {
             // это пропускает очередную порцию данных, на случай если компьютер не успевает обрабатывать данные
@@ -319,7 +319,7 @@ public class DeviceController {
      * @return объект с результатами обработки
      * @throws InterruptedException
      */
-    private ADCResult processAdcData() throws InterruptedException {
+    private Result processAdcData() throws InterruptedException {
         int size = bytesQueue.size();
         if (size > 1) {
             // это пропускает очередную порцию данных, на случай если компьютер не успевает обрабатывать данные
@@ -331,7 +331,7 @@ public class DeviceController {
         try {
             lock.lock();
             // запись параметров выборки
-            ADCResult r = new ADCResult(currentVoltageIndex,currentTimeIndex);
+            Result r = new Result(currentVoltageIndex, currentTimeIndex);
             if (r.processADCData(newBlock)) {
                 return r;
             }

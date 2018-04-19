@@ -65,9 +65,7 @@ public class MainFrame extends javax.swing.JFrame {
         htmlButton.setEnabled(enable);
     }
 
-    private BufferedImage currentImage;
-
-    private ADCResult currentADCResult;
+    private Result currentResult;
 
     private final Runnable runer = new Runnable() {
         @Override
@@ -95,18 +93,19 @@ public class MainFrame extends javax.swing.JFrame {
 
     void makePicture() throws InterruptedException {
         Rectangle r = sp.getBounds();
-        currentADCResult = dc.getADCResult();
-        drawVoltages(currentADCResult);
-        autoDcModeAdjust(currentADCResult);
-        currentImage = sr.render(r.width, r.height, currentADCResult);
-        sp.copyImage(currentImage);
+        currentResult = dc.getADCResult();
+        autoDcModeAdjust(currentResult);
+        sr.renderAndUpdateRulers(r.width, r.height, currentResult);
+        drawVoltagesAndTimeFrequency(currentResult);
+        sp.copyImage(currentResult.getImage());
     }
 
     private void redrawAndMakePicture() {
         Rectangle r = sp.getBounds();
         try {
-            currentImage = sr.render(r.width, r.height, currentADCResult);
-            sp.copyImage(currentImage);
+            sr.renderAndUpdateRulers(r.width, r.height, currentResult);
+            drawVoltagesAndTimeFrequency(currentResult);
+            sp.copyImage(currentResult.getImage());
         } catch (InterruptedException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps!", ex);
         }
@@ -137,11 +136,14 @@ public class MainFrame extends javax.swing.JFrame {
 
     private final ScopePanel sp = new ScopePanel();
 
-    void drawVoltages(ADCResult adcResult) {
+    void drawVoltagesAndTimeFrequency(Result adcResult) {
         vminLabel.setText("Vmin = " + Utils.voltageToString(adcResult.getVMin()));
         vmaxLabel.setText("Vmax = " + Utils.voltageToString(adcResult.getVMax()));
         vppLabel.setText("Vpp = " + Utils.voltageToString(adcResult.getVMax() - adcResult.getVMin()));
         vrmsLabel.setText("Vrms = " + Utils.voltageToString(adcResult.getVRms()));
+        deltaVLabel.setText("ΔV = " + Utils.voltageToString(adcResult.getDeltaV()));
+        deltaTLabel.setText("ΔT = " + Utils.timeToString(adcResult.getDeltaT()));
+        freqLabel.setText("f = " + Utils.frequencyToString(1d / adcResult.getDeltaT()));
     }
 
     private int inputMode;
@@ -256,7 +258,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private double autoDcVoltage;
 
-    private void autoDcModeAdjust(ADCResult adcResult) {
+    private void autoDcModeAdjust(Result adcResult) {
         if (autoDcMode) {
             if (adcResult != null) {
                 double vmin = adcResult.getVMin();
@@ -325,6 +327,9 @@ public class MainFrame extends javax.swing.JFrame {
         vmaxLabel = new javax.swing.JLabel();
         vppLabel = new javax.swing.JLabel();
         vrmsLabel = new javax.swing.JLabel();
+        deltaVLabel = new javax.swing.JLabel();
+        deltaTLabel = new javax.swing.JLabel();
+        freqLabel = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         continuousCheckBox = new javax.swing.JCheckBox();
         stepButton = new javax.swing.JButton();
@@ -340,9 +345,9 @@ public class MainFrame extends javax.swing.JFrame {
 
         scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
         scopeParentPanel.setPreferredSize(new java.awt.Dimension(600, 600));
-        scopeParentPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                scopeParentPanelMouseClicked(evt);
+        scopeParentPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                scopeParentPanelMouseDragged(evt);
             }
         });
         scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
@@ -692,6 +697,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel10, gridBagConstraints);
 
+        jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder("Измерения"));
         jPanel12.setLayout(new java.awt.GridBagLayout());
 
         vminLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
@@ -737,6 +743,39 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(vrmsLabel, gridBagConstraints);
+
+        deltaVLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        deltaVLabel.setText("ΔV");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(deltaVLabel, gridBagConstraints);
+
+        deltaTLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        deltaTLabel.setText("ΔT");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(deltaTLabel, gridBagConstraints);
+
+        freqLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        freqLabel.setText("f");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(freqLabel, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -961,14 +1000,12 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_pngButtonActionPerformed
 
-    private void scopeParentPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseClicked
-        if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 1) {
-            sr.addMouseClick(evt.getX(), evt.getY());
-            if (!continuousMode) {
-                redrawAndMakePicture();
-            }
+    private void scopeParentPanelMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseDragged
+        sr.addMouseClick(evt.getX(), evt.getY());
+        if (!continuousMode) {
+            redrawAndMakePicture();
         }
-    }//GEN-LAST:event_scopeParentPanelMouseClicked
+    }//GEN-LAST:event_scopeParentPanelMouseDragged
 
     public static void main(String args[]) {
 
@@ -989,7 +1026,10 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JSlider dcOffsetSlider;
     private javax.swing.JButton decRangeButton;
     private javax.swing.JButton decTimeButton;
+    private javax.swing.JLabel deltaTLabel;
+    private javax.swing.JLabel deltaVLabel;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.JLabel freqLabel;
     private javax.swing.JButton htmlButton;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;

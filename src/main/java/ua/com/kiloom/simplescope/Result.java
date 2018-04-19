@@ -1,11 +1,13 @@
 package ua.com.kiloom.simplescope;
 
+import java.awt.image.BufferedImage;
+
 /**
- * Результат измерений АЦП
+ * Результат измерений
  *
  * @author Vasily Monakhov
  */
-class ADCResult {
+class Result {
 
     /**
      * непосредственно отсчёты
@@ -28,7 +30,7 @@ class ADCResult {
      * @param currentVoltageIndex текущий индекс предела измерения напряжения
      * @param currentTimeIndex текущий индекс времени развёртки
      */
-    ADCResult(int currentVoltageIndex, int currentTimeIndex) {
+    Result(int currentVoltageIndex, int currentTimeIndex) {
         this.currentTimeIndex = currentTimeIndex;
         this.currentVoltageIndex = currentVoltageIndex;
     }
@@ -94,6 +96,54 @@ class ADCResult {
     }
 
     /**
+     * Разница времени между вертикальными линейками, сек
+     */
+    private double deltaT = 1;
+
+    /**
+     * Устанавливает разницу между вертикальными линейками
+     *
+     * @param leftTime отсчёт левой вериткальной линейки
+     * @param rightTime отсчёт правой вериткальной линейки
+     */
+    void setDeltaT(int leftTime, int rightTime) {
+        deltaT = adcTimeToRealTime(rightTime - leftTime);
+    }
+
+    /**
+     * Возвращает разницу между вертикальными линейками
+     *
+     * @return разница времени между вертикальными линейками, сек
+     */
+    double getDeltaT() {
+        return deltaT;
+    }
+
+    /**
+     * Разница напряжения между горизонтальными линейками, В
+     */
+    private double deltaV;
+
+    /**
+     * Устанавливает разницу между горизонтальными линейками
+     *
+     * @param upperValue значение АЦП, соответствующее верхней линейке
+     * @param lowerValue значение АЦП, соответствующее нижней линейке
+     */
+    void setDeltaV(int upperValue, int lowerValue) {
+        deltaV = ((upperValue - lowerValue) * Const.VOLTAGES[currentVoltageIndex]) / Const.ADC_MIDDLE;
+    }
+
+    /**
+     * Возвращает разницу между горизонтальными линейками
+     *
+     * @return разница напряжения между горизонтальными линейками, В
+     */
+    double getDeltaV() {
+        return deltaV;
+    }
+
+    /**
      * Возвращает величину времени на клетку
      *
      * @return величина времени на клетку
@@ -130,34 +180,8 @@ class ADCResult {
     }
 
     /**
-     * Уснатавливает значение минимального напряжения
-     *
-     * @param v значение минимального напряжения
-     */
-    void setVMin(double v) {
-        vMin = v;
-    }
-
-    /**
-     * Устанавливает значение максимального напряжения
-     *
-     * @param v значение максимального напряжения
-     */
-    void setVMax(double v) {
-        vMax = v;
-    }
-
-    /**
-     * Устанавливает значение среднеквадратического напряжения
-     *
-     * @param v значение среднеквадратического напряжения
-     */
-    void setVRms(double v) {
-        vRms = v;
-    }
-
-    /**
      * Обрабатывает сырые данные от АЦП ввиде массива байтов
+     *
      * @param newBlock сырые данные от АЦП ввиде массива байтов
      * @return true если данные корректные
      */
@@ -209,13 +233,37 @@ class ADCResult {
     }
 
     /**
-     * Вычисляет время по номеру отсчёта в массиве данных АЦП в зависимости от текущих
-     * параметров выборки
+     * Вычисляет время по номеру отсчёта в массиве данных АЦП в зависимости от
+     * текущих параметров выборки
+     *
      * @param value номер выборки от 0
      * @return время
      */
     double adcTimeToRealTime(int value) {
         return Const.TIMES[currentTimeIndex] * value / Const.ADC_DATA_BLOCK_SIZE;
+    }
+
+    /**
+     * готовое изображение
+     */
+    private BufferedImage image;
+
+    /**
+     * Возвращет изображение
+     *
+     * @return изображение
+     */
+    BufferedImage getImage() {
+        return image;
+    }
+
+    /**
+     * Задаёт изображение
+     *
+     * @param image изображение
+     */
+    void setImage(BufferedImage image) {
+        this.image = image;
     }
 
 }
