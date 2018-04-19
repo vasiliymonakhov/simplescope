@@ -5,10 +5,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
+import java.awt.Transparency;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Класс для рисования графика
@@ -86,7 +94,7 @@ class ScopeRenderer {
     private final static Color LIGHT_GREEN = new Color(128, 255, 128);
 
     static {
-        GREEN_MONO_SCHEME = new ColorScheme(BLACK, DARK_GREEN, DARK_GREEN, GREEN, LIGHT_GREEN, LIGHT_GREEN);
+        GREEN_MONO_SCHEME = new ColorScheme(BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
     }
 
     /**
@@ -126,27 +134,32 @@ class ScopeRenderer {
     }
 
     /**
+     * масштаб по оси абцисс в зависимости от ширины области рисования
+     */
+    private double xScale;
+
+    /**
+     * масштаб по оси ординат в зависимости от высоты области рисования
+     */
+    private double yScale;
+
+    /**
      * Преобразует набор результатов измерения АЦП устройства в набор точек
      * графика
      *
-     * @param x_pos смещение графика по оси абцисс
-     * @param y_pos смещение графика по оси ординат
-     * @param width ширина области рисования
-     * @param height высота области рисования
-     * @param adcResult резултаты измерения сигнала АЦП устроства
      * @return массив точек графика сигнала для отрисовки
      */
-    private Point[] convertAdcResultToScopePoints(int x_pos, int y_pos, int width, int height, ADCResult adcResult) {
-        int length = adcResult.getAdcData().length;
-        Point[] points = new Point[length];
+    private Point[] convertAdcResultToScopePoints() {
+        Point[] points = new Point[Const.ADC_DATA_BLOCK_SIZE];
         // вычислить масштаб по оси абцисс в зависимости от ширины области рисования
-        double xScale = ((double) width) / length;
+        xScale = ((double) width) / Const.ADC_DATA_BLOCK_SIZE;
         // вычислить масштаб по оси ординат в зависимости от высоты области рисования
-        double yScale = ((double) height) / 4096;
-        for (int i = 0; i < length; i++) {
-            int x = (int) (Math.round(xScale * i));
-            int y = (int) (Math.round(yScale * (4095 - adcResult.getAdcData()[i])));
-            points[i] = new Point(x + x_pos, y + y_pos);
+        yScale = ((double) height) / Const.ADC_RANGE;
+        // вычислить все точки графика
+        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+            int x = (int) Math.round(xScale * i + x_pos);
+            int y = (int) Math.round(yScale * (Const.ADC_MAX - adcResult.getAdcData()[i]) + y_pos);
+            points[i] = new Point(x, y);
         }
         return points;
     }
@@ -164,8 +177,19 @@ class ScopeRenderer {
     /**
      * Размер шрифта для шкалы
      */
-    private final static int fontSize = 14;
-    private final Font scopeFont = new Font("Arial", 0, fontSize);
+    private final static int fontSize = 13;
+
+    private final Font scopeFont = new Font("Arial", Font.BOLD, fontSize);
+
+    int width;
+
+    int height;
+
+    int x_pos;
+
+    int y_pos;
+
+    private ADCResult adcResult;
 
     /**
      * Рисует график сигнала
@@ -175,8 +199,9 @@ class ScopeRenderer {
      * @param adcResult набор данных от АЦП устройства
      * @return отрисованное изображение
      */
-    BufferedImage render(int imageWidth, int imageHeight, ADCResult adcResult) {
-        BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+    BufferedImage render(int imageWidth, int imageHeight, ADCResult adcResult) throws InterruptedException {
+        this.adcResult = adcResult;
+        BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -187,11 +212,11 @@ class ScopeRenderer {
         g.fillRect(0, 0, imageWidth - 1, imageHeight - 1);
 
         // сделать небольшие отступы и чтобы высота и ширина были кратны 10
-        int width = ((imageWidth - 2 * H_GAP) / 10) * 10;
-        int height = ((imageHeight - 2 * V_GAP) / 10) * 10;
+        width = ((imageWidth - 2 * H_GAP) / 10) * 10;
+        height = ((imageHeight - 2 * V_GAP) / 10) * 10;
         // вычислить координаты левого верхнего угла графика
-        int x_pos = (imageWidth - width) / 2;
-        int y_pos = (imageHeight - height) / 2;
+        x_pos = (imageWidth - width) / 2;
+        y_pos = (imageHeight - height) / 2;
 
         // нарисовать сетку
         int time = 0;
@@ -214,6 +239,9 @@ class ScopeRenderer {
             voltage -= dvoltage;
         }
 
+        // нарисовать линейки
+        drawRulers(g);
+
         // нарисовать рамку
         g.setColor(colorScheme.borderColor);
         g.drawRect(x_pos, y_pos, width, height);
@@ -221,7 +249,7 @@ class ScopeRenderer {
         // Нарисовать луч
         g.setColor(colorScheme.rayColor);
         g.setStroke(rayStroke);
-        Point[] points = convertAdcResultToScopePoints(x_pos, y_pos, width, height, adcResult);
+        Point[] points = convertAdcResultToScopePoints();
         for (int i = 0; i < points.length - 1; i++) {
             int x1 = points[i].x;
             int y1 = points[i].y;
@@ -229,14 +257,6 @@ class ScopeRenderer {
             int y2 = points[i + 1].y;
             g.drawLine(x1, y1, x2, y2);
         }
-
-        // Нарисовать напряжения
-        int dx = imageWidth / 5;
-        int tx = 0;
-        drawCenteredString(g, "Vmin = " + voltageToString(adcResult.getVMin()), tx += dx, V_GAP / 2, colorScheme.textColor);
-        drawCenteredString(g, "Vmax = " + voltageToString(adcResult.getVMax()), tx += dx, V_GAP / 2, colorScheme.textColor);
-        drawCenteredString(g, "Vpp = " + voltageToString(adcResult.getVMax() - adcResult.getVMin()), tx += dx, V_GAP / 2, colorScheme.textColor);
-        drawCenteredString(g, "Vrms = " + voltageToString(adcResult.getVRms()), tx += dx, V_GAP / 2, colorScheme.textColor);
 
         g.dispose();
         return image;
@@ -259,21 +279,132 @@ class ScopeRenderer {
     }
 
     /**
-     * Преобразует напряжение в строку с точностью 2 знака после запятой. Если
-     * абсолютная величина напряжения менее 1В, то результат выводится в
-     * милливольтах, иначе в вольтах
-     *
-     * @param voltage напряжение
-     * @return результирующая строка
+     * Очередь для повторного использования изображений. Это позволяет экономить
+     * память и меньше мусорить.
      */
-    String voltageToString(double voltage) {
-        String prefix = "";
-        double val = voltage;
-        if (Math.abs(voltage) < 1) {
-            prefix = "m";
-            val = voltage * 1000d;
+    private final BlockingQueue<BufferedImage> imagesQueue = new LinkedBlockingQueue<>();
+
+    /**
+     * Возвращает изображение из очереди, если там нет или изображения не
+     * подходят по размеру (изменились размеры главного окна), очередь очищается
+     * и создаётся новое изображение.
+     *
+     * @param imageWidth требуемая ширина
+     * @param imageHeight требуемая высота
+     * @return изображение
+     * @throws InterruptedException
+     */
+    private BufferedImage getImage(int imageWidth, int imageHeight) throws InterruptedException {
+        if (imagesQueue.isEmpty()) {
+            return createNewImage(imageWidth, imageHeight);
+        } else {
+            BufferedImage getted = imagesQueue.take();
+            if (getted.getWidth() != imageWidth || getted.getHeight() != imageHeight) {
+                imagesQueue.clear();
+                return createNewImage(imageWidth, imageHeight);
+            }
+            return getted;
         }
-        return String.format("%3.2f%sV", val, prefix);
+    }
+
+    /**
+     * Создаёт новое извображение
+     *
+     * @param imageWidth требуемая ширина
+     * @param imageHeight требуемая высота
+     * @return созданное изображение
+     */
+    private BufferedImage createNewImage(int imageWidth, int imageHeight) {
+        GraphicsConfiguration gfx_config = GraphicsEnvironment.
+                getLocalGraphicsEnvironment().getDefaultScreenDevice().
+                getDefaultConfiguration();
+        BufferedImage image = gfx_config.createCompatibleImage(imageWidth, imageHeight, Transparency.OPAQUE);
+        image.setAccelerationPriority(1);
+        return image;
+    }
+
+    /**
+     * Возвращает изображение в очередь
+     *
+     * @param image изображение
+     * @throws InterruptedException
+     */
+    void returnUsedImage(BufferedImage image) throws InterruptedException {
+        imagesQueue.put(image);
+    }
+
+    private int leftRuler = Const.ADC_DATA_BLOCK_SIZE / 4;
+    private int rightRuler = Const.ADC_DATA_BLOCK_SIZE * 3 / 4;
+    private int upperRuler = Const.ADC_RANGE * 3 / 4;
+    private int lowerRuler = Const.ADC_RANGE / 4;
+
+    void addMouseClick(int x, int y) {
+        if (x >= x_pos && x <= x_pos + width && y >= y_pos && y <= y_pos + height) {
+
+            int dLeftRuler = Math.abs(xLeftRuler - x);
+            int dRightRuler = Math.abs(xRightRuler - x);
+            int dUpperRuler = Math.abs(yUpperRuler - y);
+            int dLowerRuler = Math.abs(yLowerRuler - y);
+
+            int[] distances = new int[4];
+            distances[0] = dLeftRuler;
+            distances[1] = dRightRuler;
+            distances[2] = dUpperRuler;
+            distances[3] = dLowerRuler;
+            Arrays.sort(distances);
+            int min = distances[0];
+
+            if (min == dLeftRuler) {
+                leftRuler = xToHScale(x);
+            } else if (min == dRightRuler) {
+                rightRuler = xToHScale(x);
+            } else if (min == dUpperRuler) {
+                upperRuler = yToVScale(y);
+            } else {
+                // min == dLowerRuler
+                lowerRuler = yToVScale(y);
+            }
+
+        }
+    }
+
+    private int xToHScale(int x) {
+        return (int) Math.round((x - x_pos) / xScale);
+    }
+
+    private int yToVScale(int y) {
+        return Const.ADC_MAX - (int) Math.round((y - y_pos) / yScale);
+    }
+
+    private int xLeftRuler;
+    private int xRightRuler;
+    private int yUpperRuler;
+    private int yLowerRuler;
+
+    void drawRulers(Graphics2D g) {
+        xLeftRuler = (int) Math.round(xScale * leftRuler + x_pos);
+        xRightRuler = (int) Math.round(xScale * rightRuler + x_pos);
+        yUpperRuler = (int) Math.round(yScale * (Const.ADC_MAX - upperRuler) + y_pos);
+        yLowerRuler = (int) Math.round(yScale * (Const.ADC_MAX - lowerRuler) + y_pos);
+        g.setColor(colorScheme.rulerColor);
+        g.drawLine(xLeftRuler, y_pos, xLeftRuler, y_pos + height);
+        g.drawLine(xRightRuler, y_pos, xRightRuler, y_pos + height);
+        g.drawLine(x_pos, yUpperRuler, x_pos + width, yUpperRuler);
+        g.drawLine(x_pos, yLowerRuler, x_pos + width, yLowerRuler);
+
+        drawCenteredString(g,hRulerToString(leftRuler), xLeftRuler, V_GAP / 2, colorScheme.textColor);
+        drawCenteredString(g,hRulerToString(rightRuler), xRightRuler, V_GAP / 2, colorScheme.textColor);
+
+        drawCenteredString(g,vRulerToString(upperRuler), x_pos + width + H_GAP / 2, yUpperRuler, colorScheme.textColor);
+        drawCenteredString(g,vRulerToString(lowerRuler), x_pos + width + H_GAP / 2, yLowerRuler, colorScheme.textColor);
+    }
+
+    private String vRulerToString(int ruler) {
+        return Utils.voltageToString(adcResult.adcValueToVoltage(ruler));
+    }
+
+    private String hRulerToString(int ruler) {
+        return Utils.timeToString(adcResult.adcTimeToRealTime(ruler));
     }
 
 }

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ua.com.kiloom</groupId>
     <artifactId>Simplescope</artifactId>
-    <version>${project.build.branchVersion}.15-${project.build.type}</version>
+    <version>${project.build.branchVersion}.18-${project.build.type}</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

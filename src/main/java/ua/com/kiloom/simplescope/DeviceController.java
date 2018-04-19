@@ -156,7 +156,6 @@ public class DeviceController {
             // это пропускает очередную порцию данных, на случай если компьютер не успевает обрабатывать данные
             for (int i = 1; i < size; i++) {
                 adcQueue.take();
-                System.out.println("Пропуск обработанных данных");
             }
         }
         return adcQueue.take();
@@ -331,44 +330,12 @@ public class DeviceController {
         byte[] newBlock = bytesQueue.take();
         try {
             lock.lock();
-            int j = 0;
-            ADCResult r = new ADCResult();
-            double minVoltage = Double.POSITIVE_INFINITY;
-            double maxVoltage = Double.NEGATIVE_INFINITY;
-            double squareVoltage = 0;
-            for (int i = 0; i < Const.BYTES_BLOCK_SIZE - 1;) {
-                // преобразовать байты данныех в значение АЦП
-                int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
-                // проверить значение на допустимость
-                if (value < 0 || value > 4095) {
-                    // очевидно, что там какой-то мусор и этот блок стоит забраковать
-                    return null;
-                }
-                // запись сырых данных от АЦП для построения графика
-                r.getAdcData()[j] = value;
-                // вычислим мгновенное значение напряжения
-                double voltage = ((value - 2048) * Const.VOLTAGES[currentVoltageIndex]) / 2048;
-                // запишем в массив
-                r.getVoltages()[j] = voltage;
-                // найдём минимум и максимум
-                if (minVoltage > voltage) {
-                    minVoltage = voltage;
-                }
-                if (maxVoltage < voltage) {
-                    maxVoltage = voltage;
-                }
-                // подсчёт суммы квадратов всех значений
-                squareVoltage = squareVoltage + voltage * voltage;
-                j++;
-            }
             // запись параметров выборки
-            r.setCurrentTimeIndex(currentTimeIndex);
-            r.setCurrentVoltageIndex(currentVoltageIndex);
-            r.setVMin(minVoltage);
-            r.setVMax(maxVoltage);
-            // и среднеквадратического напряжения
-            r.setVRms(Math.sqrt(squareVoltage / Const.ADC_DATA_BLOCK_SIZE));
-            return r;
+            ADCResult r = new ADCResult(currentVoltageIndex,currentTimeIndex);
+            if (r.processADCData(newBlock)) {
+                return r;
+            }
+            return null;
         } finally {
             lock.unlock();
         }

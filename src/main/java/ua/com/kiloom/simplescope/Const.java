@@ -51,4 +51,19 @@ class Const {
      */
     static final int BYTES_BLOCK_SIZE = ADC_DATA_BLOCK_SIZE * 2;
 
+    /**
+     * Диапазон значений ЦАП от 0 до исключительно
+     */
+    static final int ADC_RANGE = 4096;
+
+    /**
+     * Максимальное значение от АЦП
+     */
+    static final int ADC_MAX = ADC_RANGE - 1;
+
+    /**
+     * Среднее значение от АЦП
+     */
+    static final int ADC_MIDDLE = ADC_RANGE / 2;
+
 }

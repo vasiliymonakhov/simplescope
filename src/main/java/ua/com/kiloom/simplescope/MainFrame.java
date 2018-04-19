@@ -8,6 +8,7 @@ package ua.com.kiloom.simplescope;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,19 +74,12 @@ public class MainFrame extends javax.swing.JFrame {
         public void run() {
             try {
                 while (true) {
-                    Rectangle r = sp.getBounds();
                     if (continuousMode) {
-                        currentADCResult = dc.getADCResult();
-                        autoDcModeAdjust();
-                        sp.image = sr.render(r.width, r.height, currentADCResult);
-                        sp.repaint();
+                        makePicture();
                     } else {
                         if (makeStep) {
                             makeStep = false;
-                            currentADCResult = dc.getADCResult();
-                            currentImage = sr.render(r.width, r.height, currentADCResult);
-                            sp.image = currentImage;
-                            sp.repaint();
+                            makePicture();
                             enableStepButtons(true);
                             continue;
                         }
@@ -98,6 +92,25 @@ public class MainFrame extends javax.swing.JFrame {
             }
         }
     };
+
+    void makePicture() throws InterruptedException {
+        Rectangle r = sp.getBounds();
+        currentADCResult = dc.getADCResult();
+        drawVoltages(currentADCResult);
+        autoDcModeAdjust(currentADCResult);
+        currentImage = sr.render(r.width, r.height, currentADCResult);
+        sp.copyImage(currentImage);
+    }
+
+    private void redrawAndMakePicture() {
+        Rectangle r = sp.getBounds();
+        try {
+            currentImage = sr.render(r.width, r.height, currentADCResult);
+            sp.copyImage(currentImage);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps!", ex);
+        }
+    }
 
     private void start() {
         if (portsComboBox.getSelectedIndex() != -1) {
@@ -124,9 +137,16 @@ public class MainFrame extends javax.swing.JFrame {
 
     private final ScopePanel sp = new ScopePanel();
 
+    void drawVoltages(ADCResult adcResult) {
+        vminLabel.setText("Vmin = " + Utils.voltageToString(adcResult.getVMin()));
+        vmaxLabel.setText("Vmax = " + Utils.voltageToString(adcResult.getVMax()));
+        vppLabel.setText("Vpp = " + Utils.voltageToString(adcResult.getVMax() - adcResult.getVMin()));
+        vrmsLabel.setText("Vrms = " + Utils.voltageToString(adcResult.getVRms()));
+    }
+
     private int inputMode;
     private int synchMode;
-    private boolean triggerMode;
+    private boolean triggerMode = true;
     private int triggerLevel = 100;
     private int dcLevel = 125;
 
@@ -236,11 +256,11 @@ public class MainFrame extends javax.swing.JFrame {
 
     private double autoDcVoltage;
 
-    private void autoDcModeAdjust() {
+    private void autoDcModeAdjust(ADCResult adcResult) {
         if (autoDcMode) {
-            if (currentADCResult != null) {
-                double vmin = currentADCResult.getVMin();
-                double vmax = currentADCResult.getVMax();
+            if (adcResult != null) {
+                double vmin = adcResult.getVMin();
+                double vmax = adcResult.getVMax();
                 autoDcVoltage += (vmin + vmax) / 2;
                 autoDcSteps++;
                 if (autoDcSteps == 10) {
@@ -300,19 +320,31 @@ public class MainFrame extends javax.swing.JFrame {
         stopButton = new javax.swing.JButton();
         portsComboBox = new javax.swing.JComboBox();
         searchPortsButton = new javax.swing.JButton();
+        jPanel12 = new javax.swing.JPanel();
+        vminLabel = new javax.swing.JLabel();
+        vmaxLabel = new javax.swing.JLabel();
+        vppLabel = new javax.swing.JLabel();
+        vrmsLabel = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         continuousCheckBox = new javax.swing.JCheckBox();
         stepButton = new javax.swing.JButton();
-        jPanel12 = new javax.swing.JPanel();
         jPanel11 = new javax.swing.JPanel();
         pngButton = new javax.swing.JButton();
         txtButton = new javax.swing.JButton();
         htmlButton = new javax.swing.JButton();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
+        scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
+        scopeParentPanel.setPreferredSize(new java.awt.Dimension(600, 600));
+        scopeParentPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                scopeParentPanelMouseClicked(evt);
+            }
+        });
         scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -660,6 +692,59 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel10, gridBagConstraints);
 
+        jPanel12.setLayout(new java.awt.GridBagLayout());
+
+        vminLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vminLabel.setText("Vmin");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(vminLabel, gridBagConstraints);
+
+        vmaxLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vmaxLabel.setText("Vmax");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(vmaxLabel, gridBagConstraints);
+
+        vppLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vppLabel.setText("Vp-p");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(vppLabel, gridBagConstraints);
+
+        vrmsLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vrmsLabel.setText("Vrms");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel12.add(vrmsLabel, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel3.add(jPanel12, gridBagConstraints);
+
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Режим работы"));
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
@@ -699,13 +784,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel1, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 10;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        jPanel3.add(jPanel12, gridBagConstraints);
 
         jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Сохранить"));
         jPanel11.setLayout(new java.awt.GridBagLayout());
@@ -748,6 +826,13 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel11, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 11;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel3.add(filler1, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -755,7 +840,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         getContentPane().add(jPanel3, gridBagConstraints);
 
-        setSize(new java.awt.Dimension(835, 662));
+        pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
@@ -771,8 +856,9 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void inputDcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDcRadioButtonActionPerformed
         setInputMode(2);
-        autoDcCheckBox.setEnabled(false);
         autoDcCheckBox.setSelected(false);
+        autoDcCheckBox.setEnabled(false);
+        autoDcMode = false;
     }//GEN-LAST:event_inputDcRadioButtonActionPerformed
 
     private void syncAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncAutoRadioButtonActionPerformed
@@ -875,6 +961,15 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_pngButtonActionPerformed
 
+    private void scopeParentPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseClicked
+        if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 1) {
+            sr.addMouseClick(evt.getX(), evt.getY());
+            if (!continuousMode) {
+                redrawAndMakePicture();
+            }
+        }
+    }//GEN-LAST:event_scopeParentPanelMouseClicked
+
     public static void main(String args[]) {
 
         EventQueue.invokeLater(new Runnable() {
@@ -894,6 +989,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JSlider dcOffsetSlider;
     private javax.swing.JButton decRangeButton;
     private javax.swing.JButton decTimeButton;
+    private javax.swing.Box.Filler filler1;
     private javax.swing.JButton htmlButton;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;
@@ -928,11 +1024,25 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JRadioButton synchNoneRadioButton;
     private javax.swing.JComboBox timeComboBox;
     private javax.swing.JButton txtButton;
+    private javax.swing.JLabel vmaxLabel;
+    private javax.swing.JLabel vminLabel;
+    private javax.swing.JLabel vppLabel;
+    private javax.swing.JLabel vrmsLabel;
     // End of variables declaration//GEN-END:variables
 
     private class ScopePanel extends JPanel {
 
         private BufferedImage image;
+
+        void copyImage(BufferedImage bi) throws InterruptedException {
+            if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
+                image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
+            }
+            Graphics g = image.getGraphics();
+            g.drawImage(bi, 0, 0, null);
+            sp.repaint();
+            sr.returnUsedImage(bi);
+        }
 
         @Override
         public void paint(Graphics g) {
