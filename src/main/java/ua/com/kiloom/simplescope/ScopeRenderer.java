@@ -113,7 +113,7 @@ class ScopeRenderer {
     private final static float[] dashingPattern1 = {3f, 3f};
 
     private final Stroke gridStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
-        BasicStroke.JOIN_MITER, 1.0f, dashingPattern1, 2.0f);
+            BasicStroke.JOIN_MITER, 1.0f, dashingPattern1, 2.0f);
 
     /**
      * Нажим для рисования луча

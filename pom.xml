@@ -3,7 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ua.com.kiloom</groupId>
     <artifactId>Simplescope</artifactId>
-    <version>${project.build.branchVersion}.18-${project.build.type}</version>
+    <version>3.0.0.23</version>
+    <url>http://kiloom.com.ua</url>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -80,7 +81,7 @@
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
-                    <newVersion>${project.build.branchVersion}.${buildNumber}-${project.build.type}</newVersion>
+                    <newVersion>3.0.0.${buildNumber}</newVersion>
                     <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
                 <executions>
