@@ -195,9 +195,6 @@ class ScopeRenderer {
         result.setImage(image);
     }
 
-    private void calculate() {
-    }
-
     /**
      * Рисует сетку
      * @param g графический контекст
