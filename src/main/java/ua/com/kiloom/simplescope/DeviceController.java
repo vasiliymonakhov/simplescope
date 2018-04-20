@@ -151,13 +151,6 @@ public class DeviceController {
      * @throws InterruptedException
      */
     Result getADCResult() throws InterruptedException {
-        int size = adcQueue.size();
-        if (size > 1) {
-            // это пропускает очередную порцию данных, на случай если компьютер не успевает обрабатывать данные
-            for (int i = 1; i < size; i++) {
-                adcQueue.take();
-            }
-        }
         return adcQueue.take();
     }
 
@@ -320,13 +313,6 @@ public class DeviceController {
      * @throws InterruptedException
      */
     private Result processAdcData() throws InterruptedException {
-        int size = bytesQueue.size();
-        if (size > 1) {
-            // это пропускает очередную порцию данных, на случай если компьютер не успевает обрабатывать данные
-            for (int i = 1; i < size; i++) {
-                bytesQueue.take();
-            }
-        }
         byte[] newBlock = bytesQueue.take();
         try {
             lock.lock();

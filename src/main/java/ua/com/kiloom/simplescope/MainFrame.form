@@ -79,7 +79,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x41f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x438;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;"/>
+                <TitledBorder title="&#x41f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x438;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -93,6 +95,9 @@
           <SubComponents>
             <Component class="javax.swing.JComboBox" name="rangeComboBox">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                   <StringArray count="11">
                     <StringItem index="0" value="50mV"/>
@@ -108,39 +113,48 @@
                     <StringItem index="10" value="100V"/>
                   </StringArray>
                 </Property>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x44b;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x43f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x438;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rangeComboBoxActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="1" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="1.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="1" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="0" anchor="10" weightX="1.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
             <Component class="javax.swing.JButton" name="decRangeButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="-"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x43c;&#x435;&#x43d;&#x44c;&#x448;&#x438;&#x442;&#x44c; &#x43f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x438;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="decRangeButtonActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="0" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="0" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="0" anchor="10" weightX="0.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
             <Component class="javax.swing.JButton" name="incRangeButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="+"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x432;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x442;&#x44c; &#x43f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x438;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="incRangeButtonActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="2" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="2" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
@@ -150,7 +164,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x41f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;"/>
+                <TitledBorder title="&#x41f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -164,6 +180,9 @@
           <SubComponents>
             <Component class="javax.swing.JComboBox" name="timeComboBox">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                   <StringArray count="18">
                     <StringItem index="0" value="10&#xb5;S"/>
@@ -186,40 +205,48 @@
                     <StringItem index="17" value="5s"/>
                   </StringArray>
                 </Property>
-                <Property name="toolTipText" type="java.lang.String" value=""/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x44b;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x43f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="timeComboBoxActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="1" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="1.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="1" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="0" anchor="10" weightX="1.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
             <Component class="javax.swing.JButton" name="decTimeButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="-"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x43c;&#x435;&#x43d;&#x44c;&#x448;&#x438;&#x442;&#x44c; &#x43f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="decTimeButtonActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="0" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="0" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="0" anchor="10" weightX="0.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
             <Component class="javax.swing.JButton" name="incTimeButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="+"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x432;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x442;&#x44c; &#x43f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="incTimeButtonActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="2" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
+                  <GridBagConstraints gridX="2" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
                 </Constraint>
               </Constraints>
             </Component>
@@ -229,7 +256,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x412;&#x445;&#x43e;&#x434;"/>
+                <TitledBorder title="&#x412;&#x445;&#x43e;&#x434;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -249,8 +278,12 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup1"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="&#x417;&#x430;&#x43a;&#x440;."/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x417;&#x430;&#x43a;&#x440;&#x44b;&#x442;&#x44b;&#x439; &#x432;&#x445;&#x43e;&#x434;, &#x43f;&#x435;&#x440;&#x435;&#x43c;&#x435;&#x43d;&#x43d;&#x43e;&#x435; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x435;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputAcRadioButtonActionPerformed"/>
@@ -261,7 +294,11 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup1"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x417;&#x435;&#x43c;&#x43b;&#x44f;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x417;&#x430;&#x437;&#x435;&#x43c;&#x43b;&#x438;&#x442;&#x44c; &#x432;&#x445;&#x43e;&#x434;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputGndRadioButtonActionPerformed"/>
@@ -272,7 +309,11 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup1"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x41e;&#x442;&#x43a;&#x440;."/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x41e;&#x442;&#x43a;&#x440;&#x44b;&#x442;&#x44b;&#x439; &#x432;&#x445;&#x43e;&#x434;, &#x43b;&#x44e;&#x431;&#x43e;&#x439; &#x441;&#x438;&#x433;&#x43d;&#x430;&#x43b;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputDcRadioButtonActionPerformed"/>
@@ -284,7 +325,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x421;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x44f;"/>
+                <TitledBorder title="&#x421;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x44f;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -304,8 +347,12 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup2"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="&#x410;&#x432;&#x442;&#x43e;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x410;&#x432;&#x442;&#x43e;&#x43c;&#x430;&#x442;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x430;&#x44f; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x44f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="syncAutoRadioButtonActionPerformed"/>
@@ -316,7 +363,11 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup2"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x41d;&#x435;&#x442;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x411;&#x435;&#x437; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x438;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="synchNoneRadioButtonActionPerformed"/>
@@ -327,7 +378,11 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup2"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x420;&#x443;&#x447;&#x43d;."/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x420;&#x443;&#x447;&#x43d;&#x430;&#x44f; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x44f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="synchManualRadioButtonActionPerformed"/>
@@ -339,7 +394,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x422;&#x440;&#x438;&#x433;&#x433;&#x435;&#x440;"/>
+                <TitledBorder title="&#x422;&#x440;&#x438;&#x433;&#x433;&#x435;&#x440;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -359,8 +416,12 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup3"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="&#x424;&#x440;&#x43e;&#x43d;&#x442;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x438;&#x440;&#x43e;&#x432;&#x430;&#x442;&#x44c; &#x43f;&#x43e; &#x43d;&#x430;&#x440;&#x430;&#x441;&#x442;&#x430;&#x43d;&#x438;&#x44e; &#x441;&#x438;&#x433;&#x43d;&#x430;&#x43b;&#x430;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="synchFrontRadioButtonActionPerformed"/>
@@ -371,7 +432,11 @@
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup3"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x421;&#x43f;&#x430;&#x434;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x445;&#x438;&#x440;&#x43e;&#x432;&#x430;&#x442;&#x44c; &#x43f;&#x43e; &#x443;&#x431;&#x44b;&#x432;&#x430;&#x43d;&#x438;&#x44e; &#x441;&#x438;&#x433;&#x43d;&#x430;&#x43b;&#x430;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="synchCutRadioButtonActionPerformed"/>
@@ -383,7 +448,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x423;&#x440;&#x43e;&#x432;&#x435;&#x43d;&#x44c; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x438;"/>
+                <TitledBorder title="&#x423;&#x440;&#x43e;&#x432;&#x435;&#x43d;&#x44c; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x438;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -397,10 +464,14 @@
           <SubComponents>
             <Component class="javax.swing.JSlider" name="synchLevelSlider">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="majorTickSpacing" type="int" value="50"/>
                 <Property name="maximum" type="int" value="200"/>
                 <Property name="minorTickSpacing" type="int" value="10"/>
                 <Property name="paintTicks" type="boolean" value="true"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x441;&#x442;&#x430;&#x43d;&#x43e;&#x432;&#x438;&#x442;&#x44c; &#x443;&#x440;&#x43e;&#x432;&#x435;&#x43d;&#x44c; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x438;"/>
                 <Property name="value" type="int" value="100"/>
               </Properties>
               <Events>
@@ -418,7 +489,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x421;&#x43c;&#x435;&#x449;&#x435;&#x43d;&#x438;&#x435; &#x432;&#x445;&#x43e;&#x434;&#x430;"/>
+                <TitledBorder title="&#x421;&#x43c;&#x435;&#x449;&#x435;&#x43d;&#x438;&#x435; &#x432;&#x445;&#x43e;&#x434;&#x430;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -432,10 +505,14 @@
           <SubComponents>
             <Component class="javax.swing.JSlider" name="dcOffsetSlider">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="majorTickSpacing" type="int" value="50"/>
                 <Property name="maximum" type="int" value="250"/>
                 <Property name="minorTickSpacing" type="int" value="10"/>
                 <Property name="paintTicks" type="boolean" value="true"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x423;&#x441;&#x442;&#x430;&#x43d;&#x43e;&#x432;&#x438;&#x442;&#x435; &#x441;&#x43c;&#x435;&#x449;&#x435;&#x43d;&#x438;&#x435; &#x432;&#x445;&#x43e;&#x434;&#x430; &#x43f;&#x43e; &#x43f;&#x43e;&#x441;&#x442;&#x43e;&#x44f;&#x43d;&#x43d;&#x43e;&#x43c;&#x443; &#x442;&#x43e;&#x43a;&#x443;"/>
                 <Property name="value" type="int" value="125"/>
               </Properties>
               <Events>
@@ -449,7 +526,11 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="autoDcCheckBox">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x410;&#x432;&#x442;&#x43e;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x41e;&#x442;&#x441;&#x43b;&#x435;&#x436;&#x438;&#x432;&#x430;&#x442;&#x44c; &#x43f;&#x43e;&#x441;&#x442;&#x43e;&#x44f;&#x43d;&#x43d;&#x443;&#x44e; &#x441;&#x43e;&#x441;&#x442;&#x430;&#x432;&#x43b;&#x44f;&#x44e;&#x449;&#x443;&#x443; &#x438; &#x43f;&#x44b;&#x442;&#x430;&#x442;&#x44c;&#x441;&#x44f; &#x43a;&#x43e;&#x43c;&#x43f;&#x435;&#x43d;&#x441;&#x438;&#x440;&#x43e;&#x432;&#x430;&#x442;&#x44c;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="autoDcCheckBoxActionPerformed"/>
@@ -466,7 +547,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x423;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x43e;"/>
+                <TitledBorder title="&#x423;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x43e;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -480,7 +563,11 @@
           <SubComponents>
             <Component class="javax.swing.JButton" name="startButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x430;&#x440;&#x442;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x41d;&#x430;&#x436;&#x43c;&#x438;&#x442;&#x435; &#x434;&#x43b;&#x44f; &#x437;&#x430;&#x43f;&#x443;&#x441;&#x43a;&#x430; &#x440;&#x430;&#x431;&#x43e;&#x442;&#x44b;"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -494,7 +581,11 @@
             </Component>
             <Component class="javax.swing.JButton" name="stopButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x43e;&#x43f;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x41d;&#x430;&#x436;&#x43c;&#x438;&#x442;&#x435; &#x434;&#x43b;&#x44f; &#x43e;&#x441;&#x442;&#x430;&#x43e;&#x432;&#x43a;&#x438; &#x440;&#x430;&#x431;&#x43e;&#x442;&#x44b;"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -502,37 +593,60 @@
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="1" gridY="1" gridWidth="2" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.5" weightY="1.0"/>
+                  <GridBagConstraints gridX="1" gridY="1" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.5" weightY="1.0"/>
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JComboBox" name="portsComboBox">
+            <Container class="javax.swing.JPanel" name="jPanel13">
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="0" gridY="0" gridWidth="2" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="0" anchor="10" weightX="1.0" weightY="1.0"/>
+                  <GridBagConstraints gridX="0" gridY="0" gridWidth="2" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="0" insetsLeft="0" insetsBottom="0" insetsRight="0" anchor="10" weightX="1.0" weightY="1.0"/>
                 </Constraint>
               </Constraints>
-            </Component>
-            <Component class="javax.swing.JButton" name="searchPortsButton">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="?"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="searchPortsButtonActionPerformed"/>
-              </Events>
-              <Constraints>
-                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
-                  <GridBagConstraints gridX="2" gridY="0" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
-                </Constraint>
-              </Constraints>
-            </Component>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JComboBox" name="portsComboBox">
+                  <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="fontScheme.getGuiFont()" type="code"/>
+                    </Property>
+                    <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x44b;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x43f;&#x43e;&#x440;&#x442;"/>
+                  </Properties>
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
+                      <GridBagConstraints gridX="0" gridY="1" gridWidth="2" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="5" insetsBottom="5" insetsRight="0" anchor="10" weightX="1.0" weightY="1.0"/>
+                    </Constraint>
+                  </Constraints>
+                </Component>
+                <Component class="javax.swing.JButton" name="searchPortsButton">
+                  <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="fontScheme.getGuiFont()" type="code"/>
+                    </Property>
+                    <Property name="text" type="java.lang.String" value="?"/>
+                    <Property name="toolTipText" type="java.lang.String" value="&#x41d;&#x430;&#x436;&#x43c;&#x438;&#x442;&#x435; &#x434;&#x43b;&#x44f; &#x43f;&#x43e;&#x438;&#x441;&#x43a;&#x430; &#x43f;&#x43e;&#x440;&#x442;&#x43e;&#x432;"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="searchPortsButtonActionPerformed"/>
+                  </Events>
+                  <Constraints>
+                    <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
+                      <GridBagConstraints gridX="2" gridY="1" gridWidth="1" gridHeight="1" fill="1" ipadX="0" ipadY="0" insetsTop="5" insetsLeft="0" insetsBottom="5" insetsRight="5" anchor="10" weightX="0.0" weightY="0.0"/>
+                    </Constraint>
+                  </Constraints>
+                </Component>
+              </SubComponents>
+            </Container>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="jPanel12">
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x418;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;"/>
+                <TitledBorder title="&#x418;&#x437;&#x43c;&#x435;&#x440;&#x435;&#x43d;&#x438;&#x44f;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -546,10 +660,11 @@
           <SubComponents>
             <Component class="javax.swing.JLabel" name="vminLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Vmin"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x43d;&#x430; &#x43c;&#x438;&#x43d;&#x438;&#x43c;&#x430;&#x43b;&#x44c;&#x43d;&#x43e;&#x433;&#x43e; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x44f;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -559,10 +674,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="vmaxLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Vmax"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x43d;&#x430; &#x43c;&#x430;&#x43a;&#x441;&#x438;&#x43c;&#x430;&#x43b;&#x44c;&#x43d;&#x43e;&#x433;&#x43e; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x44f;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -572,10 +688,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="vppLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Vp-p"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x420;&#x430;&#x437;&#x43d;&#x438;&#x446;&#x430; &#x43c;&#x430;&#x43a;&#x441;&#x438;&#x43c;&#x430;&#x43b;&#x44c;&#x43d;&#x43e;&#x433;&#x43e; &#x438; &#x43c;&#x438;&#x43d;&#x438;&#x43c;&#x430;&#x43b;&#x44c;&#x43d;&#x43e;&#x433;&#x43e; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x439;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -585,10 +702,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="vrmsLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Vrms"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x440;&#x435;&#x434;&#x43d;&#x435;&#x43a;&#x432;&#x430;&#x434;&#x440;&#x430;&#x442;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x43e;&#x435; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x435;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -598,10 +716,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="deltaVLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="&#x394;V"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x420;&#x430;&#x437;&#x43d;&#x438;&#x446;&#x430; &#x43d;&#x430;&#x43f;&#x440;&#x44f;&#x436;&#x435;&#x43d;&#x438;&#x439; &#x43f;&#x43e; &#x433;&#x43e;&#x440;&#x438;&#x437;&#x43e;&#x43d;&#x442;&#x430;&#x43b;&#x44c;&#x43d;&#x44b;&#x43c; &#x43b;&#x438;&#x43d;&#x435;&#x439;&#x43a;&#x430;&#x43c;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -611,10 +730,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="deltaTLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="&#x394;T"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x43d;&#x430; &#x432;&#x440;&#x435;&#x43c;&#x435;&#x43d;&#x438; &#x43c;&#x435;&#x436;&#x434;&#x443; &#x432;&#x435;&#x440;&#x442;&#x438;&#x43a;&#x430;&#x43b;&#x44c;&#x43d;&#x44b;&#x43c;&#x438; &#x43b;&#x438;&#x43d;&#x435;&#x439;&#x43a;&#x430;&#x43c;&#x438;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -624,10 +744,11 @@
             </Component>
             <Component class="javax.swing.JLabel" name="freqLabel">
               <Properties>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dialog" size="18" style="1"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getValFont()" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="f"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x427;&#x430;&#x441;&#x442;&#x43e;&#x442;&#x430;"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -641,7 +762,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x420;&#x435;&#x436;&#x438;&#x43c; &#x440;&#x430;&#x431;&#x43e;&#x442;&#x44b;"/>
+                <TitledBorder title="&#x420;&#x435;&#x436;&#x438;&#x43c; &#x440;&#x430;&#x431;&#x43e;&#x442;&#x44b;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -655,8 +778,12 @@
           <SubComponents>
             <Component class="javax.swing.JCheckBox" name="continuousCheckBox">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="&#x41d;&#x435;&#x43f;&#x440;&#x435;&#x440;&#x44b;&#x432;&#x43d;&#x43e;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x44b;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x43d;&#x435;&#x43f;&#x440;&#x435;&#x440;&#x44b;&#x432;&#x43d;&#x44b;&#x439; &#x438;&#x43b;&#x438; &#x43f;&#x43e;&#x448;&#x430;&#x433;&#x43e;&#x432;&#x44b;&#x439; &#x440;&#x435;&#x436;&#x438;&#x43c;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="continuousCheckBoxActionPerformed"/>
@@ -669,7 +796,11 @@
             </Component>
             <Component class="javax.swing.JButton" name="stepButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="&#x428;&#x430;&#x433;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x41d;&#x430;&#x436;&#x43c;&#x438;&#x442;&#x435; &#x434;&#x43b;&#x44f; &#x432;&#x44b;&#x43f;&#x43e;&#x43b;&#x43d;&#x435;&#x43d;&#x438;&#x44f; &#x441;&#x43b;&#x435;&#x434;&#x443;&#x44e;&#x449;&#x435;&#x433;&#x43e; &#x448;&#x430;&#x433;&#x430;"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -687,7 +818,9 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;"/>
+                <TitledBorder title="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;">
+                  <Connection PropertyName="font" code="fontScheme.getBorderFont()" type="code"/>
+                </TitledBorder>
               </Border>
             </Property>
           </Properties>
@@ -701,7 +834,11 @@
           <SubComponents>
             <Component class="javax.swing.JButton" name="pngButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="PNG"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c; &#x438;&#x437;&#x43e;&#x431;&#x440;&#x430;&#x436;&#x435;&#x43d;&#x438;&#x435; &#x432; &#x444;&#x430;&#x439;&#x43b; PNG"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -715,7 +852,11 @@
             </Component>
             <Component class="javax.swing.JButton" name="txtButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="TXT"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c; &#x434;&#x430;&#x43d;&#x43d;&#x44b;&#x435; &#x432; &#x442;&#x435;&#x43a;&#x442;&#x43e;&#x432;&#x44b;&#x439; &#x444;&#x430;&#x439;&#x43b;"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Constraints>
@@ -726,7 +867,11 @@
             </Component>
             <Component class="javax.swing.JButton" name="htmlButton">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="fontScheme.getGuiFont()" type="code"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="HTML"/>
+                <Property name="toolTipText" type="java.lang.String" value="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c; &#x43a;&#x430;&#x43a; &#x432;&#x435;&#x431;-&#x441;&#x442;&#x440;&#x430;&#x43d;&#x438;&#x446;&#x443;"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Constraints>

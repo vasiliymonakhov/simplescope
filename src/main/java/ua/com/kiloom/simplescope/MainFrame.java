@@ -1,14 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ua.com.kiloom.simplescope;
 
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,15 +10,13 @@ import javax.swing.JPanel;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 
-/**
- *
- * @author vasya
- */
 public class MainFrame extends javax.swing.JFrame {
 
     /**
-     * Creates new form MainFrame
+     * Схема шрифтов
      */
+    private FontScheme fontScheme = FontScheme.STANDART;
+
     public MainFrame() {
         initComponents();
         scopeParentPanel.add(sp);
@@ -320,6 +312,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel10 = new javax.swing.JPanel();
         startButton = new javax.swing.JButton();
         stopButton = new javax.swing.JButton();
+        jPanel13 = new javax.swing.JPanel();
         portsComboBox = new javax.swing.JComboBox();
         searchPortsButton = new javax.swing.JButton();
         jPanel12 = new javax.swing.JPanel();
@@ -362,10 +355,12 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel3.setLayout(new java.awt.GridBagLayout());
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Предел измерения"));
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Предел измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel4.setLayout(new java.awt.GridBagLayout());
 
+        rangeComboBox.setFont(fontScheme.getGuiFont());
         rangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "50mV", "100mV", "250mV", "500mV", "1V", "2.5V", "5V", "10V", "20V", "50V", "100V" }));
+        rangeComboBox.setToolTipText("Выберите предел измерения");
         rangeComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 rangeComboBoxActionPerformed(evt);
@@ -376,10 +371,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
         jPanel4.add(rangeComboBox, gridBagConstraints);
 
+        decRangeButton.setFont(fontScheme.getGuiFont());
         decRangeButton.setText("-");
+        decRangeButton.setToolTipText("Уменьшить предел измерения");
         decRangeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 decRangeButtonActionPerformed(evt);
@@ -389,10 +386,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel4.add(decRangeButton, gridBagConstraints);
 
+        incRangeButton.setFont(fontScheme.getGuiFont());
         incRangeButton.setText("+");
+        incRangeButton.setToolTipText("Увеличить предел измерения");
         incRangeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 incRangeButtonActionPerformed(evt);
@@ -402,7 +401,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel4.add(incRangeButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -411,11 +410,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel4, gridBagConstraints);
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Период развёртки"));
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Период развёртки", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel5.setLayout(new java.awt.GridBagLayout());
 
+        timeComboBox.setFont(fontScheme.getGuiFont());
         timeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10µS", "20µS", "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS", "1s", "2s", "5s" }));
-        timeComboBox.setToolTipText("");
+        timeComboBox.setToolTipText("Выберите период развёртки");
         timeComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 timeComboBoxActionPerformed(evt);
@@ -426,10 +426,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
         jPanel5.add(timeComboBox, gridBagConstraints);
 
+        decTimeButton.setFont(fontScheme.getGuiFont());
         decTimeButton.setText("-");
+        decTimeButton.setToolTipText("Уменьшить период развёртки");
         decTimeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 decTimeButtonActionPerformed(evt);
@@ -439,10 +441,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel5.add(decTimeButton, gridBagConstraints);
 
+        incTimeButton.setFont(fontScheme.getGuiFont());
         incTimeButton.setText("+");
+        incTimeButton.setToolTipText("Увеличить период развёртки");
         incTimeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 incTimeButtonActionPerformed(evt);
@@ -452,7 +456,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel5.add(incTimeButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -461,12 +465,14 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel5, gridBagConstraints);
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Вход"));
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Вход", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel6.setLayout(new java.awt.GridLayout(1, 0));
 
         buttonGroup1.add(inputAcRadioButton);
+        inputAcRadioButton.setFont(fontScheme.getGuiFont());
         inputAcRadioButton.setSelected(true);
         inputAcRadioButton.setText("Закр.");
+        inputAcRadioButton.setToolTipText("Закрытый вход, переменное напряжение");
         inputAcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputAcRadioButtonActionPerformed(evt);
@@ -475,7 +481,9 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel6.add(inputAcRadioButton);
 
         buttonGroup1.add(inputGndRadioButton);
+        inputGndRadioButton.setFont(fontScheme.getGuiFont());
         inputGndRadioButton.setText("Земля");
+        inputGndRadioButton.setToolTipText("Заземлить вход");
         inputGndRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputGndRadioButtonActionPerformed(evt);
@@ -484,7 +492,9 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel6.add(inputGndRadioButton);
 
         buttonGroup1.add(inputDcRadioButton);
+        inputDcRadioButton.setFont(fontScheme.getGuiFont());
         inputDcRadioButton.setText("Откр.");
+        inputDcRadioButton.setToolTipText("Открытый вход, любой сигнал");
         inputDcRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputDcRadioButtonActionPerformed(evt);
@@ -498,12 +508,14 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel6, gridBagConstraints);
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Синхронизация"));
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Синхронизация", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel7.setLayout(new java.awt.GridLayout(1, 0));
 
         buttonGroup2.add(syncAutoRadioButton);
+        syncAutoRadioButton.setFont(fontScheme.getGuiFont());
         syncAutoRadioButton.setSelected(true);
         syncAutoRadioButton.setText("Авто");
+        syncAutoRadioButton.setToolTipText("Автоматическая синхронизация");
         syncAutoRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 syncAutoRadioButtonActionPerformed(evt);
@@ -512,7 +524,9 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel7.add(syncAutoRadioButton);
 
         buttonGroup2.add(synchNoneRadioButton);
+        synchNoneRadioButton.setFont(fontScheme.getGuiFont());
         synchNoneRadioButton.setText("Нет");
+        synchNoneRadioButton.setToolTipText("Без синхронизации");
         synchNoneRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchNoneRadioButtonActionPerformed(evt);
@@ -521,7 +535,9 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel7.add(synchNoneRadioButton);
 
         buttonGroup2.add(synchManualRadioButton);
+        synchManualRadioButton.setFont(fontScheme.getGuiFont());
         synchManualRadioButton.setText("Ручн.");
+        synchManualRadioButton.setToolTipText("Ручная синхронизация");
         synchManualRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchManualRadioButtonActionPerformed(evt);
@@ -535,12 +551,14 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel7, gridBagConstraints);
 
-        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder("Триггер"));
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Триггер", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel8.setLayout(new java.awt.GridLayout(1, 0));
 
         buttonGroup3.add(synchFrontRadioButton);
+        synchFrontRadioButton.setFont(fontScheme.getGuiFont());
         synchFrontRadioButton.setSelected(true);
         synchFrontRadioButton.setText("Фронт");
+        synchFrontRadioButton.setToolTipText("Синхронизировать по нарастанию сигнала");
         synchFrontRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchFrontRadioButtonActionPerformed(evt);
@@ -549,7 +567,9 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel8.add(synchFrontRadioButton);
 
         buttonGroup3.add(synchCutRadioButton);
+        synchCutRadioButton.setFont(fontScheme.getGuiFont());
         synchCutRadioButton.setText("Спад");
+        synchCutRadioButton.setToolTipText("Синхронизхировать по убыванию сигнала");
         synchCutRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 synchCutRadioButtonActionPerformed(evt);
@@ -563,13 +583,15 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel8, gridBagConstraints);
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Уровень синхронизации"));
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Уровень синхронизации", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel2.setLayout(new java.awt.GridBagLayout());
 
+        synchLevelSlider.setFont(fontScheme.getGuiFont());
         synchLevelSlider.setMajorTickSpacing(50);
         synchLevelSlider.setMaximum(200);
         synchLevelSlider.setMinorTickSpacing(10);
         synchLevelSlider.setPaintTicks(true);
+        synchLevelSlider.setToolTipText("Установить уровень синхронизации");
         synchLevelSlider.setValue(100);
         synchLevelSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -590,13 +612,15 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel2, gridBagConstraints);
 
-        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Смещение входа"));
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Смещение входа", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel9.setLayout(new java.awt.GridBagLayout());
 
+        dcOffsetSlider.setFont(fontScheme.getGuiFont());
         dcOffsetSlider.setMajorTickSpacing(50);
         dcOffsetSlider.setMaximum(250);
         dcOffsetSlider.setMinorTickSpacing(10);
         dcOffsetSlider.setPaintTicks(true);
+        dcOffsetSlider.setToolTipText("Установите смещение входа по постоянному току");
         dcOffsetSlider.setValue(125);
         dcOffsetSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -612,7 +636,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel9.add(dcOffsetSlider, gridBagConstraints);
 
+        autoDcCheckBox.setFont(fontScheme.getGuiFont());
         autoDcCheckBox.setText("Авто");
+        autoDcCheckBox.setToolTipText("Отслеживать постоянную составляющуу и пытаться компенсировать");
         autoDcCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 autoDcCheckBoxActionPerformed(evt);
@@ -632,10 +658,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel9, gridBagConstraints);
 
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder("Устройство"));
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Устройство", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel10.setLayout(new java.awt.GridBagLayout());
 
+        startButton.setFont(fontScheme.getGuiFont());
         startButton.setText("Старт");
+        startButton.setToolTipText("Нажмите для запуска работы");
         startButton.setEnabled(false);
         startButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -651,7 +679,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel10.add(startButton, gridBagConstraints);
 
+        stopButton.setFont(fontScheme.getGuiFont());
         stopButton.setText("Стоп");
+        stopButton.setToolTipText("Нажмите для остаовки работы");
         stopButton.setEnabled(false);
         stopButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -661,23 +691,29 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel10.add(stopButton, gridBagConstraints);
+
+        jPanel13.setLayout(new java.awt.GridBagLayout());
+
+        portsComboBox.setFont(fontScheme.getGuiFont());
+        portsComboBox.setToolTipText("Выберите порт");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
-        jPanel10.add(portsComboBox, gridBagConstraints);
+        jPanel13.add(portsComboBox, gridBagConstraints);
 
+        searchPortsButton.setFont(fontScheme.getGuiFont());
         searchPortsButton.setText("?");
+        searchPortsButton.setToolTipText("Нажмите для поиска портов");
         searchPortsButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 searchPortsButtonActionPerformed(evt);
@@ -685,10 +721,19 @@ public class MainFrame extends javax.swing.JFrame {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
-        jPanel10.add(searchPortsButton, gridBagConstraints);
+        jPanel13.add(searchPortsButton, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel10.add(jPanel13, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -697,11 +742,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel10, gridBagConstraints);
 
-        jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder("Измерения"));
+        jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel12.setLayout(new java.awt.GridBagLayout());
 
-        vminLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vminLabel.setFont(fontScheme.getValFont());
         vminLabel.setText("Vmin");
+        vminLabel.setToolTipText("Величина минимального напряжения");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -711,8 +757,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(vminLabel, gridBagConstraints);
 
-        vmaxLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vmaxLabel.setFont(fontScheme.getValFont());
         vmaxLabel.setText("Vmax");
+        vmaxLabel.setToolTipText("Величина максимального напряжения");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -722,8 +769,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(vmaxLabel, gridBagConstraints);
 
-        vppLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vppLabel.setFont(fontScheme.getValFont());
         vppLabel.setText("Vp-p");
+        vppLabel.setToolTipText("Разница максимального и минимального напряжений");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -733,8 +781,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(vppLabel, gridBagConstraints);
 
-        vrmsLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        vrmsLabel.setFont(fontScheme.getValFont());
         vrmsLabel.setText("Vrms");
+        vrmsLabel.setToolTipText("Среднеквадратическое напряжение");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
@@ -744,8 +793,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(vrmsLabel, gridBagConstraints);
 
-        deltaVLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        deltaVLabel.setFont(fontScheme.getValFont());
         deltaVLabel.setText("ΔV");
+        deltaVLabel.setToolTipText("Разница напряжений по горизонтальным линейкам");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
@@ -755,8 +805,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(deltaVLabel, gridBagConstraints);
 
-        deltaTLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        deltaTLabel.setFont(fontScheme.getValFont());
         deltaTLabel.setText("ΔT");
+        deltaTLabel.setToolTipText("Величина времени между вертикальными линейками");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
@@ -766,8 +817,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel12.add(deltaTLabel, gridBagConstraints);
 
-        freqLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        freqLabel.setFont(fontScheme.getValFont());
         freqLabel.setText("f");
+        freqLabel.setToolTipText("Частота");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 6;
@@ -784,11 +836,13 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel12, gridBagConstraints);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Режим работы"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Режим работы", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
+        continuousCheckBox.setFont(fontScheme.getGuiFont());
         continuousCheckBox.setSelected(true);
         continuousCheckBox.setText("Непрерывно");
+        continuousCheckBox.setToolTipText("Выберите непрерывный или пошаговый режим");
         continuousCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 continuousCheckBoxActionPerformed(evt);
@@ -801,7 +855,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weighty = 1.0;
         jPanel1.add(continuousCheckBox, gridBagConstraints);
 
+        stepButton.setFont(fontScheme.getGuiFont());
         stepButton.setText("Шаг");
+        stepButton.setToolTipText("Нажмите для выполнения следующего шага");
         stepButton.setEnabled(false);
         stepButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -824,10 +880,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel1, gridBagConstraints);
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Сохранить"));
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Сохранить", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel11.setLayout(new java.awt.GridBagLayout());
 
+        pngButton.setFont(fontScheme.getGuiFont());
         pngButton.setText("PNG");
+        pngButton.setToolTipText("Сохранить изображение в файл PNG");
         pngButton.setEnabled(false);
         pngButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -841,7 +899,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel11.add(pngButton, gridBagConstraints);
 
+        txtButton.setFont(fontScheme.getGuiFont());
         txtButton.setText("TXT");
+        txtButton.setToolTipText("Сохранить данные в тектовый файл");
         txtButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -850,7 +910,9 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel11.add(txtButton, gridBagConstraints);
 
+        htmlButton.setFont(fontScheme.getGuiFont());
         htmlButton.setText("HTML");
+        htmlButton.setToolTipText("Сохранить как веб-страницу");
         htmlButton.setEnabled(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
@@ -1040,6 +1102,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel12;
+    private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
