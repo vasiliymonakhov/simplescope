@@ -213,7 +213,9 @@ class Result {
             }
 
             // Отладка - меандр
-            //value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000: Const.ADC_MIDDLE - 1000;
+            // value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000 : Const.ADC_MIDDLE - 1000;
+            // положительный меандр
+            // value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000 : Const.ADC_MIDDLE;
             // Отладка - синус
             //value = Const.ADC_MIDDLE + (int)Math.round(1000 * Math.sin(j * Math.PI * 3 /Const.ADC_DATA_BLOCK_SIZE));
             // запись сырых данных от АЦП для построения графика
@@ -246,9 +248,22 @@ class Result {
      */
     private void processAutoFreq(boolean autoFreq) {
         if (autoFreq) {
-            // выполнить поиск переходов через 0 по фронту
+            // попытаемся найти по очень крутому фронту
+            int r1 = searchCoolSignalFront(1);
+            if (r1 >= 2) {
+                // что-то нашли
+                // продолжить поиск
+                int r2 = searchCoolSignalFront(r1 + 2);
+                if (r2 >= r1) {
+                    // нашли вторую точку
+                    leftRulerPos = r1;
+                    rightRulerPos = r2;
+                    return;
+                }
+            }
+            // не нашли, выполнить поиск переходов через 0 по фронту
             // начать со второй точки
-            int r1 = searchSignalFront(1);
+            r1 = searchSignalFront(1);
             if (r1 >= 2) {
                 // что-то нашли
                 // продолжить поиск
@@ -257,19 +272,20 @@ class Result {
                     // нашли вторую точку
                     leftRulerPos = r1;
                     rightRulerPos = r2;
+                    return;
                 }
-            } else {
-                // не нашли, попытаемся найти по срезу
-                r1 = searchSignalCutoff(1);
-                if (r1 >= 2) {
-                    // что-то нашли
-                    // продолжить поиск
-                    int r2 = searchSignalCutoff(r1 + 2);
-                    if (r2 >= r1) {
-                        // нашли вторую точку
-                        leftRulerPos = r1;
-                        rightRulerPos = r2;
-                    }
+            }
+            // не нашли, попытаемся найти по срезу
+            r1 = searchSignalCutoff(1);
+            if (r1 >= 2) {
+                // что-то нашли
+                // продолжить поиск
+                int r2 = searchSignalCutoff(r1 + 2);
+                if (r2 >= r1) {
+                    // нашли вторую точку
+                    leftRulerPos = r1;
+                    rightRulerPos = r2;
+                    return;
                 }
             }
         } else {
@@ -277,6 +293,26 @@ class Result {
             leftRulerPos = -1;
             rightRulerPos = -1;
         }
+    }
+
+    /**
+     * Найти в массиве напряжений точку, в которой напряжение резко возрастает
+     *
+     * @param from с какой точки начать поиск
+     * @return номер найденной точки или -1 если подходящей точки не нашлось
+     */
+    private int searchCoolSignalFront(int from) {
+        double trig = Const.VOLTAGES[currentVoltageIndex] / 10;
+        for (int i = from; i < Const.ADC_DATA_BLOCK_SIZE - 1; i++) {
+            // взять 2 идущих подряд значений напряжения
+            double v1 = voltages[i - 1];
+            double v2 = voltages[i];
+            if (v1 < v2 && (v2 - v1 >= trig)) {
+                // нашли резкий скачек напряжения на одну клетку скопа
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -292,8 +328,7 @@ class Result {
             double v1 = voltages[i - 1];
             double v2 = voltages[i];
             double v3 = voltages[i + 1];
-            if (v1 < 0 && v3 > 0
-                    && v1 < v2 && v2 < v3) {
+            if (v1 < 0 && v3 > 0 && v1 < v2 && v2 < v3) {
                 return i;
             }
         }
@@ -301,7 +336,7 @@ class Result {
     }
 
     /**
-     * Найти в массиве напряжений точку, в которой напряжение возрастает и
+     * Найти в массиве напряжений точку, в которой напряжение спадает и
      * пересекает нуль
      *
      * @param from с какой точки начать поиск
@@ -313,8 +348,7 @@ class Result {
             double v1 = voltages[i - 1];
             double v2 = voltages[i];
             double v3 = voltages[i + 1];
-            if (v1 > 0 && v3 < 0
-                    && v1 > v2 && v2 > v3) {
+            if (v1 > 0 && v3 < 0 && v1 > v2 && v2 > v3) {
                 return i;
             }
         }
