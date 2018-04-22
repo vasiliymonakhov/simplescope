@@ -19,7 +19,8 @@ public class MainFrame extends javax.swing.JFrame {
 
     public MainFrame() {
         initComponents();
-        scopeParentPanel.add(sp);
+        scopeParentPanel.add(scopeRenderPanel);
+        harmParentPanel.add(harmRenderPanel);
         searchPorts();
     }
 
@@ -36,7 +37,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
-    private final DeviceController dc = new DeviceController(new Runnable() {
+    private final DeviceController deviceController = new DeviceController(new Runnable() {
         @Override
         public void run() {
             startButton.setEnabled(true);
@@ -46,7 +47,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
     });
 
-    private final ScopeRenderer sr = new ScopeRenderer();
+    private final ScopeRenderer scopeRenderer = new ScopeRenderer();
 
     private Thread workThread;
 
@@ -73,7 +74,7 @@ public class MainFrame extends javax.swing.JFrame {
                             enableStepButtons(true);
                             continue;
                         }
-                        dc.getADCResult();
+                        deviceController.getADCResult();
                     }
                     updateDeviceSettings();
                 }
@@ -84,20 +85,24 @@ public class MainFrame extends javax.swing.JFrame {
     };
 
     void makePicture() throws InterruptedException {
-        Rectangle r = sp.getBounds();
-        currentResult = dc.getADCResult();
+        Rectangle r = scopeRenderPanel.getBounds();
+        currentResult = deviceController.getADCResult();
         autoDcModeAdjust(currentResult);
-        sr.renderAndUpdateRulers(r.width, r.height, currentResult);
+        scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
+        scopeRenderer.renderHarmAnalyser(r.width, r.height);
         drawVoltagesAndTimeFrequency(currentResult);
-        sp.copyImage(currentResult.getImage());
+        scopeRenderPanel.copyImage(currentResult.getScopeImage());
+        harmRenderPanel.copyImage(currentResult.getHarmImage());
     }
 
     private void redrawAndMakePicture() {
-        Rectangle r = sp.getBounds();
+        Rectangle r = scopeRenderPanel.getBounds();
         try {
-            sr.renderAndUpdateRulers(r.width, r.height, currentResult);
+            scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
+            scopeRenderer.renderHarmAnalyser(r.width, r.height);
             drawVoltagesAndTimeFrequency(currentResult);
-            sp.copyImage(currentResult.getImage());
+            scopeRenderPanel.copyImage(currentResult.getScopeImage());
+            harmRenderPanel.copyImage(currentResult.getHarmImage());
         } catch (InterruptedException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps!", ex);
         }
@@ -114,7 +119,7 @@ public class MainFrame extends javax.swing.JFrame {
                     workThread = new Thread(runer);
                     workThread.start();
                 }
-                dc.open((String) portsComboBox.getSelectedItem());
+                deviceController.open((String) portsComboBox.getSelectedItem());
             } catch (SerialPortException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка запуска", ex);
             }
@@ -123,10 +128,12 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void stop() {
         stopButton.setEnabled(false);
-        dc.close();
+        deviceController.close();
     }
 
-    private final ScopePanel sp = new ScopePanel();
+    private final RenderPanel scopeRenderPanel = new RenderPanel();
+
+    private final RenderPanel harmRenderPanel = new RenderPanel();
 
     void drawVoltagesAndTimeFrequency(Result adcResult) {
         vminLabel.setText("Vmin = " + Utils.voltageToString(adcResult.getVMin()));
@@ -136,6 +143,7 @@ public class MainFrame extends javax.swing.JFrame {
         deltaVLabel.setText("ΔV = " + Utils.voltageToString(adcResult.getDeltaV()));
         deltaTLabel.setText("ΔT = " + Utils.timeToString(adcResult.getDeltaT()));
         freqLabel.setText("f = " + Utils.frequencyToString(1d / adcResult.getDeltaT()));
+        kHarmLabel.setText("Kh = " + Utils.valueToPercent(adcResult.getKHarm()));
     }
 
     private int inputMode;
@@ -148,13 +156,13 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             switch (inputMode) {
                 case 0:
-                    dc.switchInputToAc();
+                    deviceController.switchInputToAc();
                     break;
                 case 1:
-                    dc.switchInputToGnd();
+                    deviceController.switchInputToGnd();
                     break;
                 case 2:
-                    dc.switchInputToDc();
+                    deviceController.switchInputToDc();
                     break;
             }
         } catch (SerialPortException ex) {
@@ -170,13 +178,13 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             switch (synchMode) {
                 case 0:
-                    dc.switchSyncToAuto(triggerMode);
+                    deviceController.switchSyncToAuto(triggerMode);
                     break;
                 case 1:
-                    dc.switchSyncToNone();
+                    deviceController.switchSyncToNone();
                     break;
                 case 2:
-                    dc.switchSyncToLevel(triggerLevel, triggerMode);
+                    deviceController.switchSyncToLevel(triggerLevel, triggerMode);
                     break;
             }
         } catch (SerialPortException ex) {
@@ -200,7 +208,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void updateTime() {
         try {
-            dc.switchTime(currentTime);
+            deviceController.switchTime(currentTime);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены времени развёртки", ex);
         }
@@ -214,7 +222,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void updateVoltage() {
         try {
-            dc.switchVoltage(currentVoltage);
+            deviceController.switchVoltage(currentVoltage);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены предела измерений", ex);
         }
@@ -226,7 +234,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     void updateDcOffset() {
         try {
-            dc.setZeroLevel(dcLevel);
+            deviceController.setZeroLevel(dcLevel);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка изменения смещения", ex);
         }
@@ -237,7 +245,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     private void updateDeviceSettings() {
-        if (dc.isOpen()) {
+        if (deviceController.isOpen()) {
             updateTime();
             updateVoltage();
             updateSynchro();
@@ -283,7 +291,6 @@ public class MainFrame extends javax.swing.JFrame {
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
         buttonGroup3 = new javax.swing.ButtonGroup();
-        scopeParentPanel = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         rangeComboBox = new javax.swing.JComboBox();
@@ -315,14 +322,6 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel13 = new javax.swing.JPanel();
         portsComboBox = new javax.swing.JComboBox();
         searchPortsButton = new javax.swing.JButton();
-        jPanel12 = new javax.swing.JPanel();
-        vminLabel = new javax.swing.JLabel();
-        vmaxLabel = new javax.swing.JLabel();
-        vppLabel = new javax.swing.JLabel();
-        vrmsLabel = new javax.swing.JLabel();
-        deltaVLabel = new javax.swing.JLabel();
-        deltaTLabel = new javax.swing.JLabel();
-        freqLabel = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         continuousCheckBox = new javax.swing.JCheckBox();
         stepButton = new javax.swing.JButton();
@@ -331,26 +330,24 @@ public class MainFrame extends javax.swing.JFrame {
         txtButton = new javax.swing.JButton();
         htmlButton = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        jPanel14 = new javax.swing.JPanel();
+        autoFreqCheckBox = new javax.swing.JCheckBox();
+        jPanel12 = new javax.swing.JPanel();
+        vminLabel = new javax.swing.JLabel();
+        vmaxLabel = new javax.swing.JLabel();
+        vppLabel = new javax.swing.JLabel();
+        vrmsLabel = new javax.swing.JLabel();
+        deltaVLabel = new javax.swing.JLabel();
+        deltaTLabel = new javax.swing.JLabel();
+        freqLabel = new javax.swing.JLabel();
+        kHarmLabel = new javax.swing.JLabel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        scopeParentPanel = new javax.swing.JPanel();
+        harmParentPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
         getContentPane().setLayout(new java.awt.GridBagLayout());
-
-        scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
-        scopeParentPanel.setPreferredSize(new java.awt.Dimension(600, 600));
-        scopeParentPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                scopeParentPanelMouseDragged(evt);
-            }
-        });
-        scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        getContentPane().add(scopeParentPanel, gridBagConstraints);
 
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel3.setLayout(new java.awt.GridBagLayout());
@@ -742,100 +739,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel3.add(jPanel10, gridBagConstraints);
 
-        jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel12.setLayout(new java.awt.GridBagLayout());
-
-        vminLabel.setFont(fontScheme.getValFont());
-        vminLabel.setText("Vmin");
-        vminLabel.setToolTipText("Величина минимального напряжения");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(vminLabel, gridBagConstraints);
-
-        vmaxLabel.setFont(fontScheme.getValFont());
-        vmaxLabel.setText("Vmax");
-        vmaxLabel.setToolTipText("Величина максимального напряжения");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(vmaxLabel, gridBagConstraints);
-
-        vppLabel.setFont(fontScheme.getValFont());
-        vppLabel.setText("Vp-p");
-        vppLabel.setToolTipText("Разница максимального и минимального напряжений");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(vppLabel, gridBagConstraints);
-
-        vrmsLabel.setFont(fontScheme.getValFont());
-        vrmsLabel.setText("Vrms");
-        vrmsLabel.setToolTipText("Среднеквадратическое напряжение");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(vrmsLabel, gridBagConstraints);
-
-        deltaVLabel.setFont(fontScheme.getValFont());
-        deltaVLabel.setText("ΔV");
-        deltaVLabel.setToolTipText("Разница напряжений по горизонтальным линейкам");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(deltaVLabel, gridBagConstraints);
-
-        deltaTLabel.setFont(fontScheme.getValFont());
-        deltaTLabel.setText("ΔT");
-        deltaTLabel.setToolTipText("Величина времени между вертикальными линейками");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(deltaTLabel, gridBagConstraints);
-
-        freqLabel.setFont(fontScheme.getValFont());
-        freqLabel.setText("f");
-        freqLabel.setToolTipText("Частота");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 6;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel12.add(freqLabel, gridBagConstraints);
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 10;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        jPanel3.add(jPanel12, gridBagConstraints);
-
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Режим работы", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
@@ -935,11 +838,117 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weighty = 1.0;
         jPanel3.add(filler1, gridBagConstraints);
 
+        jPanel14.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Частота", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel14.setLayout(new java.awt.GridBagLayout());
+
+        autoFreqCheckBox.setFont(fontScheme.getGuiFont());
+        autoFreqCheckBox.setText("Авто");
+        autoFreqCheckBox.setToolTipText("Автоматически определять частоту сигнала");
+        autoFreqCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                autoFreqCheckBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel14.add(autoFreqCheckBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        jPanel3.add(jPanel14, gridBagConstraints);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         getContentPane().add(jPanel3, gridBagConstraints);
+
+        jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel12.setLayout(new java.awt.GridLayout());
+
+        vminLabel.setFont(fontScheme.getValFont());
+        vminLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        vminLabel.setText("Vmin");
+        vminLabel.setToolTipText("Величина минимального напряжения");
+        jPanel12.add(vminLabel);
+
+        vmaxLabel.setFont(fontScheme.getValFont());
+        vmaxLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        vmaxLabel.setText("Vmax");
+        vmaxLabel.setToolTipText("Величина максимального напряжения");
+        jPanel12.add(vmaxLabel);
+
+        vppLabel.setFont(fontScheme.getValFont());
+        vppLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        vppLabel.setText("Vp-p");
+        vppLabel.setToolTipText("Разница максимального и минимального напряжений");
+        jPanel12.add(vppLabel);
+
+        vrmsLabel.setFont(fontScheme.getValFont());
+        vrmsLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        vrmsLabel.setText("Vrms");
+        vrmsLabel.setToolTipText("Среднеквадратическое напряжение");
+        jPanel12.add(vrmsLabel);
+
+        deltaVLabel.setFont(fontScheme.getValFont());
+        deltaVLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        deltaVLabel.setText("ΔV");
+        deltaVLabel.setToolTipText("Разница напряжений по горизонтальным линейкам");
+        jPanel12.add(deltaVLabel);
+
+        deltaTLabel.setFont(fontScheme.getValFont());
+        deltaTLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        deltaTLabel.setText("ΔT");
+        deltaTLabel.setToolTipText("Величина времени между вертикальными линейками");
+        jPanel12.add(deltaTLabel);
+
+        freqLabel.setFont(fontScheme.getValFont());
+        freqLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        freqLabel.setText("f");
+        freqLabel.setToolTipText("Частота");
+        jPanel12.add(freqLabel);
+
+        kHarmLabel.setFont(fontScheme.getValFont());
+        kHarmLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        kHarmLabel.setText("Kh");
+        kHarmLabel.setToolTipText("Коэффициент гармоник");
+        jPanel12.add(kHarmLabel);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        getContentPane().add(jPanel12, gridBagConstraints);
+
+        jTabbedPane1.setFont(fontScheme.getGuiFont());
+
+        scopeParentPanel.setToolTipText("Осциллоскоп");
+        scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
+        scopeParentPanel.setPreferredSize(new java.awt.Dimension(600, 600));
+        scopeParentPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                scopeParentPanelMouseDragged(evt);
+            }
+        });
+        scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
+        jTabbedPane1.addTab("Осциллоскоп", scopeParentPanel);
+
+        harmParentPanel.setToolTipText("Анализ гармоник");
+        harmParentPanel.setLayout(new java.awt.GridLayout());
+        jTabbedPane1.addTab("Анализ гармоник", harmParentPanel);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        getContentPane().add(jTabbedPane1, gridBagConstraints);
 
         pack();
         setLocationRelativeTo(null);
@@ -1063,11 +1072,18 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_pngButtonActionPerformed
 
     private void scopeParentPanelMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseDragged
-        sr.addMouseClick(evt.getX(), evt.getY());
+        if (scopeRenderer.addMouseClick(evt.getX(), evt.getY())) {
+            autoFreqCheckBox.setSelected(false);
+            deviceController.setAutoFreq(false);
+        }
         if (!continuousMode) {
             redrawAndMakePicture();
         }
     }//GEN-LAST:event_scopeParentPanelMouseDragged
+
+    private void autoFreqCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoFreqCheckBoxActionPerformed
+        deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
+    }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
     public static void main(String args[]) {
 
@@ -1081,6 +1097,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox autoDcCheckBox;
+    private javax.swing.JCheckBox autoFreqCheckBox;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
@@ -1092,6 +1109,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel deltaVLabel;
     private javax.swing.Box.Filler filler1;
     private javax.swing.JLabel freqLabel;
+    private javax.swing.JPanel harmParentPanel;
     private javax.swing.JButton htmlButton;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;
@@ -1103,6 +1121,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
+    private javax.swing.JPanel jPanel14;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -1111,6 +1130,8 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel kHarmLabel;
     private javax.swing.JButton pngButton;
     private javax.swing.JComboBox portsComboBox;
     private javax.swing.JComboBox rangeComboBox;
@@ -1133,7 +1154,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel vrmsLabel;
     // End of variables declaration//GEN-END:variables
 
-    private class ScopePanel extends JPanel {
+    private class RenderPanel extends JPanel {
 
         private BufferedImage image;
 
@@ -1143,8 +1164,8 @@ public class MainFrame extends javax.swing.JFrame {
             }
             Graphics g = image.getGraphics();
             g.drawImage(bi, 0, 0, null);
-            sp.repaint();
-            sr.returnUsedImage(bi);
+            repaint();
+            scopeRenderer.returnUsedImage(bi);
         }
 
         @Override

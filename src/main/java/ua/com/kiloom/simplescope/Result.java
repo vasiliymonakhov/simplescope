@@ -1,6 +1,7 @@
 package ua.com.kiloom.simplescope;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 /**
  * Результат измерений
@@ -180,12 +181,23 @@ class Result {
     }
 
     /**
+     * положение левой линейки в массиве данных от АЦП
+     */
+    private int leftRulerPos = -1;
+
+    /**
+     * Положение правой линейки в массиве данных от АЦП
+     */
+    private int rightRulerPos = -1;
+
+    /**
      * Обрабатывает сырые данные от АЦП ввиде массива байтов
      *
      * @param newBlock сырые данные от АЦП ввиде массива байтов
+     * @param autoFreq требуется автоматически определить частоту сигнала
      * @return true если данные корректные
      */
-    boolean processADCData(byte[] newBlock) {
+    boolean processADCData(byte[] newBlock, boolean autoFreq) {
         int j = 0;
         // вычисление напряжений
         vMin = Double.POSITIVE_INFINITY;
@@ -199,6 +211,11 @@ class Result {
                 // очевидно, что там какой-то мусор и этот блок стоит забраковать
                 return false;
             }
+
+            // Отладка - меандр
+            //value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000: Const.ADC_MIDDLE - 1000;
+            // Отладка - синус
+            //value = Const.ADC_MIDDLE + (int)Math.round(1000 * Math.sin(j * Math.PI * 3 /Const.ADC_DATA_BLOCK_SIZE));
             // запись сырых данных от АЦП для построения графика
             adcData[j] = value;
             // вычислим мгновенное значение напряжения
@@ -218,7 +235,163 @@ class Result {
         }
         // и среднеквадратического напряжения
         vRms = Math.sqrt(squareVoltage / Const.ADC_DATA_BLOCK_SIZE);
+        processAutoFreq(autoFreq);
         return true;
+    }
+
+    /**
+     * Определить частоту сигнала
+     *
+     * @param autoFreq определять или нет
+     */
+    private void processAutoFreq(boolean autoFreq) {
+        if (autoFreq) {
+            // выполнить поиск переходов через 0 по фронту
+            // начать со второй точки
+            int r1 = searchSignalFront(1);
+            if (r1 >= 2) {
+                // что-то нашли
+                // продолжить поиск
+                int r2 = searchSignalFront(r1 + 2);
+                if (r2 >= r1) {
+                    // нашли вторую точку
+                    leftRulerPos = r1;
+                    rightRulerPos = r2;
+                }
+            } else {
+                // не нашли, попытаемся найти по срезу
+                r1 = searchSignalCutoff(1);
+                if (r1 >= 2) {
+                    // что-то нашли
+                    // продолжить поиск
+                    int r2 = searchSignalCutoff(r1 + 2);
+                    if (r2 >= r1) {
+                        // нашли вторую точку
+                        leftRulerPos = r1;
+                        rightRulerPos = r2;
+                    }
+                }
+            }
+        } else {
+            // положение линеек будет задано вручную
+            leftRulerPos = -1;
+            rightRulerPos = -1;
+        }
+    }
+
+    /**
+     * Найти в массиве напряжений точку, в которой напряжение возрастает и
+     * пересекает нуль
+     *
+     * @param from с какой точки начать поиск
+     * @return номер найденной точки или -1 если подходящей точки не нашлось
+     */
+    private int searchSignalFront(int from) {
+        for (int i = from; i < Const.ADC_DATA_BLOCK_SIZE - 1; i++) {
+            // взять 3 идущих подряд значений напряжения
+            double v1 = voltages[i - 1];
+            double v2 = voltages[i];
+            double v3 = voltages[i + 1];
+            if (v1 < 0 && v3 > 0
+                    && v1 < v2 && v2 < v3) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Найти в массиве напряжений точку, в которой напряжение возрастает и
+     * пересекает нуль
+     *
+     * @param from с какой точки начать поиск
+     * @return номер найденной точки или -1 если подходящей точки не нашлось
+     */
+    private int searchSignalCutoff(int from) {
+        for (int i = from; i < Const.ADC_DATA_BLOCK_SIZE - 1; i++) {
+            // взять 3 идущих подряд значений напряжения
+            double v1 = voltages[i - 1];
+            double v2 = voltages[i];
+            double v3 = voltages[i + 1];
+            if (v1 > 0 && v3 < 0
+                    && v1 > v2 && v2 > v3) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Доля каждой гармоники
+     */
+    private final double[] harmonics = new double[Const.HARMONICS_COUNT];
+
+    /**
+     * Коэффициент гармоник
+     */
+    private double kHarm;
+
+    /**
+     * Вычислить долю гармоник для периодического колебания, находящегося между
+     * двумя отметками графика
+     *
+     * @param fromT от какой отметки начать
+     * @param toT до ккой отметки
+     */
+    void processHarmonicsData(int fromT, int toT) {
+        if (fromT >= Const.ADC_DATA_BLOCK_SIZE || toT >= Const.ADC_DATA_BLOCK_SIZE) {
+            kHarm = 0;
+            Arrays.fill(harmonics, 0);
+            return;
+        }
+        // определить количество значений ддля вычисления
+        int count = toT - fromT + 1;
+        // шаг изменения фазы синусоиды
+        double dfi = 2 * Math.PI / count;
+        // перебор заданного количества гармоник
+        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+            // это фаза
+            double fi = dfi / 2;
+            // приращение фазы на каждом следующем отсчёте в зависимости от порядкового номера гармоники
+            double sdfi = (i + 1) * dfi;
+            // тут накапливаются значения
+            double value = 0;
+            // перебираем все значения в нашем диапазоне
+            for (int j = fromT; j <= toT; j++) {
+                // интегрируем
+                value += voltages[j] * Math.sin(fi);
+                // фаза на следующем отсчёте
+                fi += sdfi;
+            }
+            // в данный момент есть накопленное значение гармоники
+            harmonics[i] = Math.abs(value);
+        }
+
+        // вычислить коэффициент гармоник
+        double total = 0;
+        for (int i = 1; i < Const.HARMONICS_COUNT; i++) {
+            total += getHarmonics()[i] * getHarmonics()[i];
+        }
+        kHarm = Math.sqrt(total) / getHarmonics()[0];
+
+        // теперь нужно просуммировать значения всех гармоник
+        double sum = 0;
+        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+            sum += getHarmonics()[i];
+        }
+        // здесь вычисляется доля каждой гармоники
+        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+            harmonics[i] /= sum;
+        }
+    }
+
+    /**
+     * Возвращает коэффиуиент гармоник
+     *
+     * @return коэффиуиент гармоник
+     */
+    double getKHarm() {
+        return kHarm;
     }
 
     /**
@@ -244,26 +417,76 @@ class Result {
     }
 
     /**
-     * готовое изображение
+     * готовое изображение осциллограммы
      */
-    private BufferedImage image;
+    private BufferedImage scopeImage;
 
     /**
-     * Возвращет изображение
+     * Возвращет изображение осциллограммы
      *
-     * @return изображение
+     * @return изображение осциллограммы
      */
-    BufferedImage getImage() {
-        return image;
+    BufferedImage getScopeImage() {
+        return scopeImage;
     }
 
     /**
-     * Задаёт изображение
+     * Задаёт изображение осциллограммы
      *
-     * @param image изображение
+     * @param scopeImage изображение осциллограммы
      */
-    void setImage(BufferedImage image) {
-        this.image = image;
+    void setScopeImage(BufferedImage scopeImage) {
+        this.scopeImage = scopeImage;
+    }
+
+    /**
+     * готовое изображение анализа гармоник
+     */
+    private BufferedImage harmImage;
+
+    /**
+     * Возвращет изображение анализа гармоник
+     *
+     * @return изображение анализа гармоник
+     */
+    BufferedImage getHarmImage() {
+        return harmImage;
+    }
+
+    /**
+     * Задаёт изображение анализа гармоник
+     *
+     * @param harmImage изображение осциллограммы
+     */
+    void setHarmImage(BufferedImage harmImage) {
+        this.harmImage = harmImage;
+    }
+
+    /**
+     * Возвращает массив значений гармоник
+     *
+     * @return массив значений гармоник
+     */
+    double[] getHarmonics() {
+        return harmonics;
+    }
+
+    /**
+     * Возвращает положение левой линейки
+     *
+     * @return положение левой линейки
+     */
+    int getLeftRulerPos() {
+        return leftRulerPos;
+    }
+
+    /**
+     * Возвращает положение правой линейки
+     *
+     * @return положение правой линейки
+     */
+    int getRightRulerPos() {
+        return rightRulerPos;
     }
 
 }

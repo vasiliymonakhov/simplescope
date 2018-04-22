@@ -66,4 +66,9 @@ class Const {
      */
     static final int ADC_MIDDLE = ADC_RANGE / 2;
 
+    /**
+     * количество вычисленных гармоник
+     */
+    static final int HARMONICS_COUNT = 10;
+
 }

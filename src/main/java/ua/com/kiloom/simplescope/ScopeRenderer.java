@@ -25,10 +25,11 @@ class ScopeRenderer {
     /**
      * Цветовая схема скопа
      */
-    private ColorScheme colorScheme = ColorScheme.getScheme("Оранжевая монохромная");
+    private ColorScheme colorScheme = ColorScheme.getScheme("Зелёная монохромная");
 
     /**
      * Устанавливает цветовую схему
+     *
      * @param colorScheme новая цветовая схема
      */
     void setColorScheme(ColorScheme colorScheme) {
@@ -42,6 +43,7 @@ class ScopeRenderer {
 
     /**
      * Устанавливает новую схему шрифтов
+     *
      * @param схема шрифтов
      */
     void setFontScheme(FontScheme fontScheme) {
@@ -165,7 +167,7 @@ class ScopeRenderer {
      * @param imageHeight высота области рисования
      * @param result набор данных от АЦП устройства
      */
-    void renderAndUpdateRulers(int imageWidth, int imageHeight, Result result) throws InterruptedException {
+    void renderScopeAndUpdateRulers(int imageWidth, int imageHeight, Result result) throws InterruptedException {
         this.result = result;
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
@@ -182,7 +184,7 @@ class ScopeRenderer {
         x_pos = (imageWidth - width) / 2;
         y_pos = (imageHeight - height) / 2;
         // нарисовать сетку
-        drawGrid(g);
+        drawScopeGrid(g);
         g.setStroke(normalStroke);
         // нарисовать линейки
         drawRulers(g);
@@ -192,14 +194,15 @@ class ScopeRenderer {
         // нарисовать луч
         drawRay(g);
         g.dispose();
-        result.setImage(image);
+        result.setScopeImage(image);
     }
 
     /**
-     * Рисует сетку
+     * Рисует сетку осциллоскопа
+     *
      * @param g графический контекст
      */
-    private void drawGrid(Graphics2D g) {
+    private void drawScopeGrid(Graphics2D g) {
         g.setStroke(gridStroke);
         int time = 0;
         int dtime = result.getTimePerCell();
@@ -223,6 +226,7 @@ class ScopeRenderer {
 
     /**
      * Нарисовать луч
+     *
      * @param g графический контекст
      */
     private void drawRay(Graphics2D g) {
@@ -327,11 +331,14 @@ class ScopeRenderer {
     private int lowerRuler = Const.ADC_RANGE / 4;
 
     /**
-     * Добавить координаты события от мыши относительно левого верхнего угла изображения
+     * Добавить координаты события от мыши относительно левого верхнего угла
+     * изображения
+     *
      * @param x по оси абсцисс
      * @param y по оси ординат
      */
-    void addMouseClick(int x, int y) {
+    boolean addMouseClick(int x, int y) {
+        boolean offAutoFreq = false;
         // проверить, попадает ли точка в область рисования графика
         if (x >= x_pos && x <= x_pos + width && y >= y_pos && y <= y_pos + height) {
             // найти расстояние от точки до каждой из линеек
@@ -350,8 +357,10 @@ class ScopeRenderer {
             // в зависимости от того, кто ближе, переместить линейку в эту точку
             if (min == dLeftRuler) {
                 leftRuler = xToHScale(x);
+                offAutoFreq = true;
             } else if (min == dRightRuler) {
                 rightRuler = xToHScale(x);
+                offAutoFreq = true;
             } else if (min == dUpperRuler) {
                 upperRuler = yToVScale(y);
             } else {
@@ -359,10 +368,12 @@ class ScopeRenderer {
                 lowerRuler = yToVScale(y);
             }
         }
+        return offAutoFreq;
     }
 
     /**
      * Преобразует ось абсцисс на изображении в позицию в выборке
+     *
      * @param x координата
      * @return позиция в выборке из АЦП
      */
@@ -372,6 +383,7 @@ class ScopeRenderer {
 
     /**
      * Преобразует ось ординат на изображении в значение выборки
+     *
      * @param x координата
      * @return значение выборки из АЦП
      */
@@ -392,9 +404,17 @@ class ScopeRenderer {
 
     /**
      * Нарисовать линейки
+     *
      * @param g графический контекст
      */
     void drawRulers(Graphics2D g) {
+        // проверить, не двигаются ли наши линейки автоматически
+        if (result.getLeftRulerPos() != -1) {
+            leftRuler = result.getLeftRulerPos();
+        }
+        if (result.getRightRulerPos() != -1) {
+            rightRuler = result.getRightRulerPos();
+        }
         // вычислить координаты линеек на изображении
         xLeftRuler = (int) Math.round(xScale * leftRuler + x_pos);
         xRightRuler = (int) Math.round(xScale * rightRuler + x_pos);
@@ -420,6 +440,7 @@ class ScopeRenderer {
 
     /**
      * Преобразует положение горизонтальной линейки в строку с напряжением
+     *
      * @param ruler положение линейки
      * @return строка со временем
      */
@@ -429,11 +450,99 @@ class ScopeRenderer {
 
     /**
      * Преобразует положение вертикальной линейки в строку со временем
+     *
      * @param ruler положение линейки
      * @return строка со временем
      */
     private String vRulerToString(int ruler) {
         return Utils.timeToString(result.adcTimeToRealTime(ruler));
+    }
+
+    /**
+     * Рисует изображение анализа гармоник
+     *
+     * @param imageWidth ширина области рисования
+     * @param imageHeight высота области рисования
+     * @throws InterruptedException
+     */
+    void renderHarmAnalyser(int imageWidth, int imageHeight) throws InterruptedException {
+        result.processHarmonicsData(leftRuler, rightRuler);
+        BufferedImage image = getImage(imageWidth, imageHeight);
+        Graphics2D g = (Graphics2D) image.getGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setFont(fontScheme.getScopeFont());
+        // залить цветом фона
+        g.setColor(colorScheme.getBackgroundColor());
+        g.fillRect(0, 0, imageWidth - 1, imageHeight - 1);
+        // нарисовать сетку анализатора гармоник
+        drawHarmAnalyserGrid(g);
+        // нарисовать рамку
+        g.setStroke(normalStroke);
+        g.setColor(colorScheme.getBorderColor());
+        g.drawRect(x_pos, y_pos, width, height);
+        // наристовать столбцы
+        drawHarmAnalyserBars(g);
+        result.setHarmImage(image);
+    }
+
+    /**
+     * Рисует сетку анализатора гармоник
+     *
+     * @param g графический контекст
+     */
+    private void drawHarmAnalyserGrid(Graphics2D g) {
+        g.setStroke(gridStroke);
+        for (int i = 0; i <= width; i += width / 10) {
+            g.setColor(colorScheme.getGridColor());
+            g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
+        }
+        double deltaPercent = 0.1d;
+        double percent = 1d;
+        for (int i = 0; i <= height; i += height / 10) {
+            g.setColor(colorScheme.getGridColor());
+            g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
+            // градуировка с шагом 10% слева
+            drawCenteredString(g, Utils.valueToPercent(percent), x_pos - H_GAP / 2, y_pos + i, colorScheme.getTextColor());
+            percent -= deltaPercent;
+        }
+    }
+
+    /**
+     * Рисует столбцы анализатора
+     *
+     * @param g графический контекст
+     */
+    private void drawHarmAnalyserBars(Graphics2D g) {
+        double[] harms = result.getHarmonics();
+        // ширина клетки
+        int cw = width / 10;
+        // ширина столбика
+        int bw = 6 * cw / 10;
+        // смещение столбиков
+        int xl = x_pos + (cw - bw) / 2;
+        // смещение центра надписи по горизонтали
+        int cx = x_pos + cw / 2;
+        // нижняя координата столбиков
+        int yl = y_pos + height;
+        // частота основной гармоники
+        double fr = 1 / result.getDeltaT();
+        // рисуем только первые 10 столбиков
+        for (int i = 0; i < 10; i ++) {
+            g.setColor(colorScheme.getGridColor());
+            // высота столбика
+            int bl = (int)(Math.round(harms[i] * height));
+            g.fillRect(xl, yl - bl, bw, bl);
+            g.setColor(colorScheme.getRayColor());
+            g.drawRect(xl, yl - bl, bw, bl);
+            // над столбиком нарисовать величину гармоники в %
+            drawCenteredString(g, Utils.valueToPercent(harms[i]), cx, y_pos + height - bl - V_GAP / 2, colorScheme.getTextColor());
+            // под столбиком частоту гармоники
+            drawCenteredString(g, Utils.frequencyToString(fr * (i + 1)), cx, y_pos + height + V_GAP / 2, colorScheme.getTextColor());
+            // сдвинуть на следующий столбик
+            xl += cw;
+            cx += cw;
+        }
     }
 
 }

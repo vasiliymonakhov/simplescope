@@ -307,6 +307,18 @@ public class DeviceController {
     }
 
     /**
+     * Требуется автоматически определить частоту сигнала
+     */
+    private volatile boolean autoFreq;
+
+    /**
+     * Включить или выключить автоматическое определение частоты
+     */
+    void setAutoFreq(boolean on) {
+        autoFreq = on;
+    }
+
+    /**
      * Обрабатывает данные от ЦАП
      *
      * @return объект с результатами обработки
@@ -318,7 +330,7 @@ public class DeviceController {
             lock.lock();
             // запись параметров выборки
             Result r = new Result(currentVoltageIndex, currentTimeIndex);
-            if (r.processADCData(newBlock)) {
+            if (r.processADCData(newBlock, autoFreq)) {
                 return r;
             }
             return null;

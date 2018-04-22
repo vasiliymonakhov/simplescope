@@ -62,4 +62,13 @@ public class Utils {
         }
         return String.format("%.2f%sHz", val, prefix);
     }
+
+    /**
+     * Превраяет долю в % с точностью 2 знака после запятой.
+     * @param val доля, где 1 соответсвуе 100%
+     * @return строка с процентами
+     */
+    static String valueToPercent(double val) {
+        return String.format("%.2f%%", val * 100d);
+    }
 }
