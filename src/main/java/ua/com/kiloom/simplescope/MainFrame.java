@@ -3,10 +3,13 @@ package ua.com.kiloom.simplescope;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import jssc.SerialPortException;
@@ -107,20 +110,22 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     private void drawResults() throws InterruptedException {
-        if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
-            Rectangle r = scopeRenderPanel.getBounds();
-            if (r.width != 0 && r.height != 0) {
-                scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
-                scopeRenderPanel.copyImage(currentResult.getScopeImage());
+        if (currentResult != null) {
+            if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+                Rectangle r = scopeRenderPanel.getBounds();
+                if (r.width != 0 && r.height != 0) {
+                    scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
+                    scopeRenderPanel.copyImage(currentResult.getScopeImage());
+                }
+            } else {
+                Rectangle r = harmRenderPanel.getBounds();
+                if (r.width != 0 && r.height != 0) {
+                    scopeRenderer.renderHarmAnalyser(r.width, r.height, currentResult);
+                    harmRenderPanel.copyImage(currentResult.getHarmImage());
+                }
             }
-        } else {
-            Rectangle r = harmRenderPanel.getBounds();
-            if (r.width != 0 && r.height != 0) {
-                scopeRenderer.renderHarmAnalyser(r.width, r.height, currentResult);
-                harmRenderPanel.copyImage(currentResult.getHarmImage());
-            }
+            drawVoltagesAndTimeFrequency(currentResult);
         }
-        drawVoltagesAndTimeFrequency(currentResult);
     }
 
     private void redrawAndMakePicture() {
@@ -355,6 +360,9 @@ public class MainFrame extends javax.swing.JFrame {
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         jPanel14 = new javax.swing.JPanel();
         autoFreqCheckBox = new javax.swing.JCheckBox();
+        jPanel15 = new javax.swing.JPanel();
+        leftOffsetButton = new javax.swing.JButton();
+        rightOffsetButton = new javax.swing.JButton();
         jPanel12 = new javax.swing.JPanel();
         vminLabel = new javax.swing.JLabel();
         vmaxLabel = new javax.swing.JLabel();
@@ -855,7 +863,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel3.add(jPanel11, gridBagConstraints);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 11;
+        gridBagConstraints.gridy = 12;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
@@ -880,9 +888,52 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridy = 11;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         jPanel3.add(jPanel14, gridBagConstraints);
+
+        jPanel15.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Сдвиг", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel15.setLayout(new java.awt.GridBagLayout());
+
+        leftOffsetButton.setFont(fontScheme.getGuiFont());
+        leftOffsetButton.setText("Влево");
+        leftOffsetButton.setToolTipText("Сдвинуть график влево");
+        leftOffsetButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                leftOffsetButtonMousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                leftOffsetButtonMouseReleased(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
+        jPanel15.add(leftOffsetButton, gridBagConstraints);
+
+        rightOffsetButton.setFont(fontScheme.getGuiFont());
+        rightOffsetButton.setText("Вправо");
+        rightOffsetButton.setToolTipText("Сдвинуть график вправо");
+        rightOffsetButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                rightOffsetButtonMousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                rightOffsetButtonMouseReleased(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
+        jPanel15.add(rightOffsetButton, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        jPanel3.add(jPanel15, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -1108,6 +1159,38 @@ public class MainFrame extends javax.swing.JFrame {
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
     }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
+    private final Timer leftTimer = new Timer(100, new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            deviceController.addTimeOffset(1);
+        }
+    });
+
+    private void leftOffsetButtonMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_leftOffsetButtonMousePressed
+        leftTimer.start();
+    }//GEN-LAST:event_leftOffsetButtonMousePressed
+
+    private void leftOffsetButtonMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_leftOffsetButtonMouseReleased
+        leftTimer.stop();
+    }//GEN-LAST:event_leftOffsetButtonMouseReleased
+
+    private final Timer rightTimer = new Timer(100, new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            deviceController.addTimeOffset(-1);
+        }
+    });
+
+    private void rightOffsetButtonMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_rightOffsetButtonMousePressed
+        rightTimer.start();
+    }//GEN-LAST:event_rightOffsetButtonMousePressed
+
+    private void rightOffsetButtonMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_rightOffsetButtonMouseReleased
+        rightTimer.stop();
+    }//GEN-LAST:event_rightOffsetButtonMouseReleased
+
     public static void main(String args[]) {
 
         EventQueue.invokeLater(new Runnable() {
@@ -1145,6 +1228,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
+    private javax.swing.JPanel jPanel15;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -1154,9 +1238,11 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JLabel kHarmLabel;
+    private javax.swing.JButton leftOffsetButton;
     private javax.swing.JButton pngButton;
     private javax.swing.JComboBox portsComboBox;
     private javax.swing.JComboBox rangeComboBox;
+    private javax.swing.JButton rightOffsetButton;
     private javax.swing.JPanel scopeParentPanel;
     private javax.swing.JButton searchPortsButton;
     private javax.swing.JButton startButton;
@@ -1181,9 +1267,14 @@ public class MainFrame extends javax.swing.JFrame {
 
         private BufferedImage image;
 
-        void copyImage(BufferedImage bi) {
-            image = bi;
+        void copyImage(BufferedImage bi) throws InterruptedException {
+            if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
+                image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
+            }
+            Graphics g = image.getGraphics();
+            g.drawImage(bi, 0, 0, null);
             repaint();
+            scopeRenderer.returnUsedImage(bi);
         }
 
         @Override
@@ -1194,12 +1285,6 @@ public class MainFrame extends javax.swing.JFrame {
                 int x = (w - image.getWidth()) / 2;
                 int y = (h - image.getHeight()) / 2;
                 g.drawImage(image, x, y, null);
-                try {
-                    scopeRenderer.returnUsedImage(image);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                image = null;
                 return;
             }
             g.setColor(colorScheme.getBackgroundColor());

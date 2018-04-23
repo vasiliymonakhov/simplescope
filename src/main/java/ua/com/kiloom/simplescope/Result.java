@@ -203,7 +203,15 @@ class Result {
         vMin = Double.POSITIVE_INFINITY;
         vMax = Double.NEGATIVE_INFINITY;
         double squareVoltage = 0;
-        for (int i = 0; i < Const.BYTES_BLOCK_SIZE - 1;) {
+        // определить размер полученного блока
+
+        int steps = Const.BYTES_BLOCK_SIZE - 1;
+        boolean needAppend = false;
+        if (newBlock.length < Const.BYTES_BLOCK_SIZE) {
+            steps = newBlock.length - 1;
+            needAppend = true;
+        }
+        for (int i = 0; i < steps;) {
             // преобразовать байты данныех в значение АЦП
             int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
             // проверить значение на допустимость
@@ -236,7 +244,14 @@ class Result {
             j++;
         }
         // и среднеквадратического напряжения
-        vRms = Math.sqrt(squareVoltage / Const.ADC_DATA_BLOCK_SIZE);
+        vRms = Math.sqrt(squareVoltage / j);
+        // если размер блока меньше, то добить остаток последними значениями
+        if (needAppend) {
+            for (int i = steps / 2; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+                adcData[i] = adcData[i - 1];
+                voltages[i] = voltages[i - 1];
+            }
+        }
         processAutoFreq(autoFreq);
         return true;
     }

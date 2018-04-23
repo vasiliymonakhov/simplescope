@@ -1,7 +1,8 @@
 package ua.com.kiloom.simplescope;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,12 +47,12 @@ public class DeviceController {
      * Очередь для байтов от АЦП. Сюда обработчик прерывания от
      * последовательного порта помещает массивы байтов.
      */
-    private final BlockingQueue<byte[]> bytesQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<byte[]> bytesQueue = new LinkedBlockingQueue<>();
 
     /**
      * Очередь обработанных данных от АЦП. Сюда помещаются вычисленные значения.
      */
-    private final BlockingQueue<Result> adcQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<Result> adcQueue = new LinkedBlockingQueue<>();
 
     /**
      * Флажок-сигнал для остановки получения данных от устройства. Чтобы
@@ -63,6 +64,18 @@ public class DeviceController {
     private boolean stop;
 
     /**
+     * Количество шагов, которые нужно пропустить
+     */
+    private final AtomicInteger timeOffset = new AtomicInteger();
+
+    /**
+     * Добавить время смещения по горизонтали для подстройки графика
+     */
+    void addTimeOffset(int time) {
+        timeOffset.addAndGet(time);
+    }
+
+    /**
      * Открыть устройство. Устанавливает связь с портом и запускает поток
      * обработки данных от АЦП.
      *
@@ -70,6 +83,7 @@ public class DeviceController {
      * @throws SerialPortException
      */
     void open(String portName) throws SerialPortException {
+        timeOffset.set(0);
         port = new SerialPort(portName);
         port.openPort();
         port.setParams(SerialPort.BAUDRATE_115200,
@@ -79,16 +93,19 @@ public class DeviceController {
         port.addEventListener(new SerialPortEventListener() {
             @Override
             public void serialEvent(SerialPortEvent event) {
-                if (event.getEventValue() >= Const.BYTES_BLOCK_SIZE) {
+                int offset = 2 * timeOffset.get();
+                if (event.getEventValue() >= Const.BYTES_BLOCK_SIZE + offset) {
                     try {
-                        byte[] data = port.readBytes(Const.BYTES_BLOCK_SIZE);
+                        byte[] data = port.readBytes(Const.BYTES_BLOCK_SIZE + offset);
                         bytesQueue.add(data);
+                        timeOffset.set(0);
                     } catch (SerialPortException ex) {
                         Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка чтения данных из устройства!", ex);
                     }
                 }
             }
         }, SerialPort.MASK_RXCHAR);
+        port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_RXABORT);
         stop = false;
         // поток, обрабатывающий данные от АЦП
         Thread th = new Thread(new Runnable() {
@@ -98,8 +115,12 @@ public class DeviceController {
                     while (!stop) {
                         // бесконечный цикл получения данных
                         Result r;
-                        if ((r = processAdcData()) != null) {
-                            adcQueue.add(r);
+                        if (bytesQueue.isEmpty()) {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                        } else {
+                            if ((r = processAdcData()) != null) {
+                                adcQueue.add(r);
+                            }
                         }
                     }
                 } catch (InterruptedException th) {
