@@ -64,11 +64,11 @@ public class Utils {
     }
 
     /**
-     * Превраяет долю в % с точностью 2 знака после запятой.
+     * Превраяет долю в % с точностью 1 знак после запятой.
      * @param val доля, где 1 соответсвуе 100%
      * @return строка с процентами
      */
     static String valueToPercent(double val) {
-        return String.format("%.2f%%", val * 100d);
+        return String.format("%.1f%%", val * 100d);
     }
 }

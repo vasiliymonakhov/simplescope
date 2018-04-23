@@ -203,6 +203,7 @@ class ScopeRenderer {
         // нарисовать луч
         drawRay(g);
         g.dispose();
+        result.processHarmonicsData(leftRuler, rightRuler);
         result.setScopeImage(image);
     }
 
@@ -477,6 +478,9 @@ class ScopeRenderer {
      */
     void renderHarmAnalyser(int imageWidth, int imageHeight, Result result) throws InterruptedException {
         this.result = result;
+        // записать в результат положение линеек
+        result.setDeltaT(leftRuler, rightRuler);
+        result.setDeltaV(upperRuler, lowerRuler);
         result.processHarmonicsData(leftRuler, rightRuler);
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
