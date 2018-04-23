@@ -1268,13 +1268,15 @@ public class MainFrame extends javax.swing.JFrame {
         private BufferedImage image;
 
         void copyImage(BufferedImage bi) throws InterruptedException {
-            if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
-                image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
+            if (bi != null) {
+                if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
+                    image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
+                }
+                Graphics g = image.getGraphics();
+                g.drawImage(bi, 0, 0, null);
+                repaint();
+                scopeRenderer.returnUsedImage(bi);
             }
-            Graphics g = image.getGraphics();
-            g.drawImage(bi, 0, 0, null);
-            repaint();
-            scopeRenderer.returnUsedImage(bi);
         }
 
         @Override

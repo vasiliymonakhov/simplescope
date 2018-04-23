@@ -191,6 +191,11 @@ class Result {
     private int rightRulerPos = -1;
 
     /**
+     * Автоматически вычислять частоту
+     */
+    private boolean autoFreq;
+
+    /**
      * Обрабатывает сырые данные от АЦП ввиде массива байтов
      *
      * @param newBlock сырые данные от АЦП ввиде массива байтов
@@ -198,6 +203,7 @@ class Result {
      * @return true если данные корректные
      */
     boolean processADCData(byte[] newBlock, boolean autoFreq) {
+        this.autoFreq = autoFreq;
         int j = 0;
         // вычисление напряжений
         vMin = Double.POSITIVE_INFINITY;
@@ -252,7 +258,9 @@ class Result {
                 voltages[i] = voltages[i - 1];
             }
         }
-        processAutoFreq(autoFreq);
+        if (processAutoFreq()) {
+            this.setDeltaT(leftRulerPos, rightRulerPos);
+        }
         return true;
     }
 
@@ -260,8 +268,9 @@ class Result {
      * Определить частоту сигнала
      *
      * @param autoFreq определять или нет
+     * @return true если частота определена автоматически
      */
-    private void processAutoFreq(boolean autoFreq) {
+    private boolean processAutoFreq() {
         if (autoFreq) {
             // попытаемся найти по очень крутому фронту
             int r1 = searchCoolSignalFront(1);
@@ -273,7 +282,7 @@ class Result {
                     // нашли вторую точку
                     leftRulerPos = r1;
                     rightRulerPos = r2;
-                    return;
+                    return true;
                 }
             }
             // не нашли, выполнить поиск переходов через 0 по фронту
@@ -287,7 +296,7 @@ class Result {
                     // нашли вторую точку
                     leftRulerPos = r1;
                     rightRulerPos = r2;
-                    return;
+                    return true;
                 }
             }
             // не нашли, попытаемся найти по срезу
@@ -300,6 +309,7 @@ class Result {
                     // нашли вторую точку
                     leftRulerPos = r1;
                     rightRulerPos = r2;
+                    return true;
                 }
             }
         } else {
@@ -307,16 +317,18 @@ class Result {
             leftRulerPos = -1;
             rightRulerPos = -1;
         }
+        return false;
     }
 
     /**
-     * Найти в массиве напряжений точку, в которой напряжение резко возрастает
+     * Найти в массиве напряжений точку, в которой напряжение резко возрастает. Разница
+     * напряжений между соседними точками должна составить 90% от vRms
      *
      * @param from с какой точки начать поиск
      * @return номер найденной точки или -1 если подходящей точки не нашлось
      */
     private int searchCoolSignalFront(int from) {
-        double trig = Const.VOLTAGES[currentVoltageIndex] / 10;
+        double trig = vRms * 0.9d;
         for (int i = from; i < Const.ADC_DATA_BLOCK_SIZE - 1; i++) {
             // взять 2 идущих подряд значений напряжения
             double v1 = voltages[i - 1];
@@ -535,6 +547,15 @@ class Result {
      */
     int getRightRulerPos() {
         return rightRulerPos;
+    }
+
+    /**
+     * Был ли включен режим автоматического определения частоты
+     *
+     * @return the autoFreq
+     */
+    boolean isAutoFreq() {
+        return autoFreq;
     }
 
 }

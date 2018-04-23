@@ -203,7 +203,7 @@ class ScopeRenderer {
         // нарисовать луч
         drawRay(g);
         g.dispose();
-        result.processHarmonicsData(leftRuler, rightRuler);
+        // result.processHarmonicsData(leftRuler, rightRuler);
         result.setScopeImage(image);
     }
 
@@ -444,8 +444,7 @@ class ScopeRenderer {
         drawCenteredString(g, hRulerToString(upperRuler), x_pos + width + H_GAP / 2, yUpperRuler, colorScheme.getTextColor());
         drawCenteredString(g, hRulerToString(lowerRuler), x_pos + width + H_GAP / 2, yLowerRuler, colorScheme.getTextColor());
         // записать в результат положение линеек
-        result.setDeltaT(leftRuler, rightRuler);
-        result.setDeltaV(upperRuler, lowerRuler);
+        updateRulers();
     }
 
     /**
@@ -469,6 +468,16 @@ class ScopeRenderer {
     }
 
     /**
+     * записать в результат положение линеек
+     */
+    private void updateRulers() {
+        if (!result.isAutoFreq()) {
+            result.setDeltaT(leftRuler, rightRuler);
+        }
+        result.setDeltaV(upperRuler, lowerRuler);
+    }
+
+    /**
      * Рисует изображение анализа гармоник
      *
      * @param imageWidth ширина области рисования
@@ -478,9 +487,7 @@ class ScopeRenderer {
      */
     void renderHarmAnalyser(int imageWidth, int imageHeight, Result result) throws InterruptedException {
         this.result = result;
-        // записать в результат положение линеек
-        result.setDeltaT(leftRuler, rightRuler);
-        result.setDeltaV(upperRuler, lowerRuler);
+        updateRulers();
         result.processHarmonicsData(leftRuler, rightRuler);
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
