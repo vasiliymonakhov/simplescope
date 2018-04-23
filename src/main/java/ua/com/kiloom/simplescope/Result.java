@@ -285,7 +285,6 @@ class Result {
                     // нашли вторую точку
                     leftRulerPos = r1;
                     rightRulerPos = r2;
-                    return;
                 }
             }
         } else {

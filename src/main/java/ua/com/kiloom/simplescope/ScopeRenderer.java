@@ -161,6 +161,20 @@ class ScopeRenderer {
     private Result result;
 
     /**
+     * Сделать расчёты геометрии
+     * @param imageWidth ширина области рисования
+     * @param imageHeight высота области рисования
+     */
+    void calculateGeometry(int imageWidth, int imageHeight) {
+        // сделать небольшие отступы и чтобы высота и ширина были кратны 10
+        width = ((imageWidth - 2 * H_GAP) / 10) * 10;
+        height = ((imageHeight - 2 * V_GAP) / 10) * 10;
+        // вычислить координаты левого верхнего угла графика
+        x_pos = (imageWidth - width) / 2;
+        y_pos = (imageHeight - height) / 2;
+    }
+
+    /**
      * Рисует график сигнала
      *
      * @param imageWidth ширина области рисования
@@ -177,12 +191,7 @@ class ScopeRenderer {
         // залить цветом фона
         g.setColor(colorScheme.getBackgroundColor());
         g.fillRect(0, 0, imageWidth - 1, imageHeight - 1);
-        // сделать небольшие отступы и чтобы высота и ширина были кратны 10
-        width = ((imageWidth - 2 * H_GAP) / 10) * 10;
-        height = ((imageHeight - 2 * V_GAP) / 10) * 10;
-        // вычислить координаты левого верхнего угла графика
-        x_pos = (imageWidth - width) / 2;
-        y_pos = (imageHeight - height) / 2;
+        calculateGeometry(imageWidth, imageHeight);
         // нарисовать сетку
         drawScopeGrid(g);
         g.setStroke(normalStroke);
@@ -463,9 +472,11 @@ class ScopeRenderer {
      *
      * @param imageWidth ширина области рисования
      * @param imageHeight высота области рисования
+     * @param result набор данных от АЦП устройства
      * @throws InterruptedException
      */
-    void renderHarmAnalyser(int imageWidth, int imageHeight) throws InterruptedException {
+    void renderHarmAnalyser(int imageWidth, int imageHeight, Result result) throws InterruptedException {
+        this.result = result;
         result.processHarmonicsData(leftRuler, rightRuler);
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
@@ -475,6 +486,7 @@ class ScopeRenderer {
         // залить цветом фона
         g.setColor(colorScheme.getBackgroundColor());
         g.fillRect(0, 0, imageWidth - 1, imageHeight - 1);
+        calculateGeometry(imageWidth, imageHeight);
         // нарисовать сетку анализатора гармоник
         drawHarmAnalyserGrid(g);
         // нарисовать рамку
@@ -493,7 +505,7 @@ class ScopeRenderer {
      */
     private void drawHarmAnalyserGrid(Graphics2D g) {
         g.setStroke(gridStroke);
-        for (int i = 0; i <= width; i += width / 10) {
+        for (int i = 0; i <= width; i += width / Const.HARMONICS_COUNT) {
             g.setColor(colorScheme.getGridColor());
             g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
         }
@@ -516,9 +528,9 @@ class ScopeRenderer {
     private void drawHarmAnalyserBars(Graphics2D g) {
         double[] harms = result.getHarmonics();
         // ширина клетки
-        int cw = width / 10;
+        int cw = width / Const.HARMONICS_COUNT;
         // ширина столбика
-        int bw = 6 * cw / 10;
+        int bw = 6 * cw / Const.HARMONICS_COUNT;
         // смещение столбиков
         int xl = x_pos + (cw - bw) / 2;
         // смещение центра надписи по горизонтали
@@ -528,7 +540,7 @@ class ScopeRenderer {
         // частота основной гармоники
         double fr = 1 / result.getDeltaT();
         // рисуем только первые 10 столбиков
-        for (int i = 0; i < 10; i ++) {
+        for (int i = 0; i < Const.HARMONICS_COUNT; i ++) {
             g.setColor(colorScheme.getGridColor());
             // высота столбика
             int bl = (int)(Math.round(harms[i] * height));

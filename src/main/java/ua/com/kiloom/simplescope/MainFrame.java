@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 
@@ -16,11 +18,25 @@ public class MainFrame extends javax.swing.JFrame {
      * Схема шрифтов
      */
     private FontScheme fontScheme = FontScheme.STANDART;
+    /**
+     * Цветовая схема скопа
+     */
+    private ColorScheme colorScheme = ColorScheme.getScheme("Зелёная монохромная");
 
     public MainFrame() {
         initComponents();
         scopeParentPanel.add(scopeRenderPanel);
         harmParentPanel.add(harmRenderPanel);
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                try {
+                    drawResults();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
         searchPorts();
     }
 
@@ -85,24 +101,31 @@ public class MainFrame extends javax.swing.JFrame {
     };
 
     void makePicture() throws InterruptedException {
-        Rectangle r = scopeRenderPanel.getBounds();
         currentResult = deviceController.getADCResult();
         autoDcModeAdjust(currentResult);
-        scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
-        scopeRenderer.renderHarmAnalyser(r.width, r.height);
+        drawResults();
+    }
+
+    private void drawResults() throws InterruptedException {
+        if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+            Rectangle r = scopeRenderPanel.getBounds();
+            if (r.width != 0 && r.height != 0) {
+                scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
+                scopeRenderPanel.copyImage(currentResult.getScopeImage());
+            }
+        } else {
+            Rectangle r = harmRenderPanel.getBounds();
+            if (r.width != 0 && r.height != 0) {
+                scopeRenderer.renderHarmAnalyser(r.width, r.height, currentResult);
+                harmRenderPanel.copyImage(currentResult.getHarmImage());
+            }
+        }
         drawVoltagesAndTimeFrequency(currentResult);
-        scopeRenderPanel.copyImage(currentResult.getScopeImage());
-        harmRenderPanel.copyImage(currentResult.getHarmImage());
     }
 
     private void redrawAndMakePicture() {
-        Rectangle r = scopeRenderPanel.getBounds();
         try {
-            scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
-            scopeRenderer.renderHarmAnalyser(r.width, r.height);
-            drawVoltagesAndTimeFrequency(currentResult);
-            scopeRenderPanel.copyImage(currentResult.getScopeImage());
-            harmRenderPanel.copyImage(currentResult.getHarmImage());
+            drawResults();
         } catch (InterruptedException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps!", ex);
         }
@@ -341,7 +364,7 @@ public class MainFrame extends javax.swing.JFrame {
         deltaTLabel = new javax.swing.JLabel();
         freqLabel = new javax.swing.JLabel();
         kHarmLabel = new javax.swing.JLabel();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        tabbedPane = new javax.swing.JTabbedPane();
         scopeParentPanel = new javax.swing.JPanel();
         harmParentPanel = new javax.swing.JPanel();
 
@@ -869,7 +892,7 @@ public class MainFrame extends javax.swing.JFrame {
         getContentPane().add(jPanel3, gridBagConstraints);
 
         jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel12.setLayout(new java.awt.GridLayout());
+        jPanel12.setLayout(new java.awt.GridLayout(1, 0));
 
         vminLabel.setFont(fontScheme.getValFont());
         vminLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -925,7 +948,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         getContentPane().add(jPanel12, gridBagConstraints);
 
-        jTabbedPane1.setFont(fontScheme.getGuiFont());
+        tabbedPane.setFont(fontScheme.getGuiFont());
 
         scopeParentPanel.setToolTipText("Осциллоскоп");
         scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
@@ -936,11 +959,11 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         scopeParentPanel.setLayout(new java.awt.GridLayout(1, 0));
-        jTabbedPane1.addTab("Осциллоскоп", scopeParentPanel);
+        tabbedPane.addTab("Осциллоскоп", scopeParentPanel);
 
         harmParentPanel.setToolTipText("Анализ гармоник");
-        harmParentPanel.setLayout(new java.awt.GridLayout());
-        jTabbedPane1.addTab("Анализ гармоник", harmParentPanel);
+        harmParentPanel.setLayout(new java.awt.GridLayout(1, 0));
+        tabbedPane.addTab("Анализ гармоник", harmParentPanel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -948,7 +971,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        getContentPane().add(jTabbedPane1, gridBagConstraints);
+        getContentPane().add(tabbedPane, gridBagConstraints);
 
         pack();
         setLocationRelativeTo(null);
@@ -1130,7 +1153,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel kHarmLabel;
     private javax.swing.JButton pngButton;
     private javax.swing.JComboBox portsComboBox;
@@ -1146,6 +1168,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JSlider synchLevelSlider;
     private javax.swing.JRadioButton synchManualRadioButton;
     private javax.swing.JRadioButton synchNoneRadioButton;
+    private javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JComboBox timeComboBox;
     private javax.swing.JButton txtButton;
     private javax.swing.JLabel vmaxLabel;
@@ -1158,14 +1181,9 @@ public class MainFrame extends javax.swing.JFrame {
 
         private BufferedImage image;
 
-        void copyImage(BufferedImage bi) throws InterruptedException {
-            if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
-                image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
-            }
-            Graphics g = image.getGraphics();
-            g.drawImage(bi, 0, 0, null);
+        void copyImage(BufferedImage bi) {
+            image = bi;
             repaint();
-            scopeRenderer.returnUsedImage(bi);
         }
 
         @Override
@@ -1176,7 +1194,16 @@ public class MainFrame extends javax.swing.JFrame {
                 int x = (w - image.getWidth()) / 2;
                 int y = (h - image.getHeight()) / 2;
                 g.drawImage(image, x, y, null);
+                try {
+                    scopeRenderer.returnUsedImage(image);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                image = null;
+                return;
             }
+            g.setColor(colorScheme.getBackgroundColor());
+            g.fillRect(0, 0, w, h);
         }
 
     }
