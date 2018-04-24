@@ -264,7 +264,7 @@ class Result {
             }
             // проверить перегрузку входа, если есть абсолютный 0 или максимально возможное значение,
             // то скорее всего стоит изменить предел измерения вниз
-            if (value == 0 || value == Const.ADC_RANGE) {
+            if (value <= 0 || value >= Const.ADC_MAX) {
                 overloadSignal = true;
             }
 
