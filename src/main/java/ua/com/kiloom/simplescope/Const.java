@@ -67,8 +67,23 @@ class Const {
     static final int ADC_MIDDLE = ADC_RANGE / 2;
 
     /**
+     * Нижняя граница слабого сигнала для автопереключения предела напряжений
+     */
+    static final int ADC_LOW_WEAK_RANGE = ADC_MIDDLE - ADC_RANGE / 8;
+
+    /**
+     * Верхняя граница слабого сигнала  для автопереключения предела напряжений
+     */
+    static final int ADC_HIGH_WEAK_RANGE = ADC_MIDDLE + ADC_RANGE / 8;
+
+    /**
+     * Размер блока для автоматического измерения сигнала
+     */
+    static final int AUTO_MEASURE_BLOCK = ADC_RANGE / 256;
+
+    /**
      * количество вычисленных гармоник
      */
-    static final int HARMONICS_COUNT = 10;
+    static final int HARMONICS_COUNT = 20;
 
 }

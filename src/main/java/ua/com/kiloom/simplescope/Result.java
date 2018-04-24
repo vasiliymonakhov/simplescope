@@ -108,6 +108,13 @@ class Result {
      * @param rightTime отсчёт правой вериткальной линейки
      */
     void setDeltaT(int leftTime, int rightTime) {
+        if (leftTime < rightTime) {
+            leftRulerPos = leftTime;
+            rightRulerPos = rightTime;
+        } else {
+            leftRulerPos = rightTime;
+            rightRulerPos = leftTime;
+        }
         deltaT = adcTimeToRealTime(rightTime - leftTime);
     }
 
@@ -132,6 +139,13 @@ class Result {
      * @param lowerValue значение АЦП, соответствующее нижней линейке
      */
     void setDeltaV(int upperValue, int lowerValue) {
+        if (upperValue < lowerValue) {
+            lowerRulerPos = lowerValue;
+            upperRulerPos = upperValue;
+        } else {
+            lowerRulerPos = upperValue;
+            upperRulerPos = lowerValue;
+        }
         deltaV = ((upperValue - lowerValue) * Const.VOLTAGES[currentVoltageIndex]) / Const.ADC_MIDDLE;
     }
 
@@ -183,12 +197,22 @@ class Result {
     /**
      * положение левой линейки в массиве данных от АЦП
      */
-    private int leftRulerPos = -1;
+    private int leftRulerPos;
 
     /**
      * Положение правой линейки в массиве данных от АЦП
      */
-    private int rightRulerPos = -1;
+    private int rightRulerPos;
+
+    /**
+     * Положение верхней линейки
+     */
+    private int upperRulerPos;
+
+    /**
+     * Положение нижней линейки
+     */
+    private int lowerRulerPos;
 
     /**
      * Автоматически вычислять частоту
@@ -196,14 +220,26 @@ class Result {
     private boolean autoFreq;
 
     /**
+     * автоматически обмерять сигнал
+     */
+    private boolean autoMeasure;
+
+    /**
+     * Признак перегрузки входа АЦП
+     */
+    private boolean overloadSignal;
+
+    /**
      * Обрабатывает сырые данные от АЦП ввиде массива байтов
      *
      * @param newBlock сырые данные от АЦП ввиде массива байтов
      * @param autoFreq требуется автоматически определить частоту сигнала
+     * @param autoMeasure требуется автоматически обмерять сигнал
      * @return true если данные корректные
      */
-    boolean processADCData(byte[] newBlock, boolean autoFreq) {
+    boolean processADCData(byte[] newBlock, boolean autoFreq, boolean autoMeasure) {
         this.autoFreq = autoFreq;
+        this.autoMeasure = autoMeasure;
         int j = 0;
         // вычисление напряжений
         vMin = Double.POSITIVE_INFINITY;
@@ -217,6 +253,7 @@ class Result {
             steps = newBlock.length - 1;
             needAppend = true;
         }
+        overloadSignal = false;
         for (int i = 0; i < steps;) {
             // преобразовать байты данныех в значение АЦП
             int value = newBlock[i++] << 8 | newBlock[i++] & 0x00FF;
@@ -225,13 +262,21 @@ class Result {
                 // очевидно, что там какой-то мусор и этот блок стоит забраковать
                 return false;
             }
+            // проверить перегрузку входа, если есть абсолютный 0 или максимально возможное значение,
+            // то скорее всего стоит изменить предел измерения вниз
+            if (value == 0 || value == Const.ADC_RANGE) {
+                overloadSignal = true;
+            }
 
             // Отладка - меандр
             // value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000 : Const.ADC_MIDDLE - 1000;
             // положительный меандр
             // value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000 : Const.ADC_MIDDLE;
             // Отладка - синус
-            //value = Const.ADC_MIDDLE + (int)Math.round(1000 * Math.sin(j * Math.PI * 3 /Const.ADC_DATA_BLOCK_SIZE));
+            // value = Const.ADC_MIDDLE + (int)Math.round(-500 * Math.sin(j * Math.PI * 8 /Const.ADC_DATA_BLOCK_SIZE) +
+            //         200 * Math.sin(j * Math.PI * 12 /Const.ADC_DATA_BLOCK_SIZE) +
+            //         400 * Math.sin(j * Math.PI * 16 /Const.ADC_DATA_BLOCK_SIZE) +
+            //         500 * Math.sin(j * Math.PI * 4 /Const.ADC_DATA_BLOCK_SIZE));
             // запись сырых данных от АЦП для построения графика
             adcData[j] = value;
             // вычислим мгновенное значение напряжения
@@ -259,9 +304,54 @@ class Result {
             }
         }
         if (processAutoFreq()) {
-            this.setDeltaT(leftRulerPos, rightRulerPos);
+            setDeltaT(leftRulerPos, rightRulerPos);
         }
+        processAutoMeasure();
         return true;
+    }
+
+    /**
+     * Массив для накопления количества попаданий сигнала в блок
+     */
+    private final int[] measures = new int[Const.ADC_RANGE / Const.AUTO_MEASURE_BLOCK];
+
+    /**
+     * Изерить линейками сигнал
+     *
+     * @return true если удалось измерять
+     */
+    private void processAutoMeasure() {
+        if (autoMeasure) {
+            Arrays.fill(measures, 0);
+            // подсчитать попадания сигнала в каждый блок
+            for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+                int block = adcData[i] / Const.AUTO_MEASURE_BLOCK;
+                measures[block]++;
+            }
+            // найти два максимума
+            // сделаем копию нашего массива
+            int[] tmp = Arrays.copyOf(measures, measures.length);
+            // сортируем по возрастанию
+            Arrays.sort(tmp);
+            // два последних элемента - это и есть наши максимумы
+            int m1 = tmp[tmp.length - 1];
+            int m2 = tmp[tmp.length - 2];
+            // найдём где они находятся
+            int p1 = -1;
+            int p2 = -1;
+            for (int i = 0; i < measures.length; i++) {
+                if (measures[i] == m1) {
+                    p1 = i;
+                }
+                if (measures[i] == m2) {
+                    p2 = i;
+                }
+            }
+            // вычислим новое положение линеек
+            int vp1 = p1 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
+            int vp2 = p2 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
+            setDeltaV(vp2, vp1);
+        }
     }
 
     /**
@@ -280,8 +370,7 @@ class Result {
                 int r2 = searchCoolSignalFront(r1 + 2);
                 if (r2 >= r1) {
                     // нашли вторую точку
-                    leftRulerPos = r1;
-                    rightRulerPos = r2;
+                    setDeltaT(r1, r2);
                     return true;
                 }
             }
@@ -294,8 +383,7 @@ class Result {
                 int r2 = searchSignalFront(r1 + 2);
                 if (r2 >= r1) {
                     // нашли вторую точку
-                    leftRulerPos = r1;
-                    rightRulerPos = r2;
+                    setDeltaT(r1, r2);
                     return true;
                 }
             }
@@ -307,8 +395,7 @@ class Result {
                 int r2 = searchSignalCutoff(r1 + 2);
                 if (r2 >= r1) {
                     // нашли вторую точку
-                    leftRulerPos = r1;
-                    rightRulerPos = r2;
+                    setDeltaT(r1, r2);
                     return true;
                 }
             }
@@ -321,8 +408,8 @@ class Result {
     }
 
     /**
-     * Найти в массиве напряжений точку, в которой напряжение резко возрастает. Разница
-     * напряжений между соседними точками должна составить 90% от vRms
+     * Найти в массиве напряжений точку, в которой напряжение резко возрастает.
+     * Разница напряжений между соседними точками должна составить 90% от vRms
      *
      * @param from с какой точки начать поиск
      * @return номер найденной точки или -1 если подходящей точки не нашлось
@@ -396,7 +483,7 @@ class Result {
      * двумя отметками графика
      *
      * @param fromT от какой отметки начать
-     * @param toT до ккой отметки
+     * @param toT до какой отметки
      */
     void processHarmonicsData(int fromT, int toT) {
         if (fromT >= Const.ADC_DATA_BLOCK_SIZE || toT >= Const.ADC_DATA_BLOCK_SIZE) {
@@ -405,7 +492,7 @@ class Result {
             return;
         }
         // определить количество значений ддля вычисления
-        int count = toT - fromT + 1;
+        int count = toT - fromT;
         // шаг изменения фазы синусоиды
         double dfi = 2 * Math.PI / count;
         // перебор заданного количества гармоник
@@ -556,6 +643,42 @@ class Result {
      */
     boolean isAutoFreq() {
         return autoFreq;
+    }
+
+    /**
+     * Была ли перегрузка входа
+     *
+     * @return the overloadSignal
+     */
+    boolean isOverloadSignal() {
+        return overloadSignal;
+    }
+
+    /**
+     * Был ли включен режим автоматического обмера сигнала
+     *
+     * @return the autoMeasure
+     */
+    boolean isAutoMeasure() {
+        return autoMeasure;
+    }
+
+    /**
+     * Возвращает положение верхней линейки
+     *
+     * @return положение верхней линейки
+     */
+    int getUpperRulerPos() {
+        return upperRulerPos;
+    }
+
+    /**
+     * Возвращает положение нижней линейки
+     *
+     * @return положение нижней линейки
+     */
+    int getLowerRulerPos() {
+        return lowerRulerPos;
     }
 
 }

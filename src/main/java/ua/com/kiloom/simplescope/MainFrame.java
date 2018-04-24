@@ -105,8 +105,9 @@ public class MainFrame extends javax.swing.JFrame {
 
     void makePicture() throws InterruptedException {
         currentResult = deviceController.getADCResult();
-        autoDcModeAdjust(currentResult);
         drawResults();
+        autoDcModeAdjust();
+        autoLimitModeAdjust();
     }
 
     private void drawResults() throws InterruptedException {
@@ -171,7 +172,12 @@ public class MainFrame extends javax.swing.JFrame {
         deltaVLabel.setText("ΔV = " + Utils.voltageToString(adcResult.getDeltaV()));
         deltaTLabel.setText("ΔT = " + Utils.timeToString(adcResult.getDeltaT()));
         freqLabel.setText("f = " + Utils.frequencyToString(1d / adcResult.getDeltaT()));
-        kHarmLabel.setText("Kh = " + Utils.valueToPercent(adcResult.getKHarm()));
+        if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+            kHarmLabel.setVisible(false);
+        } else {
+            kHarmLabel.setText("Kh = " + Utils.valueToPercent(adcResult.getKHarm()));
+            kHarmLabel.setVisible(true);
+        }
     }
 
     private int inputMode;
@@ -260,7 +266,7 @@ public class MainFrame extends javax.swing.JFrame {
         currentVoltage = volt;
     }
 
-    void updateDcOffset() {
+    private void updateDcOffset() {
         try {
             deviceController.setZeroLevel(dcLevel);
         } catch (SerialPortException ex) {
@@ -286,11 +292,11 @@ public class MainFrame extends javax.swing.JFrame {
 
     private double autoDcVoltage;
 
-    private void autoDcModeAdjust(Result adcResult) {
+    private void autoDcModeAdjust() {
         if (autoDcMode) {
-            if (adcResult != null) {
-                double vmin = adcResult.getVMin();
-                double vmax = adcResult.getVMax();
+            if (currentResult != null) {
+                double vmin = currentResult.getVMin();
+                double vmax = currentResult.getVMax();
                 autoDcVoltage += (vmin + vmax) / 2;
                 autoDcSteps++;
                 if (autoDcSteps == 10) {
@@ -311,6 +317,26 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    private int autoLimitSteps;
+
+    private boolean isOverload = true;
+
+    private void autoLimitModeAdjust() {
+        if (autoLimitMode) {
+            if (currentResult != null) {
+                isOverload &= currentResult.isOverloadSignal();
+                autoLimitSteps++;
+                if (autoLimitSteps == 10) {
+                    autoLimitSteps = 0;
+                    if (isOverload) {
+                        upRange();
+                    }
+                    isOverload = true;
+                }
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -324,6 +350,7 @@ public class MainFrame extends javax.swing.JFrame {
         rangeComboBox = new javax.swing.JComboBox();
         decRangeButton = new javax.swing.JButton();
         incRangeButton = new javax.swing.JButton();
+        autoLimitCheckBox = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         timeComboBox = new javax.swing.JComboBox();
         decTimeButton = new javax.swing.JButton();
@@ -360,6 +387,7 @@ public class MainFrame extends javax.swing.JFrame {
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         jPanel14 = new javax.swing.JPanel();
         autoFreqCheckBox = new javax.swing.JCheckBox();
+        autoMeasureCheckBox = new javax.swing.JCheckBox();
         jPanel15 = new javax.swing.JPanel();
         leftOffsetButton = new javax.swing.JButton();
         rightOffsetButton = new javax.swing.JButton();
@@ -396,7 +424,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
@@ -412,7 +440,7 @@ public class MainFrame extends javax.swing.JFrame {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel4.add(decRangeButton, gridBagConstraints);
@@ -427,10 +455,27 @@ public class MainFrame extends javax.swing.JFrame {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel4.add(incRangeButton, gridBagConstraints);
+
+        autoLimitCheckBox.setFont(fontScheme.getGuiFont());
+        autoLimitCheckBox.setText("Автоувеличение");
+        autoLimitCheckBox.setToolTipText("Автоматически увеличивать предел при перегрузке входа");
+        autoLimitCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                autoLimitCheckBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel4.add(autoLimitCheckBox, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -665,7 +710,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel9.add(dcOffsetSlider, gridBagConstraints);
 
         autoDcCheckBox.setFont(fontScheme.getGuiFont());
-        autoDcCheckBox.setText("Авто");
+        autoDcCheckBox.setText("Автоотслеживание");
         autoDcCheckBox.setToolTipText("Отслеживать постоянную составляющуу и пытаться компенсировать");
         autoDcCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -869,12 +914,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weighty = 1.0;
         jPanel3.add(filler1, gridBagConstraints);
 
-        jPanel14.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Частота", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel14.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Линейки", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel14.setLayout(new java.awt.GridBagLayout());
 
         autoFreqCheckBox.setFont(fontScheme.getGuiFont());
-        autoFreqCheckBox.setText("Авто");
-        autoFreqCheckBox.setToolTipText("Автоматически определять частоту сигнала");
+        autoFreqCheckBox.setText("Авто верт.");
+        autoFreqCheckBox.setToolTipText("Автоматически определять период сигнала");
         autoFreqCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 autoFreqCheckBoxActionPerformed(evt);
@@ -885,6 +930,22 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel14.add(autoFreqCheckBox, gridBagConstraints);
+
+        autoMeasureCheckBox.setFont(fontScheme.getGuiFont());
+        autoMeasureCheckBox.setText("Авто гориз.");
+        autoMeasureCheckBox.setToolTipText("Автоматически определять величину сигнала");
+        autoMeasureCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                autoMeasureCheckBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel14.add(autoMeasureCheckBox, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -1081,18 +1142,26 @@ public class MainFrame extends javax.swing.JFrame {
         setTriggerLevel(synchLevelSlider.getValue());
     }//GEN-LAST:event_synchLevelSliderStateChanged
 
-    private void decRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decRangeButtonActionPerformed
+    private void downRange() {
         int idx = rangeComboBox.getSelectedIndex();
         if (idx > 0) {
             rangeComboBox.setSelectedIndex(idx - 1);
         }
+    }
+
+    private void decRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decRangeButtonActionPerformed
+        downRange();
     }//GEN-LAST:event_decRangeButtonActionPerformed
 
-    private void incRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incRangeButtonActionPerformed
+    private void upRange() {
         int idx = rangeComboBox.getSelectedIndex();
         if (idx < 10) {
             rangeComboBox.setSelectedIndex(idx + 1);
         }
+    }
+
+    private void incRangeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incRangeButtonActionPerformed
+        upRange();
     }//GEN-LAST:event_incRangeButtonActionPerformed
 
     private void decTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decTimeButtonActionPerformed
@@ -1191,6 +1260,16 @@ public class MainFrame extends javax.swing.JFrame {
         rightTimer.stop();
     }//GEN-LAST:event_rightOffsetButtonMouseReleased
 
+    private boolean autoLimitMode;
+
+    private void autoLimitCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoLimitCheckBoxActionPerformed
+        autoLimitMode = autoLimitCheckBox.isSelected();
+    }//GEN-LAST:event_autoLimitCheckBoxActionPerformed
+
+    private void autoMeasureCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoMeasureCheckBoxActionPerformed
+        deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
+    }//GEN-LAST:event_autoMeasureCheckBoxActionPerformed
+
     public static void main(String args[]) {
 
         EventQueue.invokeLater(new Runnable() {
@@ -1204,6 +1283,8 @@ public class MainFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox autoDcCheckBox;
     private javax.swing.JCheckBox autoFreqCheckBox;
+    private javax.swing.JCheckBox autoLimitCheckBox;
+    private javax.swing.JCheckBox autoMeasureCheckBox;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;

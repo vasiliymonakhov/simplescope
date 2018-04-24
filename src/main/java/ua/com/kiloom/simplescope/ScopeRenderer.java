@@ -419,11 +419,13 @@ class ScopeRenderer {
      */
     void drawRulers(Graphics2D g) {
         // проверить, не двигаются ли наши линейки автоматически
-        if (result.getLeftRulerPos() != -1) {
+        if (result.isAutoFreq()) {
             leftRuler = result.getLeftRulerPos();
-        }
-        if (result.getRightRulerPos() != -1) {
             rightRuler = result.getRightRulerPos();
+        }
+        if (result.isAutoMeasure()) {
+            upperRuler = result.getUpperRulerPos();
+            lowerRuler = result.getLowerRulerPos();
         }
         // вычислить координаты линеек на изображении
         xLeftRuler = (int) Math.round(xScale * leftRuler + x_pos);
@@ -474,7 +476,9 @@ class ScopeRenderer {
         if (!result.isAutoFreq()) {
             result.setDeltaT(leftRuler, rightRuler);
         }
-        result.setDeltaV(upperRuler, lowerRuler);
+        if (!result.isAutoMeasure()) {
+            result.setDeltaV(upperRuler, lowerRuler);
+        }
     }
 
     /**
@@ -541,7 +545,7 @@ class ScopeRenderer {
         // ширина клетки
         int cw = width / Const.HARMONICS_COUNT;
         // ширина столбика
-        int bw = 6 * cw / Const.HARMONICS_COUNT;
+        int bw = (Const.HARMONICS_COUNT - 2) * cw / Const.HARMONICS_COUNT;
         // смещение столбиков
         int xl = x_pos + (cw - bw) / 2;
         // смещение центра надписи по горизонтали

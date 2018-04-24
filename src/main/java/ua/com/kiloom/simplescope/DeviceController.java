@@ -340,6 +340,18 @@ public class DeviceController {
     }
 
     /**
+     * Требуется автоматически измерять сигнал
+     */
+    private volatile boolean autoMeasure;
+
+    /**
+     * Включить или выключить автоматическое измерение сигнала
+     */
+    void setAutoMeasure(boolean on) {
+        autoMeasure = on;
+    }
+
+    /**
      * Обрабатывает данные от ЦАП
      *
      * @return объект с результатами обработки
@@ -351,7 +363,7 @@ public class DeviceController {
             lock.lock();
             // запись параметров выборки
             Result r = new Result(currentVoltageIndex, currentTimeIndex);
-            if (r.processADCData(newBlock, autoFreq)) {
+            if (r.processADCData(newBlock, autoFreq, autoMeasure)) {
                 return r;
             }
             return null;
