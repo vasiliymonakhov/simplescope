@@ -139,14 +139,14 @@ class Result {
      * @param lowerValue значение АЦП, соответствующее нижней линейке
      */
     void setDeltaV(int upperValue, int lowerValue) {
-        if (upperValue < lowerValue) {
+        if (upperValue > lowerValue) {
             lowerRulerPos = lowerValue;
             upperRulerPos = upperValue;
         } else {
             lowerRulerPos = upperValue;
             upperRulerPos = lowerValue;
         }
-        deltaV = ((upperValue - lowerValue) * Const.VOLTAGES[currentVoltageIndex]) / Const.ADC_MIDDLE;
+        deltaV = ((upperRulerPos - lowerRulerPos) * Const.VOLTAGES[currentVoltageIndex]) / Const.ADC_MIDDLE;
     }
 
     /**
@@ -350,7 +350,7 @@ class Result {
             // вычислим новое положение линеек
             int vp1 = p1 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
             int vp2 = p2 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
-            setDeltaV(vp2, vp1);
+            setDeltaV(vp1, vp2);
         }
     }
 
