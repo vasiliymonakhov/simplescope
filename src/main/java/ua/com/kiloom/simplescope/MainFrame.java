@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,18 +16,32 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
+import static ua.com.kiloom.simplescope.AppProperties.Keys.*;
 
+/**
+ * Класс главного окна
+ *
+ * @author vasya
+ */
 public class MainFrame extends javax.swing.JFrame {
 
     /**
      * Схема шрифтов
      */
-    private FontScheme fontScheme = FontScheme.STANDART;
+    private final FontScheme fontScheme = FontScheme.STANDART;
     /**
      * Цветовая схема скопа
      */
-    private ColorScheme colorScheme = ColorScheme.getScheme("Зелёная монохромная");
+    private ColorScheme colorScheme = ColorScheme.GREEN_MONO_SCHEME;
 
+    /**
+     * Настройки
+     */
+    private final AppProperties prop = new AppProperties();
+
+    /**
+     * Создаёт окно
+     */
     public MainFrame() {
         initComponents();
         scopeParentPanel.add(scopeRenderPanel);
@@ -40,9 +56,26 @@ public class MainFrame extends javax.swing.JFrame {
                 }
             }
         });
-        searchPorts();
+        this.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowOpened(WindowEvent e) {
+                searchPorts();
+                prop.load();
+                setupFrameFromProperties();
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                storeFrameToProperties();
+                prop.save();
+            }
+        });
     }
 
+    /**
+     * Поиск портов
+     */
     private void searchPorts() {
         portsComboBox.removeAllItems();
         String[] portNames = SerialPortList.getPortNames();
@@ -56,6 +89,9 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Класс управления устройством
+     */
     private final DeviceController deviceController = new DeviceController(new Runnable() {
         @Override
         public void run() {
@@ -66,10 +102,21 @@ public class MainFrame extends javax.swing.JFrame {
         }
     });
 
+    /**
+     * Класс рисования графиков
+     */
     private final ScopeRenderer scopeRenderer = new ScopeRenderer();
 
+    /**
+     * Рабочий поток
+     */
     private Thread workThread;
 
+    /**
+     * Разрешает или запрещает кнопки
+     *
+     * @param enable разрешить или запретить
+     */
     void enableStepButtons(boolean enable) {
         stepButton.setEnabled(enable);
         pngButton.setEnabled(enable);
@@ -77,13 +124,20 @@ public class MainFrame extends javax.swing.JFrame {
         htmlButton.setEnabled(enable);
     }
 
+    /**
+     * Текущий результат оцифровки сигнала
+     */
     private Result currentResult;
 
+    /**
+     * Код, исполняемый в рабочем потоке
+     */
     private final Runnable runer = new Runnable() {
         @Override
         public void run() {
             try {
                 while (true) {
+                    updateDeviceSettings();
                     if (continuousMode) {
                         makePicture();
                     } else {
@@ -95,7 +149,6 @@ public class MainFrame extends javax.swing.JFrame {
                         }
                         deviceController.getADCResult();
                     }
-                    updateDeviceSettings();
                 }
             } catch (InterruptedException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
@@ -103,6 +156,11 @@ public class MainFrame extends javax.swing.JFrame {
         }
     };
 
+    /**
+     * Сделать картинку. Получить данные, обработать, нарисовать и подстроить.
+     *
+     * @throws InterruptedException
+     */
     void makePicture() throws InterruptedException {
         currentResult = deviceController.getADCResult();
         drawResults();
@@ -110,6 +168,11 @@ public class MainFrame extends javax.swing.JFrame {
         autoLimitModeAdjust();
     }
 
+    /**
+     * Отображает результаты
+     *
+     * @throws InterruptedException
+     */
     private void drawResults() throws InterruptedException {
         if (currentResult != null) {
             if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
@@ -125,10 +188,13 @@ public class MainFrame extends javax.swing.JFrame {
                     harmRenderPanel.copyImage(currentResult.getHarmImage());
                 }
             }
-            drawVoltagesAndTimeFrequency(currentResult);
+            drawVoltagesAndTimeFrequency();
         }
     }
 
+    /**
+     * Перерисовать картинку
+     */
     private void redrawAndMakePicture() {
         try {
             drawResults();
@@ -137,6 +203,9 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Запуск рабочего потока
+     */
     private void start() {
         if (portsComboBox.getSelectedIndex() != -1) {
             try {
@@ -149,53 +218,123 @@ public class MainFrame extends javax.swing.JFrame {
                     workThread.start();
                 }
                 deviceController.open((String) portsComboBox.getSelectedItem());
+                updateDeviceSettings();
             } catch (SerialPortException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка запуска", ex);
             }
         }
     }
 
+    /**
+     * Остановка рабочего потока
+     */
     private void stop() {
         stopButton.setEnabled(false);
         deviceController.close();
     }
 
+    /**
+     * Панель для отображения графика
+     */
     private final RenderPanel scopeRenderPanel = new RenderPanel();
 
+    /**
+     * Панель для отображения диаграммы гармоник
+     */
     private final RenderPanel harmRenderPanel = new RenderPanel();
 
-    void drawVoltagesAndTimeFrequency(Result adcResult) {
-        vminLabel.setText("Vmin = " + Utils.voltageToString(adcResult.getVMin()));
-        vmaxLabel.setText("Vmax = " + Utils.voltageToString(adcResult.getVMax()));
-        vppLabel.setText("Vpp = " + Utils.voltageToString(adcResult.getVMax() - adcResult.getVMin()));
-        vrmsLabel.setText("Vrms = " + Utils.voltageToString(adcResult.getVRms()));
-        deltaVLabel.setText("ΔV = " + Utils.voltageToString(adcResult.getDeltaV()));
-        deltaTLabel.setText("ΔT = " + Utils.timeToString(adcResult.getDeltaT()));
-        freqLabel.setText("f = " + Utils.frequencyToString(1d / adcResult.getDeltaT()));
+    /**
+     * Отобразить результаты измерений
+     */
+    void drawVoltagesAndTimeFrequency() {
+        vminLabel.setText("Vmin = " + Utils.voltageToString(currentResult.getVMin()));
+        vmaxLabel.setText("Vmax = " + Utils.voltageToString(currentResult.getVMax()));
+        vppLabel.setText("Vpp = " + Utils.voltageToString(currentResult.getVMax() - currentResult.getVMin()));
+        vrmsLabel.setText("Vrms = " + Utils.voltageToString(currentResult.getVRms()));
+        deltaVLabel.setText("ΔV = " + Utils.voltageToString(currentResult.getDeltaV()));
+        deltaTLabel.setText("ΔT = " + Utils.timeToString(currentResult.getDeltaT()));
+        freqLabel.setText("f = " + Utils.frequencyToString(1d / currentResult.getDeltaT()));
         if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
             kHarmLabel.setVisible(false);
         } else {
-            kHarmLabel.setText("Kh = " + Utils.valueToPercent(adcResult.getKHarm()));
+            kHarmLabel.setText("Kh = " + Utils.valueToPercent(currentResult.getKHarm()));
             kHarmLabel.setVisible(true);
         }
     }
 
-    private int inputMode;
-    private int synchMode;
+    /**
+     * режимы входа
+     */
+    private static enum InputMode {
+
+        /**
+         * Закрытый, переменный ток
+         */
+        AC,
+        /**
+         * Заземлён
+         */
+        GND,
+        /**
+         * Открытый, постоянный ток
+         */
+        DC;
+    }
+
+    /**
+     * Режим входа
+     */
+    private InputMode inputMode;
+
+    /**
+     * Режимы синхронизации
+     */
+    private static enum SynchMode {
+
+        /**
+         * Авто
+         */
+        AUTO,
+        /**
+         * Нет
+         */
+        NONE,
+        /**
+         * Ручная
+         */
+        MANUAL
+    }
+
+    /**
+     * Режим синхронизации
+     */
+    private SynchMode synchMode;
+    /**
+     * Синхронизация по фронту
+     */
     private boolean triggerMode = true;
+    /**
+     * Уровень синхронизации
+     */
     private int triggerLevel = 100;
+    /**
+     * Смещение по постоянному току
+     */
     private int dcLevel = 125;
 
+    /**
+     * Обновить вход на устройстве
+     */
     private void updateInputMode() {
         try {
             switch (inputMode) {
-                case 0:
+                case AC:
                     deviceController.switchInputToAc();
                     break;
-                case 1:
+                case GND:
                     deviceController.switchInputToGnd();
                     break;
-                case 2:
+                case DC:
                     deviceController.switchInputToDc();
                     break;
             }
@@ -204,20 +343,28 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setInputMode(int mode) {
+    /**
+     * Установить режим входа устройства
+     *
+     * @param mode режим входа
+     */
+    private void setInputMode(InputMode mode) {
         inputMode = mode;
     }
 
+    /**
+     * Обновить режим синхронизации на устройстве
+     */
     private void updateSynchro() {
         try {
             switch (synchMode) {
-                case 0:
+                case AUTO:
                     deviceController.switchSyncToAuto(triggerMode);
                     break;
-                case 1:
+                case NONE:
                     deviceController.switchSyncToNone();
                     break;
-                case 2:
+                case MANUAL:
                     deviceController.switchSyncToLevel(triggerLevel, triggerMode);
                     break;
             }
@@ -226,46 +373,86 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setSynchMode(int mode) {
+    /**
+     * Установить режим синхронизации
+     *
+     * @param mode режим синхронизации
+     */
+    private void setSynchMode(SynchMode mode) {
         synchMode = mode;
     }
 
+    /**
+     * Установить синхронизацию по фронту или срезу
+     *
+     * @param mode
+     */
     private void setTriggerMode(boolean mode) {
         triggerMode = mode;
     }
 
+    /**
+     * Установить уровень синхронизации
+     *
+     * @param level уровень синхронизации
+     */
     private void setTriggerLevel(int level) {
         triggerLevel = level;
     }
 
-    private int currentTime;
+    /**
+     * Текущий период развёртки
+     */
+    private int currentPeriod;
 
-    private void updateTime() {
+    /**
+     * Установить период развёртки в устройстве
+     */
+    private void updatePeriod() {
         try {
-            deviceController.switchTime(currentTime);
+            deviceController.switchTime(currentPeriod);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены времени развёртки", ex);
         }
     }
 
-    private void setTime(int time) {
-        currentTime = time;
+    /**
+     * Установить период развёртки
+     *
+     * @param periodIndex период развёртки
+     */
+    private void setPeriod(int periodIndex) {
+        currentPeriod = periodIndex;
     }
 
-    private int currentVoltage;
+    /**
+     * Текущий предел измерения
+     */
+    private int currentRange;
 
-    private void updateVoltage() {
+    /**
+     * Обновить предел измерения на устройстве
+     */
+    private void updateRange() {
         try {
-            deviceController.switchVoltage(currentVoltage);
+            deviceController.switchVoltage(currentRange);
         } catch (SerialPortException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены предела измерений", ex);
         }
     }
 
-    private void setVoltage(int volt) {
-        currentVoltage = volt;
+    /**
+     * Задать предел измерения
+     *
+     * @param rangeIndex индекс предела измерения
+     */
+    private void setRange(int rangeIndex) {
+        currentRange = rangeIndex;
     }
 
+    /**
+     * Обновить смещение входа на устройстве
+     */
     private void updateDcOffset() {
         try {
             deviceController.setZeroLevel(dcLevel);
@@ -274,24 +461,41 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Установить смещение входа
+     *
+     * @param offset смещение входа
+     */
     private void setDcOffset(int offset) {
         dcLevel = offset;
     }
 
+    /**
+     * Обновить настройки устройства
+     */
     private void updateDeviceSettings() {
         if (deviceController.isOpen()) {
-            updateTime();
-            updateVoltage();
             updateSynchro();
-            updateInputMode();
+            updatePeriod();
+            updateRange();
             updateDcOffset();
+            updateInputMode();
         }
     }
 
+    /**
+     * Количество шагов авторегулирования смещения
+     */
     private int autoDcSteps;
 
+    /**
+     * Среднее отклонение от нуля
+     */
     private double autoDcVoltage;
 
+    /**
+     * Отрегулировать смещение входа
+     */
     private void autoDcModeAdjust() {
         if (autoDcMode) {
             if (currentResult != null) {
@@ -317,12 +521,21 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Количество шагов проверки перегрузки входа
+     */
     private int autoLimitSteps;
 
+    /**
+     * Признак перегрузки входа
+     */
     private boolean isOverload = true;
 
+    /**
+     * Отрегулировать предел измерения
+     */
     private void autoLimitModeAdjust() {
-        if (autoLimitMode) {
+        if (autoRangeMode) {
             if (currentResult != null) {
                 isOverload &= currentResult.isOverloadSignal();
                 autoLimitSteps++;
@@ -350,9 +563,9 @@ public class MainFrame extends javax.swing.JFrame {
         rangeComboBox = new javax.swing.JComboBox();
         decRangeButton = new javax.swing.JButton();
         incRangeButton = new javax.swing.JButton();
-        autoLimitCheckBox = new javax.swing.JCheckBox();
+        autoRangeCheckBox = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
-        timeComboBox = new javax.swing.JComboBox();
+        periodComboBox = new javax.swing.JComboBox();
         decTimeButton = new javax.swing.JButton();
         incTimeButton = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
@@ -360,7 +573,7 @@ public class MainFrame extends javax.swing.JFrame {
         inputGndRadioButton = new javax.swing.JRadioButton();
         inputDcRadioButton = new javax.swing.JRadioButton();
         jPanel7 = new javax.swing.JPanel();
-        syncAutoRadioButton = new javax.swing.JRadioButton();
+        synchAutoRadioButton = new javax.swing.JRadioButton();
         synchNoneRadioButton = new javax.swing.JRadioButton();
         synchManualRadioButton = new javax.swing.JRadioButton();
         jPanel8 = new javax.swing.JPanel();
@@ -460,12 +673,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel4.add(incRangeButton, gridBagConstraints);
 
-        autoLimitCheckBox.setFont(fontScheme.getGuiFont());
-        autoLimitCheckBox.setText("Автоувеличение");
-        autoLimitCheckBox.setToolTipText("Автоматически увеличивать предел при перегрузке входа");
-        autoLimitCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        autoRangeCheckBox.setFont(fontScheme.getGuiFont());
+        autoRangeCheckBox.setText("Автоувеличение");
+        autoRangeCheckBox.setToolTipText("Автоматически увеличивать предел при перегрузке входа");
+        autoRangeCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                autoLimitCheckBoxActionPerformed(evt);
+                autoRangeCheckBoxActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -475,7 +688,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel4.add(autoLimitCheckBox, gridBagConstraints);
+        jPanel4.add(autoRangeCheckBox, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -486,12 +699,12 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Период развёртки", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel5.setLayout(new java.awt.GridBagLayout());
 
-        timeComboBox.setFont(fontScheme.getGuiFont());
-        timeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10µS", "20µS", "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS", "1s", "2s", "5s" }));
-        timeComboBox.setToolTipText("Выберите период развёртки");
-        timeComboBox.addActionListener(new java.awt.event.ActionListener() {
+        periodComboBox.setFont(fontScheme.getGuiFont());
+        periodComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10µS", "20µS", "50µS", "100µS", "200µS", "500µS", "1mS", "2mS", "5mS", "10mS", "20mS", "50mS", "100mS", "200mS", "500mS", "1s", "2s", "5s" }));
+        periodComboBox.setToolTipText("Выберите период развёртки");
+        periodComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                timeComboBoxActionPerformed(evt);
+                periodComboBoxActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -500,7 +713,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
-        jPanel5.add(timeComboBox, gridBagConstraints);
+        jPanel5.add(periodComboBox, gridBagConstraints);
 
         decTimeButton.setFont(fontScheme.getGuiFont());
         decTimeButton.setText("-");
@@ -584,17 +797,17 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Синхронизация", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel7.setLayout(new java.awt.GridLayout(1, 0));
 
-        buttonGroup2.add(syncAutoRadioButton);
-        syncAutoRadioButton.setFont(fontScheme.getGuiFont());
-        syncAutoRadioButton.setSelected(true);
-        syncAutoRadioButton.setText("Авто");
-        syncAutoRadioButton.setToolTipText("Автоматическая синхронизация");
-        syncAutoRadioButton.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroup2.add(synchAutoRadioButton);
+        synchAutoRadioButton.setFont(fontScheme.getGuiFont());
+        synchAutoRadioButton.setSelected(true);
+        synchAutoRadioButton.setText("Авто");
+        synchAutoRadioButton.setToolTipText("Автоматическая синхронизация");
+        synchAutoRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                syncAutoRadioButtonActionPerformed(evt);
+                synchAutoRadioButtonActionPerformed(evt);
             }
         });
-        jPanel7.add(syncAutoRadioButton);
+        jPanel7.add(synchAutoRadioButton);
 
         buttonGroup2.add(synchNoneRadioButton);
         synchNoneRadioButton.setFont(fontScheme.getGuiFont());
@@ -1090,40 +1303,40 @@ public class MainFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void inputAcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputAcRadioButtonActionPerformed
-        setInputMode(0);
+        setInputMode(InputMode.AC);
         autoDcCheckBox.setEnabled(true);
     }//GEN-LAST:event_inputAcRadioButtonActionPerformed
 
     private void inputGndRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputGndRadioButtonActionPerformed
-        setInputMode(1);
+        setInputMode(InputMode.GND);
         autoDcCheckBox.setEnabled(true);
     }//GEN-LAST:event_inputGndRadioButtonActionPerformed
 
     private void inputDcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDcRadioButtonActionPerformed
-        setInputMode(2);
+        setInputMode(InputMode.DC);
         autoDcCheckBox.setSelected(false);
         autoDcCheckBox.setEnabled(false);
         autoDcMode = false;
     }//GEN-LAST:event_inputDcRadioButtonActionPerformed
 
-    private void syncAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syncAutoRadioButtonActionPerformed
-        setSynchMode(0);
-    }//GEN-LAST:event_syncAutoRadioButtonActionPerformed
+    private void synchAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchAutoRadioButtonActionPerformed
+        setSynchMode(SynchMode.AUTO);
+    }//GEN-LAST:event_synchAutoRadioButtonActionPerformed
 
     private void synchManualRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchManualRadioButtonActionPerformed
-        setSynchMode(2);
+        setSynchMode(SynchMode.MANUAL);
     }//GEN-LAST:event_synchManualRadioButtonActionPerformed
 
     private void synchNoneRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchNoneRadioButtonActionPerformed
-        setSynchMode(1);
+        setSynchMode(SynchMode.NONE);
     }//GEN-LAST:event_synchNoneRadioButtonActionPerformed
 
-    private void timeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timeComboBoxActionPerformed
-        setTime(timeComboBox.getSelectedIndex());
-    }//GEN-LAST:event_timeComboBoxActionPerformed
+    private void periodComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_periodComboBoxActionPerformed
+        setPeriod(periodComboBox.getSelectedIndex());
+    }//GEN-LAST:event_periodComboBoxActionPerformed
 
     private void rangeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rangeComboBoxActionPerformed
-        setVoltage(rangeComboBox.getSelectedIndex());
+        setRange(rangeComboBox.getSelectedIndex());
     }//GEN-LAST:event_rangeComboBoxActionPerformed
 
     private void dcOffsetSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dcOffsetSliderStateChanged
@@ -1142,6 +1355,9 @@ public class MainFrame extends javax.swing.JFrame {
         setTriggerLevel(synchLevelSlider.getValue());
     }//GEN-LAST:event_synchLevelSliderStateChanged
 
+    /**
+     * Уменьшить предел измерения
+     */
     private void downRange() {
         int idx = rangeComboBox.getSelectedIndex();
         if (idx > 0) {
@@ -1153,6 +1369,9 @@ public class MainFrame extends javax.swing.JFrame {
         downRange();
     }//GEN-LAST:event_decRangeButtonActionPerformed
 
+    /**
+     * Увеличить предел измерения
+     */
     private void upRange() {
         int idx = rangeComboBox.getSelectedIndex();
         if (idx < 10) {
@@ -1165,16 +1384,16 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_incRangeButtonActionPerformed
 
     private void decTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decTimeButtonActionPerformed
-        int idx = timeComboBox.getSelectedIndex();
+        int idx = periodComboBox.getSelectedIndex();
         if (idx > 0) {
-            timeComboBox.setSelectedIndex(idx - 1);
+            periodComboBox.setSelectedIndex(idx - 1);
         }
     }//GEN-LAST:event_decTimeButtonActionPerformed
 
     private void incTimeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incTimeButtonActionPerformed
-        int idx = timeComboBox.getSelectedIndex();
+        int idx = periodComboBox.getSelectedIndex();
         if (idx < 17) {
-            timeComboBox.setSelectedIndex(idx + 1);
+            periodComboBox.setSelectedIndex(idx + 1);
         }
     }//GEN-LAST:event_incTimeButtonActionPerformed
 
@@ -1190,8 +1409,14 @@ public class MainFrame extends javax.swing.JFrame {
         stop();
     }//GEN-LAST:event_stopButtonActionPerformed
 
+    /**
+     * Непрерывный режим
+     */
     private volatile boolean continuousMode = true;
 
+    /**
+     * Флажок шага
+     */
     private volatile boolean makeStep;
 
     private void continuousCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_continuousCheckBoxActionPerformed
@@ -1204,6 +1429,9 @@ public class MainFrame extends javax.swing.JFrame {
         enableStepButtons(false);
     }//GEN-LAST:event_stepButtonActionPerformed
 
+    /**
+     * Режим автоматической подстройки смещения входа
+     */
     private volatile boolean autoDcMode;
 
     private void autoDcCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoDcCheckBoxActionPerformed
@@ -1228,7 +1456,10 @@ public class MainFrame extends javax.swing.JFrame {
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
     }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
-    private final Timer leftTimer = new Timer(100, new ActionListener() {
+    /**
+     * Таймер для сдвига влеов
+     */
+    private final Timer leftTimer = new Timer(25, new ActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -1244,7 +1475,10 @@ public class MainFrame extends javax.swing.JFrame {
         leftTimer.stop();
     }//GEN-LAST:event_leftOffsetButtonMouseReleased
 
-    private final Timer rightTimer = new Timer(100, new ActionListener() {
+    /**
+     * Таймер для сдвига вправо
+     */
+    private final Timer rightTimer = new Timer(25, new ActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -1260,11 +1494,14 @@ public class MainFrame extends javax.swing.JFrame {
         rightTimer.stop();
     }//GEN-LAST:event_rightOffsetButtonMouseReleased
 
-    private boolean autoLimitMode;
+    /**
+     * Режим автоматического изменения предела измерения
+     */
+    private boolean autoRangeMode;
 
-    private void autoLimitCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoLimitCheckBoxActionPerformed
-        autoLimitMode = autoLimitCheckBox.isSelected();
-    }//GEN-LAST:event_autoLimitCheckBoxActionPerformed
+    private void autoRangeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoRangeCheckBoxActionPerformed
+        autoRangeMode = autoRangeCheckBox.isSelected();
+    }//GEN-LAST:event_autoRangeCheckBoxActionPerformed
 
     private void autoMeasureCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoMeasureCheckBoxActionPerformed
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
@@ -1283,8 +1520,8 @@ public class MainFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox autoDcCheckBox;
     private javax.swing.JCheckBox autoFreqCheckBox;
-    private javax.swing.JCheckBox autoLimitCheckBox;
     private javax.swing.JCheckBox autoMeasureCheckBox;
+    private javax.swing.JCheckBox autoRangeCheckBox;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
@@ -1320,6 +1557,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel9;
     private javax.swing.JLabel kHarmLabel;
     private javax.swing.JButton leftOffsetButton;
+    private javax.swing.JComboBox periodComboBox;
     private javax.swing.JButton pngButton;
     private javax.swing.JComboBox portsComboBox;
     private javax.swing.JComboBox rangeComboBox;
@@ -1329,14 +1567,13 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton startButton;
     private javax.swing.JButton stepButton;
     private javax.swing.JButton stopButton;
-    private javax.swing.JRadioButton syncAutoRadioButton;
+    private javax.swing.JRadioButton synchAutoRadioButton;
     private javax.swing.JRadioButton synchCutRadioButton;
     private javax.swing.JRadioButton synchFrontRadioButton;
     private javax.swing.JSlider synchLevelSlider;
     private javax.swing.JRadioButton synchManualRadioButton;
     private javax.swing.JRadioButton synchNoneRadioButton;
     private javax.swing.JTabbedPane tabbedPane;
-    private javax.swing.JComboBox timeComboBox;
     private javax.swing.JButton txtButton;
     private javax.swing.JLabel vmaxLabel;
     private javax.swing.JLabel vminLabel;
@@ -1344,22 +1581,41 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel vrmsLabel;
     // End of variables declaration//GEN-END:variables
 
+    /**
+     * Панель для рисования графика или диаграммы
+     */
     private class RenderPanel extends JPanel {
 
+        /**
+         * Изображение, которое нужно нарисовать на панели
+         */
         private BufferedImage image;
 
+        /**
+         * Скопировать на панель изображение
+         *
+         * @param bi изображение, которое должно рисоваться на этой панели
+         * @throws InterruptedException
+         */
         void copyImage(BufferedImage bi) throws InterruptedException {
             if (bi != null) {
                 if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
+                    // новое изображение отличается от старого
                     image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
                 }
                 Graphics g = image.getGraphics();
                 g.drawImage(bi, 0, 0, null);
                 repaint();
+                // вернуть использованное изображение для повторной работы
                 scopeRenderer.returnUsedImage(bi);
             }
         }
 
+        /**
+         * Перерисовывает панель по требованию системы
+         *
+         * @param g графический контекст, на котором производится рисования
+         */
         @Override
         public void paint(Graphics g) {
             int w = this.getWidth();
@@ -1370,10 +1626,122 @@ public class MainFrame extends javax.swing.JFrame {
                 g.drawImage(image, x, y, null);
                 return;
             }
+            // если изображение не задано, то просто залить цветом фона
             g.setColor(colorScheme.getBackgroundColor());
             g.fillRect(0, 0, w, h);
         }
 
+    }
+
+    /**
+     * Задать параметры элементов управления окна из настроек
+     */
+    void setupFrameFromProperties() {
+        portsComboBox.setSelectedItem(prop.getString(PORT_NAME, ""));
+        autoRangeCheckBox.setSelected(prop.getBoolean(AUTO_RANGE_MODE, false));
+        autoRangeMode = autoRangeCheckBox.isSelected();
+        rangeComboBox.setSelectedItem(prop.getString(RANGE, "10V"));
+        periodComboBox.setSelectedItem(prop.getString(PERIOD, "100mS"));
+        switch (prop.getInteger(INPUT, 0)) {
+            case 0:
+                inputAcRadioButton.setSelected(true);
+                setInputMode(InputMode.AC);
+                autoDcCheckBox.setEnabled(true);
+                break;
+            case 2:
+                inputDcRadioButton.setSelected(true);
+                setInputMode(InputMode.DC);
+                autoDcCheckBox.setEnabled(false);
+                break;
+            default:
+                inputGndRadioButton.setSelected(true);
+                setInputMode(InputMode.GND);
+                autoDcCheckBox.setEnabled(true);
+        }
+        autoDcCheckBox.setSelected(prop.getBoolean(AUTO_DC, false));
+        autoDcMode = autoDcCheckBox.isSelected();
+        dcOffsetSlider.setValue(prop.getInteger(DC_OFFSET, 125));
+        setDcOffset(dcOffsetSlider.getValue());
+        switch (prop.getInteger(SYNCH, 0)) {
+            case 0:
+                synchAutoRadioButton.setSelected(true);
+                setSynchMode(SynchMode.AUTO);
+                break;
+            case 2:
+                synchManualRadioButton.setSelected(true);
+                setSynchMode(SynchMode.MANUAL);
+                break;
+            default:
+                synchNoneRadioButton.setSelected(true);
+                setSynchMode(SynchMode.NONE);
+        }
+        switch (prop.getInteger(SYNCH_FRONT, 0)) {
+            case 0:
+                synchFrontRadioButton.setSelected(true);
+                setTriggerMode(true);
+                break;
+            default:
+                synchCutRadioButton.setSelected(true);
+                setTriggerMode(false);
+        }
+        synchLevelSlider.setValue(prop.getInteger(SYNCH_LEVEL, 100));
+        setTriggerLevel(synchLevelSlider.getValue());
+        autoFreqCheckBox.setSelected(prop.getBoolean(AUTO_FREQ, false));
+        deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
+        autoMeasureCheckBox.setSelected(prop.getBoolean(AUTO_MEASURE, false));
+        deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
+        Rectangle r = new Rectangle();
+        r.x = prop.getInteger(X, 0);
+        r.y = prop.getInteger(Y, 0);
+        r.width = prop.getInteger(W, 640);
+        r.height = prop.getInteger(H, 480);
+        this.setBounds(r);
+        if (prop.getBoolean(MAXIMIZED, true)) {
+            setExtendedState(MAXIMIZED_BOTH);
+        }
+        colorScheme = prop.getColorScheme();
+        scopeRenderer.setColorScheme(colorScheme);
+    }
+
+    /**
+     * Сохранить параметры элементов управления окна в настройки
+     */
+    void storeFrameToProperties() {
+        prop.setString(PORT_NAME, (String) portsComboBox.getSelectedItem());
+        prop.setBoolean(AUTO_RANGE_MODE, autoRangeCheckBox.isSelected());
+        prop.setString(RANGE, (String) rangeComboBox.getSelectedItem());
+        prop.setString(PERIOD, (String) periodComboBox.getSelectedItem());
+        if (inputAcRadioButton.isSelected()) {
+            prop.setInteger(INPUT, 0);
+        } else if (inputDcRadioButton.isSelected()) {
+            prop.setInteger(INPUT, 2);
+        } else {
+            prop.setInteger(INPUT, 1);
+        }
+        prop.setBoolean(AUTO_DC, autoDcCheckBox.isSelected());
+        prop.setInteger(DC_OFFSET, dcOffsetSlider.getValue());
+        if (synchAutoRadioButton.isSelected()) {
+            prop.setInteger(SYNCH, 0);
+        } else if (synchManualRadioButton.isSelected()) {
+            prop.setInteger(SYNCH, 2);
+        } else {
+            prop.setInteger(SYNCH, 1);
+        }
+        if (synchFrontRadioButton.isSelected()) {
+            prop.setInteger(SYNCH_FRONT, 0);
+        } else {
+            prop.setInteger(SYNCH_FRONT, 1);
+        }
+        prop.setInteger(SYNCH_LEVEL, synchLevelSlider.getValue());
+        prop.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
+        prop.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
+        Rectangle r = this.getBounds();
+        prop.setInteger(X, r.x);
+        prop.setInteger(Y, r.y);
+        prop.setInteger(W, r.width);
+        prop.setInteger(H, r.height);
+        prop.setBoolean(MAXIMIZED, getExtendedState() == MAXIMIZED_BOTH);
+        prop.setColorScheme(colorScheme);
     }
 
 }

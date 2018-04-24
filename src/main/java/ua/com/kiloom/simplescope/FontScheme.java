@@ -8,7 +8,6 @@ import java.awt.Font;
  */
 class FontScheme {
 
-
     private final Font scopeFont;
 
     private final Font guiFont;
@@ -28,8 +27,6 @@ class FontScheme {
             new Font("Noto Sans", 0, 13),
             new Font("Noto Sans", 0, 18),
             new Font("Noto Sans", 0, 9));
-
-
 
     /**
      * @return the scopeFont

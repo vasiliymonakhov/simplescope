@@ -25,7 +25,7 @@ class ScopeRenderer {
     /**
      * Цветовая схема скопа
      */
-    private ColorScheme colorScheme = ColorScheme.getScheme("Зелёная монохромная");
+    private ColorScheme colorScheme = ColorScheme.GREEN_MONO_SCHEME;
 
     /**
      * Устанавливает цветовую схему
@@ -34,6 +34,15 @@ class ScopeRenderer {
      */
     void setColorScheme(ColorScheme colorScheme) {
         this.colorScheme = colorScheme;
+    }
+
+    /**
+     * Возвращает цветовую схему
+     *
+     * @return цветовая схема
+     */
+    ColorScheme getColorScheme() {
+        return colorScheme;
     }
 
     /**
@@ -162,6 +171,7 @@ class ScopeRenderer {
 
     /**
      * Сделать расчёты геометрии
+     *
      * @param imageWidth ширина области рисования
      * @param imageHeight высота области рисования
      */
@@ -555,10 +565,10 @@ class ScopeRenderer {
         // частота основной гармоники
         double fr = 1 / result.getDeltaT();
         // рисуем только первые 10 столбиков
-        for (int i = 0; i < Const.HARMONICS_COUNT; i ++) {
+        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
             g.setColor(colorScheme.getGridColor());
             // высота столбика
-            int bl = (int)(Math.round(harms[i] * height));
+            int bl = (int) (Math.round(harms[i] * height));
             g.fillRect(xl, yl - bl, bw, bl);
             g.setColor(colorScheme.getRayColor());
             g.drawRect(xl, yl - bl, bw, bl);

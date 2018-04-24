@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 /**
  * Класс для цветов графика
+ *
  * @author Vasily Monakhov
  */
 class ColorScheme {
@@ -37,6 +38,11 @@ class ColorScheme {
     private final Color rulerColor;
 
     /**
+     * Имя схемы
+     */
+    private final String name;
+
+    /**
      * Создаёт цветовую схему
      *
      * @param backgroundColor цвет фона скопа
@@ -46,12 +52,13 @@ class ColorScheme {
      * @param textColor цвет текста
      * @param rulerColor цвет линеек
      */
-    private ColorScheme(Color backgroundColor,
+    private ColorScheme(String name, Color backgroundColor,
             Color borderColor,
             Color gridColor,
             Color rayColor,
             Color textColor,
             Color rulerColor) {
+        this.name = name;
         this.backgroundColor = backgroundColor;
         this.borderColor = borderColor;
         this.gridColor = gridColor;
@@ -90,7 +97,7 @@ class ColorScheme {
     /**
      * Зелёная почти монохромная схема
      */
-    private final static ColorScheme GREEN_MONO_SCHEME;
+    final static ColorScheme GREEN_MONO_SCHEME;
     /**
      * Серая монохромная схема
      */
@@ -116,22 +123,23 @@ class ColorScheme {
     private final static Map<String, ColorScheme> SCHEMES = new TreeMap<>();
 
     static {
-        GREEN_MONO_SCHEME = new ColorScheme(BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
-        ORANGE_MONO_SCHEME = new ColorScheme(BLACK, DARK_ORANGE, DARK_ORANGE, LIGHT_ORANGE, ORANGE, ORANGE);
-        GRAY_MONO_SCHEME = new ColorScheme(BLACK, DARK_GRAY, DARK_GRAY, WHITE, GRAY, GRAY);
-        WHITE_MONO_SCHEME = new ColorScheme(WHITE, DARK_GRAY, DARK_GRAY, BLACK, DARK_GRAY, DARK_GRAY);
-        DARK_COLOR_SCHEME = new ColorScheme(BLACK, GREEN, GREEN, WHITE, BLUE, RED);
-        LIGHT_COLOR_SCHEME = new ColorScheme(WHITE, GREEN, GREEN, BLACK, BLUE, RED);
-        SCHEMES.put("Зелёная монохромная", GREEN_MONO_SCHEME);
-        SCHEMES.put("Оранжевая монохромная", ORANGE_MONO_SCHEME);
-        SCHEMES.put("Серая монохромная", GRAY_MONO_SCHEME);
-        SCHEMES.put("Белая монохромная", WHITE_MONO_SCHEME);
-        SCHEMES.put("Тёмная цветная", DARK_COLOR_SCHEME);
-        SCHEMES.put("Светлая цветная", LIGHT_COLOR_SCHEME);
+        GREEN_MONO_SCHEME = new ColorScheme("Зелёная монохромная", BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
+        ORANGE_MONO_SCHEME = new ColorScheme("Оранжевая монохромная", BLACK, DARK_ORANGE, DARK_ORANGE, LIGHT_ORANGE, ORANGE, ORANGE);
+        GRAY_MONO_SCHEME = new ColorScheme("Серая монохромная", BLACK, DARK_GRAY, DARK_GRAY, WHITE, GRAY, GRAY);
+        WHITE_MONO_SCHEME = new ColorScheme("Белая монохромная", WHITE, DARK_GRAY, DARK_GRAY, BLACK, DARK_GRAY, DARK_GRAY);
+        DARK_COLOR_SCHEME = new ColorScheme("Тёмная цветная", BLACK, GREEN, GREEN, WHITE, BLUE, RED);
+        LIGHT_COLOR_SCHEME = new ColorScheme("Светлая цветная", WHITE, GREEN, GREEN, BLACK, BLUE, RED);
+        registerScheme(GREEN_MONO_SCHEME);
+        registerScheme(ORANGE_MONO_SCHEME);
+        registerScheme(GRAY_MONO_SCHEME);
+        registerScheme(WHITE_MONO_SCHEME);
+        registerScheme(DARK_COLOR_SCHEME);
+        registerScheme(LIGHT_COLOR_SCHEME);
     }
 
     /**
      * Возвращает коллекцию имен схем
+     *
      * @return коллекция имен схем
      */
     static Collection<String> getNames() {
@@ -140,53 +148,87 @@ class ColorScheme {
 
     /**
      * Возвращает схему по имени
+     *
      * @param name имя схемы
      * @return схема
      */
     static ColorScheme getScheme(String name) {
+        if (name == null) {
+            return GREEN_MONO_SCHEME;
+        }
         return SCHEMES.get(name);
     }
 
     /**
-     * @return the backgroundColor
+     * Зарегистрировать схему
+     *
+     * @param scheme схема
+     */
+    private static void registerScheme(ColorScheme scheme) {
+        SCHEMES.put(scheme.name, scheme);
+    }
+
+    /**
+     * Возвращает цвет фона
+     *
+     * @return цвет фона
      */
     Color getBackgroundColor() {
         return backgroundColor;
     }
 
     /**
-     * @return the borderColor
+     * Возвращает цвет рамки графика
+     *
+     * @return цвет рамки графика
      */
     Color getBorderColor() {
         return borderColor;
     }
 
     /**
-     * @return the gridColor
+     * Возвращает цвет сетки
+     *
+     * @return цвет сетки
      */
     Color getGridColor() {
         return gridColor;
     }
 
     /**
-     * @return the rayColor
+     * Возвращает цвет луча
+     *
+     * @return цвет луча
      */
     Color getRayColor() {
         return rayColor;
     }
 
     /**
-     * @return the textColor
+     * Возвращает цвет надписей
+     *
+     * @return цвет надписей
      */
     Color getTextColor() {
         return textColor;
     }
 
     /**
-     * @return the rulerColor
+     * Возвращает цвет линеек
+     *
+     * @return цвет линеек
      */
     Color getRulerColor() {
         return rulerColor;
+    }
+
+    /**
+     * Возвращает имя схемы
+     *
+     * @return имя схемы
+     */
+    String getName() {
+        return name;
     }
 
 }

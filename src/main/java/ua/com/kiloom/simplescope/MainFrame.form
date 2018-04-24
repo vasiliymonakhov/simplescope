@@ -14,8 +14,7 @@
     <Property name="title" type="java.lang.String" value="Simplescope v3"/>
   </Properties>
   <SyntheticProperties>
-    <SyntheticProperty name="formSizePolicy" type="int" value="0"/>
-    <SyntheticProperty name="generateSize" type="boolean" value="false"/>
+    <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
     <SyntheticProperty name="generateCenter" type="boolean" value="true"/>
   </SyntheticProperties>
   <AuxValues>
@@ -132,7 +131,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JCheckBox" name="autoLimitCheckBox">
+            <Component class="javax.swing.JCheckBox" name="autoRangeCheckBox">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
                   <Connection code="fontScheme.getGuiFont()" type="code"/>
@@ -141,7 +140,7 @@
                 <Property name="toolTipText" type="java.lang.String" value="&#x410;&#x432;&#x442;&#x43e;&#x43c;&#x430;&#x442;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x438; &#x443;&#x432;&#x435;&#x43b;&#x438;&#x447;&#x438;&#x432;&#x430;&#x442;&#x44c; &#x43f;&#x440;&#x435;&#x434;&#x435;&#x43b; &#x43f;&#x440;&#x438; &#x43f;&#x435;&#x440;&#x435;&#x433;&#x440;&#x443;&#x437;&#x43a;&#x435; &#x432;&#x445;&#x43e;&#x434;&#x430;"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="autoLimitCheckBoxActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="autoRangeCheckBoxActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -169,7 +168,7 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout"/>
           <SubComponents>
-            <Component class="javax.swing.JComboBox" name="timeComboBox">
+            <Component class="javax.swing.JComboBox" name="periodComboBox">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
                   <Connection code="fontScheme.getGuiFont()" type="code"/>
@@ -199,7 +198,7 @@
                 <Property name="toolTipText" type="java.lang.String" value="&#x412;&#x44b;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x43f;&#x435;&#x440;&#x438;&#x43e;&#x434; &#x440;&#x430;&#x437;&#x432;&#x451;&#x440;&#x442;&#x43a;&#x438;"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="timeComboBoxActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="periodComboBoxActionPerformed"/>
               </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">
@@ -333,7 +332,7 @@
             <Property name="rows" type="int" value="1"/>
           </Layout>
           <SubComponents>
-            <Component class="javax.swing.JRadioButton" name="syncAutoRadioButton">
+            <Component class="javax.swing.JRadioButton" name="synchAutoRadioButton">
               <Properties>
                 <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                   <ComponentRef name="buttonGroup2"/>
@@ -346,7 +345,7 @@
                 <Property name="toolTipText" type="java.lang.String" value="&#x410;&#x432;&#x442;&#x43e;&#x43c;&#x430;&#x442;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x430;&#x44f; &#x441;&#x438;&#x43d;&#x445;&#x440;&#x43e;&#x43d;&#x438;&#x437;&#x430;&#x446;&#x438;&#x44f;"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="syncAutoRadioButtonActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="synchAutoRadioButtonActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JRadioButton" name="synchNoneRadioButton">
