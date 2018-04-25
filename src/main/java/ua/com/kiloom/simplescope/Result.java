@@ -115,7 +115,7 @@ class Result {
             leftRulerPos = rightTime;
             rightRulerPos = leftTime;
         }
-        deltaT = adcTimeToRealTime(rightTime - leftTime);
+        deltaT = adcTimeToRealTime(rightRulerPos - leftRulerPos);
     }
 
     /**
@@ -317,36 +317,42 @@ class Result {
 
     /**
      * Изерить линейками сигнал
-     *
-     * @return true если удалось измерять
      */
     private void processAutoMeasure() {
         if (autoMeasure) {
             Arrays.fill(measures, 0);
             // подсчитать попадания сигнала в каждый блок
+            // и среднее значение
+            int middle = 0;
             for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
                 int block = adcData[i] / Const.AUTO_MEASURE_BLOCK;
                 measures[block]++;
+                middle += adcData[i];
             }
-            // найти два максимума
-            // сделаем копию нашего массива
-            int[] tmp = Arrays.copyOf(measures, measures.length);
-            // сортируем по возрастанию
-            Arrays.sort(tmp);
-            // два последних элемента - это и есть наши максимумы
-            int m1 = tmp[tmp.length - 1];
-            int m2 = tmp[tmp.length - 2];
-            // найдём где они находятся
-            int p1 = -1;
-            int p2 = -1;
-            for (int i = 0; i < measures.length; i++) {
-                if (measures[i] == m1) {
+            middle /= Const.ADC_DATA_BLOCK_SIZE;
+            // найдём в какой блок попадает среднее значение
+            int middlepos = middle / Const.AUTO_MEASURE_BLOCK;
+
+            // ищем максимум ниже положения среднего значения
+            int m1 = Integer.MIN_VALUE;
+            int p1 = middle;
+            for (int i = middlepos - 1; i >= 0; i--) {
+                if (measures[i] > m1) {
+                    m1 = measures[i];
                     p1 = i;
                 }
-                if (measures[i] == m2) {
+            }
+
+            // ищем максимум выше положения среднего значения
+            int m2 = Integer.MIN_VALUE;
+            int p2 = middle;
+            for (int i = middlepos + 1; i < measures.length; i++) {
+                if (measures[i] > m2) {
+                    m2 = measures[i];
                     p2 = i;
                 }
             }
+
             // вычислим новое положение линеек
             int vp1 = p1 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
             int vp2 = p2 * Const.AUTO_MEASURE_BLOCK + Const.AUTO_MEASURE_BLOCK / 2;
@@ -491,7 +497,7 @@ class Result {
             Arrays.fill(harmonics, 0);
             return;
         }
-        // определить количество значений ддля вычисления
+        // определить количество значений для вычисления
         int count = toT - fromT;
         // шаг изменения фазы синусоиды
         double dfi = 2 * Math.PI / count;
@@ -517,14 +523,14 @@ class Result {
         // вычислить коэффициент гармоник
         double total = 0;
         for (int i = 1; i < Const.HARMONICS_COUNT; i++) {
-            total += getHarmonics()[i] * getHarmonics()[i];
+            total += harmonics[i] * harmonics[i];
         }
-        kHarm = Math.sqrt(total) / getHarmonics()[0];
+        kHarm = Math.sqrt(total) / harmonics[0];
 
         // теперь нужно просуммировать значения всех гармоник
         double sum = 0;
         for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
-            sum += getHarmonics()[i];
+            sum += harmonics[i];
         }
         // здесь вычисляется доля каждой гармоники
         for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
@@ -533,9 +539,9 @@ class Result {
     }
 
     /**
-     * Возвращает коэффиуиент гармоник
+     * Возвращает коэффициент гармоник
      *
-     * @return коэффиуиент гармоник
+     * @return коэффициент гармоник
      */
     double getKHarm() {
         return kHarm;
