@@ -527,9 +527,9 @@ public class MainFrame extends javax.swing.JFrame {
     private int autoLimitSteps;
 
     /**
-     * Признак перегрузки входа
+     * Счетчик перегрузки входа
      */
-    private boolean isOverload = true;
+    private int overloadCount;
 
     /**
      * Отрегулировать предел измерения
@@ -537,14 +537,16 @@ public class MainFrame extends javax.swing.JFrame {
     private void autoLimitModeAdjust() {
         if (autoRangeMode) {
             if (currentResult != null) {
-                isOverload &= currentResult.isOverloadSignal();
+                if (currentResult.isOverloadSignal()) {
+                    overloadCount++;
+                }
                 autoLimitSteps++;
-                if (autoLimitSteps == 10) {
+                if (autoLimitSteps >= Const.OVERLOAD_DETECT_STEPS) {
                     autoLimitSteps = 0;
-                    if (isOverload) {
+                    if (overloadCount >= Const.OVERLOAD_COUNT) {
                         upRange();
                     }
-                    isOverload = true;
+                    overloadCount = 0;
                 }
             }
         }
@@ -674,8 +676,8 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel4.add(incRangeButton, gridBagConstraints);
 
         autoRangeCheckBox.setFont(fontScheme.getGuiFont());
-        autoRangeCheckBox.setText("Автоувеличение");
-        autoRangeCheckBox.setToolTipText("Автоматически увеличивать предел при перегрузке входа");
+        autoRangeCheckBox.setText("Автопереключение");
+        autoRangeCheckBox.setToolTipText("Автоматически переключать предел при перегрузке входа");
         autoRangeCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 autoRangeCheckBoxActionPerformed(evt);
@@ -752,7 +754,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel3.add(jPanel5, gridBagConstraints);
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Вход", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel6.setLayout(new java.awt.GridLayout(1, 0));
+        jPanel6.setLayout(new java.awt.GridBagLayout());
 
         buttonGroup1.add(inputAcRadioButton);
         inputAcRadioButton.setFont(fontScheme.getGuiFont());
@@ -764,7 +766,11 @@ public class MainFrame extends javax.swing.JFrame {
                 inputAcRadioButtonActionPerformed(evt);
             }
         });
-        jPanel6.add(inputAcRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel6.add(inputAcRadioButton, gridBagConstraints);
 
         buttonGroup1.add(inputGndRadioButton);
         inputGndRadioButton.setFont(fontScheme.getGuiFont());
@@ -775,7 +781,11 @@ public class MainFrame extends javax.swing.JFrame {
                 inputGndRadioButtonActionPerformed(evt);
             }
         });
-        jPanel6.add(inputGndRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel6.add(inputGndRadioButton, gridBagConstraints);
 
         buttonGroup1.add(inputDcRadioButton);
         inputDcRadioButton.setFont(fontScheme.getGuiFont());
@@ -786,7 +796,11 @@ public class MainFrame extends javax.swing.JFrame {
                 inputDcRadioButtonActionPerformed(evt);
             }
         });
-        jPanel6.add(inputDcRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel6.add(inputDcRadioButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -795,7 +809,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel3.add(jPanel6, gridBagConstraints);
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Синхронизация", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel7.setLayout(new java.awt.GridLayout(1, 0));
+        jPanel7.setLayout(new java.awt.GridBagLayout());
 
         buttonGroup2.add(synchAutoRadioButton);
         synchAutoRadioButton.setFont(fontScheme.getGuiFont());
@@ -807,7 +821,10 @@ public class MainFrame extends javax.swing.JFrame {
                 synchAutoRadioButtonActionPerformed(evt);
             }
         });
-        jPanel7.add(synchAutoRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel7.add(synchAutoRadioButton, gridBagConstraints);
 
         buttonGroup2.add(synchNoneRadioButton);
         synchNoneRadioButton.setFont(fontScheme.getGuiFont());
@@ -818,7 +835,10 @@ public class MainFrame extends javax.swing.JFrame {
                 synchNoneRadioButtonActionPerformed(evt);
             }
         });
-        jPanel7.add(synchNoneRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel7.add(synchNoneRadioButton, gridBagConstraints);
 
         buttonGroup2.add(synchManualRadioButton);
         synchManualRadioButton.setFont(fontScheme.getGuiFont());
@@ -829,7 +849,10 @@ public class MainFrame extends javax.swing.JFrame {
                 synchManualRadioButtonActionPerformed(evt);
             }
         });
-        jPanel7.add(synchManualRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel7.add(synchManualRadioButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -838,7 +861,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel3.add(jPanel7, gridBagConstraints);
 
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Триггер", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel8.setLayout(new java.awt.GridLayout(1, 0));
+        jPanel8.setLayout(new java.awt.GridBagLayout());
 
         buttonGroup3.add(synchFrontRadioButton);
         synchFrontRadioButton.setFont(fontScheme.getGuiFont());
@@ -850,7 +873,11 @@ public class MainFrame extends javax.swing.JFrame {
                 synchFrontRadioButtonActionPerformed(evt);
             }
         });
-        jPanel8.add(synchFrontRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel8.add(synchFrontRadioButton, gridBagConstraints);
 
         buttonGroup3.add(synchCutRadioButton);
         synchCutRadioButton.setFont(fontScheme.getGuiFont());
@@ -861,7 +888,11 @@ public class MainFrame extends javax.swing.JFrame {
                 synchCutRadioButtonActionPerformed(evt);
             }
         });
-        jPanel8.add(synchCutRadioButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel8.add(synchCutRadioButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -962,7 +993,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
         gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel10.add(startButton, gridBagConstraints);
 
         stopButton.setFont(fontScheme.getGuiFont());
@@ -980,7 +1011,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
         gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel10.add(stopButton, gridBagConstraints);
 
         jPanel13.setLayout(new java.awt.GridBagLayout());
@@ -1045,6 +1076,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         jPanel1.add(continuousCheckBox, gridBagConstraints);
 
         stepButton.setFont(fontScheme.getGuiFont());
@@ -1088,7 +1120,8 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel11.add(pngButton, gridBagConstraints);
 
         txtButton.setFont(fontScheme.getGuiFont());
@@ -1099,7 +1132,8 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
         jPanel11.add(txtButton, gridBagConstraints);
 
         htmlButton.setFont(fontScheme.getGuiFont());
@@ -1110,7 +1144,8 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel11.add(htmlButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1251,7 +1286,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         deltaTLabel.setFont(fontScheme.getValFont());
         deltaTLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        deltaTLabel.setText("ΔT");
+        deltaTLabel.setText("Δt");
         deltaTLabel.setToolTipText("Величина времени между вертикальными линейками");
         jPanel12.add(deltaTLabel);
 
@@ -1443,9 +1478,13 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_pngButtonActionPerformed
 
     private void scopeParentPanelMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseDragged
-        if (scopeRenderer.addMouseClick(evt.getX(), evt.getY())) {
+        int res = scopeRenderer.addMouseClick(evt.getX(), evt.getY());
+        if (res == 1) {
             autoFreqCheckBox.setSelected(false);
             deviceController.setAutoFreq(false);
+        } else if (res == 2) {
+            autoMeasureCheckBox.setSelected(false);
+            deviceController.setAutoMeasure(false);
         }
         if (!continuousMode) {
             redrawAndMakePicture();
@@ -1457,7 +1496,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
     /**
-     * Таймер для сдвига влеов
+     * Таймер для сдвига влево
      */
     private final Timer leftTimer = new Timer(25, new ActionListener() {
 

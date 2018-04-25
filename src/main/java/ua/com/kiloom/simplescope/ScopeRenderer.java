@@ -356,9 +356,10 @@ class ScopeRenderer {
      *
      * @param x по оси абсцисс
      * @param y по оси ординат
+     * @return 0 - ничего не менять, 1 - захвачена вертикальная линейка, 2 -
+     * захвачена горизонтальная линейка
      */
-    boolean addMouseClick(int x, int y) {
-        boolean offAutoFreq = false;
+    int addMouseClick(int x, int y) {
         // проверить, попадает ли точка в область рисования графика
         if (x >= x_pos && x <= x_pos + width && y >= y_pos && y <= y_pos + height) {
             // найти расстояние от точки до каждой из линеек
@@ -374,21 +375,27 @@ class ScopeRenderer {
             distances[3] = dLowerRuler;
             Arrays.sort(distances);
             int min = distances[0];
+            if (min > Const.MOUSE_MAX_DISTANCE_TO_RULER) {
+                // мышь далеко от линеек
+                return 0;
+            }
             // в зависимости от того, кто ближе, переместить линейку в эту точку
             if (min == dLeftRuler) {
                 leftRuler = xToHScale(x);
-                offAutoFreq = true;
+                return 1;
             } else if (min == dRightRuler) {
                 rightRuler = xToHScale(x);
-                offAutoFreq = true;
+                return 1;
             } else if (min == dUpperRuler) {
                 upperRuler = yToVScale(y);
+                return 2;
             } else {
                 // min == dLowerRuler
                 lowerRuler = yToVScale(y);
+                return 2;
             }
         }
-        return offAutoFreq;
+        return 0;
     }
 
     /**
@@ -564,7 +571,7 @@ class ScopeRenderer {
         int yl = y_pos + height;
         // частота основной гармоники
         double fr = 1 / result.getDeltaT();
-        // рисуем только первые 10 столбиков
+        // рисуем столбики
         for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
             g.setColor(colorScheme.getGridColor());
             // высота столбика
