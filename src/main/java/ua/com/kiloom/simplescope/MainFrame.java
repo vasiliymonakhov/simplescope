@@ -1,8 +1,12 @@
 package ua.com.kiloom.simplescope;
 
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -10,8 +14,12 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.Timer;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import jssc.SerialPortException;
@@ -28,16 +36,11 @@ public class MainFrame extends javax.swing.JFrame {
     /**
      * Схема шрифтов
      */
-    private final FontScheme fontScheme = FontScheme.STANDART;
+    private final FontScheme fontScheme = AppProperties.getFontScheme();
     /**
      * Цветовая схема скопа
      */
-    private ColorScheme colorScheme = ColorScheme.GREEN_MONO_SCHEME;
-
-    /**
-     * Настройки
-     */
-    private final AppProperties prop = new AppProperties();
+    private ColorScheme colorScheme = AppProperties.getColorScheme();
 
     /**
      * Создаёт окно
@@ -46,6 +49,7 @@ public class MainFrame extends javax.swing.JFrame {
         initComponents();
         scopeParentPanel.add(scopeRenderPanel);
         harmParentPanel.add(harmRenderPanel);
+        setupDemoScopePanel.add(scopeDemoPanel);
         tabbedPane.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -61,16 +65,19 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void windowOpened(WindowEvent e) {
                 searchPorts();
-                prop.load();
                 setupFrameFromProperties();
             }
 
             @Override
             public void windowClosing(WindowEvent e) {
+                // сохранение настроек в файл
                 storeFrameToProperties();
-                prop.save();
+                AppProperties.setColorScheme(setupColorScheme);
+                AppProperties.setFontScheme(setupFontScheme);
+                AppProperties.save();
             }
         });
+        setupInit();
     }
 
     /**
@@ -178,13 +185,13 @@ public class MainFrame extends javax.swing.JFrame {
             if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
                 Rectangle r = scopeRenderPanel.getBounds();
                 if (r.width != 0 && r.height != 0) {
-                    scopeRenderer.renderScopeAndUpdateRulers(r.width, r.height, currentResult);
+                    scopeRenderer.renderScope(r.width, r.height, currentResult);
                     scopeRenderPanel.copyImage(currentResult.getScopeImage());
                 }
             } else {
                 Rectangle r = harmRenderPanel.getBounds();
                 if (r.width != 0 && r.height != 0) {
-                    scopeRenderer.renderHarmAnalyser(r.width, r.height, currentResult);
+                    scopeRenderer.renderHarmAnalyse(r.width, r.height, currentResult);
                     harmRenderPanel.copyImage(currentResult.getHarmImage());
                 }
             }
@@ -209,6 +216,7 @@ public class MainFrame extends javax.swing.JFrame {
     private void start() {
         if (portsComboBox.getSelectedIndex() != -1) {
             try {
+                tabbedPane.setSelectedComponent(scopeParentPanel);
                 startButton.setEnabled(false);
                 portsComboBox.setEnabled(false);
                 searchPortsButton.setEnabled(false);
@@ -618,6 +626,47 @@ public class MainFrame extends javax.swing.JFrame {
         tabbedPane = new javax.swing.JTabbedPane();
         scopeParentPanel = new javax.swing.JPanel();
         harmParentPanel = new javax.swing.JPanel();
+        setupPanel = new javax.swing.JPanel();
+        jPanel16 = new javax.swing.JPanel();
+        jPanel17 = new javax.swing.JPanel();
+        guiFontComboBox = new javax.swing.JComboBox();
+        guiFontBoldCheckBox = new javax.swing.JCheckBox();
+        guiFontItalicCheckBox = new javax.swing.JCheckBox();
+        guiFontSizeSpinner = new javax.swing.JSpinner();
+        jPanel18 = new javax.swing.JPanel();
+        valFontComboBox = new javax.swing.JComboBox();
+        valFontBoldCheckBox = new javax.swing.JCheckBox();
+        valFontItalicCheckBox = new javax.swing.JCheckBox();
+        valFontSizeSpinner = new javax.swing.JSpinner();
+        jPanel19 = new javax.swing.JPanel();
+        borderFontComboBox = new javax.swing.JComboBox();
+        borderFontBoldCheckBox = new javax.swing.JCheckBox();
+        borderFontItalicCheckBox = new javax.swing.JCheckBox();
+        borderFontSizeSpinner = new javax.swing.JSpinner();
+        jPanel20 = new javax.swing.JPanel();
+        colorSchemeComboBox = new javax.swing.JComboBox();
+        jPanel21 = new javax.swing.JPanel();
+        scopeFontComboBox = new javax.swing.JComboBox();
+        scopeFontBoldCheckBox = new javax.swing.JCheckBox();
+        scopeFontItalicCheckBox = new javax.swing.JCheckBox();
+        scopeFontSizeSpinner = new javax.swing.JSpinner();
+        jPanel22 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        harmCountSpinner = new javax.swing.JSpinner();
+        harmRenderSpinner = new javax.swing.JSpinner();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        demoPanel = new javax.swing.JPanel();
+        demoPanel1 = new javax.swing.JPanel();
+        demoComboBox = new javax.swing.JComboBox();
+        demoButton1 = new javax.swing.JButton();
+        demoButton2 = new javax.swing.JButton();
+        demoCheckBox = new javax.swing.JCheckBox();
+        demoPanel2 = new javax.swing.JPanel();
+        demoLabel1 = new javax.swing.JLabel();
+        demoLabel2 = new javax.swing.JLabel();
+        setupDemoScopePanel = new javax.swing.JPanel();
+        filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
@@ -992,13 +1041,12 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
         jPanel10.add(startButton, gridBagConstraints);
 
         stopButton.setFont(fontScheme.getGuiFont());
         stopButton.setText("Стоп");
-        stopButton.setToolTipText("Нажмите для остаовки работы");
+        stopButton.setToolTipText("Нажмите для останова работы");
         stopButton.setEnabled(false);
         stopButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1010,7 +1058,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 1;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel10.add(stopButton, gridBagConstraints);
 
@@ -1020,8 +1067,7 @@ public class MainFrame extends javax.swing.JFrame {
         portsComboBox.setToolTipText("Выберите порт");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
@@ -1037,8 +1083,8 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
         jPanel13.add(searchPortsButton, gridBagConstraints);
@@ -1049,7 +1095,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
         jPanel10.add(jPanel13, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1309,6 +1354,11 @@ public class MainFrame extends javax.swing.JFrame {
         getContentPane().add(jPanel12, gridBagConstraints);
 
         tabbedPane.setFont(fontScheme.getGuiFont());
+        tabbedPane.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tabbedPaneStateChanged(evt);
+            }
+        });
 
         scopeParentPanel.setToolTipText("Осциллоскоп");
         scopeParentPanel.setMinimumSize(new java.awt.Dimension(600, 600));
@@ -1324,6 +1374,414 @@ public class MainFrame extends javax.swing.JFrame {
         harmParentPanel.setToolTipText("Анализ гармоник");
         harmParentPanel.setLayout(new java.awt.GridLayout(1, 0));
         tabbedPane.addTab("Анализ гармоник", harmParentPanel);
+
+        setupPanel.setLayout(new java.awt.GridBagLayout());
+
+        jPanel16.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Внешний вид", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel16.setLayout(new java.awt.GridBagLayout());
+
+        jPanel17.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Основной шрифт", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel17.setLayout(new java.awt.GridBagLayout());
+
+        guiFontComboBox.setFont(fontScheme.getGuiFont());
+        guiFontComboBox.setToolTipText("Выберите шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel17.add(guiFontComboBox, gridBagConstraints);
+
+        guiFontBoldCheckBox.setFont(fontScheme.getGuiFont());
+        guiFontBoldCheckBox.setText("Жирный");
+        guiFontBoldCheckBox.setToolTipText("Включите если хотите жирный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel17.add(guiFontBoldCheckBox, gridBagConstraints);
+
+        guiFontItalicCheckBox.setFont(fontScheme.getGuiFont());
+        guiFontItalicCheckBox.setText("Наклонный");
+        guiFontItalicCheckBox.setToolTipText("Включите если хотите наклонный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel17.add(guiFontItalicCheckBox, gridBagConstraints);
+
+        guiFontSizeSpinner.setFont(fontScheme.getGuiFont());
+        guiFontSizeSpinner.setModel(new javax.swing.SpinnerNumberModel(10, 5, 50, 1));
+        guiFontSizeSpinner.setToolTipText("Укажите размер шрифта");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel17.add(guiFontSizeSpinner, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel16.add(jPanel17, gridBagConstraints);
+
+        jPanel18.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Шрифт для измеренных величин", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel18.setLayout(new java.awt.GridBagLayout());
+
+        valFontComboBox.setFont(fontScheme.getGuiFont());
+        valFontComboBox.setToolTipText("Выберите шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel18.add(valFontComboBox, gridBagConstraints);
+
+        valFontBoldCheckBox.setFont(fontScheme.getGuiFont());
+        valFontBoldCheckBox.setText("Жирный");
+        valFontBoldCheckBox.setToolTipText("Включите если хотите жирный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel18.add(valFontBoldCheckBox, gridBagConstraints);
+
+        valFontItalicCheckBox.setFont(fontScheme.getGuiFont());
+        valFontItalicCheckBox.setText("Наклонный");
+        valFontItalicCheckBox.setToolTipText("Включите если хотите наклонный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel18.add(valFontItalicCheckBox, gridBagConstraints);
+
+        valFontSizeSpinner.setFont(fontScheme.getGuiFont());
+        valFontSizeSpinner.setModel(new javax.swing.SpinnerNumberModel(10, 5, 50, 1));
+        valFontSizeSpinner.setToolTipText("Укажите размер шрифта");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel18.add(valFontSizeSpinner, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel16.add(jPanel18, gridBagConstraints);
+
+        jPanel19.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Шрифт для рамок", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel19.setLayout(new java.awt.GridBagLayout());
+
+        borderFontComboBox.setFont(fontScheme.getGuiFont());
+        borderFontComboBox.setToolTipText("Выберите шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel19.add(borderFontComboBox, gridBagConstraints);
+
+        borderFontBoldCheckBox.setFont(fontScheme.getGuiFont());
+        borderFontBoldCheckBox.setText("Жирный");
+        borderFontBoldCheckBox.setToolTipText("Включите если хотите жирный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel19.add(borderFontBoldCheckBox, gridBagConstraints);
+
+        borderFontItalicCheckBox.setFont(fontScheme.getGuiFont());
+        borderFontItalicCheckBox.setText("Наклонный");
+        borderFontItalicCheckBox.setToolTipText("Включите если хотите наклонный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel19.add(borderFontItalicCheckBox, gridBagConstraints);
+
+        borderFontSizeSpinner.setFont(fontScheme.getGuiFont());
+        borderFontSizeSpinner.setModel(new javax.swing.SpinnerNumberModel(10, 5, 50, 1));
+        borderFontSizeSpinner.setToolTipText("Укажите размер шрифта");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel19.add(borderFontSizeSpinner, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel16.add(jPanel19, gridBagConstraints);
+
+        jPanel20.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Цветовая схема графиков", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel20.setLayout(new java.awt.GridBagLayout());
+
+        colorSchemeComboBox.setFont(fontScheme.getGuiFont());
+        colorSchemeComboBox.setToolTipText("Выберите цветовую схему");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel20.add(colorSchemeComboBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel16.add(jPanel20, gridBagConstraints);
+
+        jPanel21.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Шрифт для графиков", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel21.setLayout(new java.awt.GridBagLayout());
+
+        scopeFontComboBox.setFont(fontScheme.getGuiFont());
+        scopeFontComboBox.setToolTipText("Выберите шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel21.add(scopeFontComboBox, gridBagConstraints);
+
+        scopeFontBoldCheckBox.setFont(fontScheme.getGuiFont());
+        scopeFontBoldCheckBox.setText("Жирный");
+        scopeFontBoldCheckBox.setToolTipText("Включите если хотите жирный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel21.add(scopeFontBoldCheckBox, gridBagConstraints);
+
+        scopeFontItalicCheckBox.setFont(fontScheme.getGuiFont());
+        scopeFontItalicCheckBox.setText("Наклонный");
+        scopeFontItalicCheckBox.setToolTipText("Включите если хотите наклонный шрифт");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel21.add(scopeFontItalicCheckBox, gridBagConstraints);
+
+        scopeFontSizeSpinner.setFont(fontScheme.getGuiFont());
+        scopeFontSizeSpinner.setModel(new javax.swing.SpinnerNumberModel(10, 5, 50, 1));
+        scopeFontSizeSpinner.setToolTipText("Укажите размер шрифта");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel21.add(scopeFontSizeSpinner, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        jPanel16.add(jPanel21, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        setupPanel.add(jPanel16, gridBagConstraints);
+
+        jPanel22.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Анализ гармоник", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel22.setLayout(new java.awt.GridBagLayout());
+
+        jLabel1.setFont(fontScheme.getGuiFont());
+        jLabel1.setText("Рассчитывать");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(jLabel1, gridBagConstraints);
+
+        jLabel2.setFont(fontScheme.getGuiFont());
+        jLabel2.setText("Отображать");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(jLabel2, gridBagConstraints);
+
+        harmCountSpinner.setFont(fontScheme.getGuiFont());
+        harmCountSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
+        harmCountSpinner.setToolTipText("Выберите количество рассчитываемых гармоник");
+        harmCountSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                harmCountSpinnerStateChanged(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(harmCountSpinner, gridBagConstraints);
+
+        harmRenderSpinner.setFont(fontScheme.getGuiFont());
+        harmRenderSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
+        harmRenderSpinner.setToolTipText("Выберите количество отображаемых гармоник");
+        harmRenderSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                harmRenderSpinnerStateChanged(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(harmRenderSpinner, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel22.add(filler2, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        setupPanel.add(jPanel22, gridBagConstraints);
+
+        demoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Образец", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        demoPanel.setLayout(new java.awt.GridBagLayout());
+
+        demoPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Предел измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, setupFontScheme.getBorderFont()));
+        demoPanel1.setLayout(new java.awt.GridBagLayout());
+
+        demoComboBox.setFont(setupFontScheme.getGuiFont());
+        demoComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "50mV", "100mV", "250mV", "500mV", "1V", "2.5V", "5V", "10V", "20V", "50V", "100V" }));
+        demoComboBox.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
+        demoPanel1.add(demoComboBox, gridBagConstraints);
+
+        demoButton1.setFont(setupFontScheme.getGuiFont());
+        demoButton1.setText("-");
+        demoButton1.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
+        demoPanel1.add(demoButton1, gridBagConstraints);
+
+        demoButton2.setFont(setupFontScheme.getGuiFont());
+        demoButton2.setText("+");
+        demoButton2.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 5, 5);
+        demoPanel1.add(demoButton2, gridBagConstraints);
+
+        demoCheckBox.setFont(setupFontScheme.getGuiFont());
+        demoCheckBox.setText("Автопереключение");
+        demoCheckBox.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        demoPanel1.add(demoCheckBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        demoPanel.add(demoPanel1, gridBagConstraints);
+
+        demoPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Измерения", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, setupFontScheme.getBorderFont()));
+        demoPanel2.setLayout(new java.awt.GridBagLayout());
+
+        demoLabel1.setFont(setupFontScheme.getValFont());
+        demoLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        demoLabel1.setText("Vmin = -10V");
+        demoLabel1.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        demoPanel2.add(demoLabel1, gridBagConstraints);
+
+        demoLabel2.setFont(setupFontScheme.getValFont());
+        demoLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        demoLabel2.setText("Vmax = 10V");
+        demoLabel2.setToolTipText("Образец");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        demoPanel2.add(demoLabel2, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        demoPanel.add(demoPanel2, gridBagConstraints);
+
+        setupDemoScopePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        setupDemoScopePanel.setToolTipText("Так будет выглядеть график");
+        setupDemoScopePanel.setLayout(new java.awt.GridLayout());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        demoPanel.add(setupDemoScopePanel, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        demoPanel.add(filler3, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        setupPanel.add(demoPanel, gridBagConstraints);
+
+        tabbedPane.addTab("Настройка", setupPanel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -1546,6 +2004,28 @@ public class MainFrame extends javax.swing.JFrame {
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
     }//GEN-LAST:event_autoMeasureCheckBoxActionPerformed
 
+    private void harmCountSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_harmCountSpinnerStateChanged
+        int cnt = (Integer) harmCountSpinner.getValue();
+        AppProperties.setHarmonicsCount(cnt);
+        if (cnt < (Integer) harmRenderSpinner.getValue()) {
+            harmRenderSpinner.setValue(cnt);
+        }
+    }//GEN-LAST:event_harmCountSpinnerStateChanged
+
+    private void harmRenderSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_harmRenderSpinnerStateChanged
+        int cnt = (Integer) harmRenderSpinner.getValue();
+        if (cnt > (Integer) harmCountSpinner.getValue()) {
+            harmCountSpinner.setValue(cnt);
+        }
+        AppProperties.setHarmonicsRender(cnt);
+    }//GEN-LAST:event_harmRenderSpinnerStateChanged
+
+    private void tabbedPaneStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabbedPaneStateChanged
+        if (tabbedPane.getSelectedComponent() == setupPanel) {
+            stop();
+        }
+    }//GEN-LAST:event_tabbedPaneStateChanged
+
     public static void main(String args[]) {
 
         EventQueue.invokeLater(new Runnable() {
@@ -1561,24 +2041,48 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBox autoFreqCheckBox;
     private javax.swing.JCheckBox autoMeasureCheckBox;
     private javax.swing.JCheckBox autoRangeCheckBox;
+    private javax.swing.JCheckBox borderFontBoldCheckBox;
+    private javax.swing.JComboBox borderFontComboBox;
+    private javax.swing.JCheckBox borderFontItalicCheckBox;
+    private javax.swing.JSpinner borderFontSizeSpinner;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.ButtonGroup buttonGroup3;
+    private javax.swing.JComboBox colorSchemeComboBox;
     private javax.swing.JCheckBox continuousCheckBox;
     private javax.swing.JSlider dcOffsetSlider;
     private javax.swing.JButton decRangeButton;
     private javax.swing.JButton decTimeButton;
     private javax.swing.JLabel deltaTLabel;
     private javax.swing.JLabel deltaVLabel;
+    private javax.swing.JButton demoButton1;
+    private javax.swing.JButton demoButton2;
+    private javax.swing.JCheckBox demoCheckBox;
+    private javax.swing.JComboBox demoComboBox;
+    private javax.swing.JLabel demoLabel1;
+    private javax.swing.JLabel demoLabel2;
+    private javax.swing.JPanel demoPanel;
+    private javax.swing.JPanel demoPanel1;
+    private javax.swing.JPanel demoPanel2;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
+    private javax.swing.Box.Filler filler3;
     private javax.swing.JLabel freqLabel;
+    private javax.swing.JCheckBox guiFontBoldCheckBox;
+    private javax.swing.JComboBox guiFontComboBox;
+    private javax.swing.JCheckBox guiFontItalicCheckBox;
+    private javax.swing.JSpinner guiFontSizeSpinner;
+    private javax.swing.JSpinner harmCountSpinner;
     private javax.swing.JPanel harmParentPanel;
+    private javax.swing.JSpinner harmRenderSpinner;
     private javax.swing.JButton htmlButton;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;
     private javax.swing.JRadioButton inputAcRadioButton;
     private javax.swing.JRadioButton inputDcRadioButton;
     private javax.swing.JRadioButton inputGndRadioButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
@@ -1586,7 +2090,14 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
     private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel16;
+    private javax.swing.JPanel jPanel17;
+    private javax.swing.JPanel jPanel18;
+    private javax.swing.JPanel jPanel19;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel20;
+    private javax.swing.JPanel jPanel21;
+    private javax.swing.JPanel jPanel22;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -1601,8 +2112,14 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JComboBox portsComboBox;
     private javax.swing.JComboBox rangeComboBox;
     private javax.swing.JButton rightOffsetButton;
+    private javax.swing.JCheckBox scopeFontBoldCheckBox;
+    private javax.swing.JComboBox scopeFontComboBox;
+    private javax.swing.JCheckBox scopeFontItalicCheckBox;
+    private javax.swing.JSpinner scopeFontSizeSpinner;
     private javax.swing.JPanel scopeParentPanel;
     private javax.swing.JButton searchPortsButton;
+    private javax.swing.JPanel setupDemoScopePanel;
+    private javax.swing.JPanel setupPanel;
     private javax.swing.JButton startButton;
     private javax.swing.JButton stepButton;
     private javax.swing.JButton stopButton;
@@ -1614,6 +2131,10 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JRadioButton synchNoneRadioButton;
     private javax.swing.JTabbedPane tabbedPane;
     private javax.swing.JButton txtButton;
+    private javax.swing.JCheckBox valFontBoldCheckBox;
+    private javax.swing.JComboBox valFontComboBox;
+    private javax.swing.JCheckBox valFontItalicCheckBox;
+    private javax.swing.JSpinner valFontSizeSpinner;
     private javax.swing.JLabel vmaxLabel;
     private javax.swing.JLabel vminLabel;
     private javax.swing.JLabel vppLabel;
@@ -1633,20 +2154,19 @@ public class MainFrame extends javax.swing.JFrame {
         /**
          * Скопировать на панель изображение
          *
-         * @param bi изображение, которое должно рисоваться на этой панели
+         * @param bi новое изображение, которое должно рисоваться на этой панели
          * @throws InterruptedException
          */
         void copyImage(BufferedImage bi) throws InterruptedException {
             if (bi != null) {
-                if (image == null || image.getWidth() != bi.getWidth() || image.getHeight() != bi.getHeight()) {
-                    // новое изображение отличается от старого
-                    image = new BufferedImage(bi.getWidth(), bi.getHeight(), bi.getType());
+                // есть новое изображение
+                if (image != null) {
+                    // старое можно вернуть для повторного использования
+                    scopeRenderer.returnUsedImage(image);
                 }
-                Graphics g = image.getGraphics();
-                g.drawImage(bi, 0, 0, null);
+                image = bi;
+                // затребовать перерисовку окна
                 repaint();
-                // вернуть использованное изображение для повторной работы
-                scopeRenderer.returnUsedImage(bi);
             }
         }
 
@@ -1660,6 +2180,7 @@ public class MainFrame extends javax.swing.JFrame {
             int w = this.getWidth();
             int h = this.getHeight();
             if (image != null) {
+                // изображение задано
                 int x = (w - image.getWidth()) / 2;
                 int y = (h - image.getHeight()) / 2;
                 g.drawImage(image, x, y, null);
@@ -1676,12 +2197,12 @@ public class MainFrame extends javax.swing.JFrame {
      * Задать параметры элементов управления окна из настроек
      */
     void setupFrameFromProperties() {
-        portsComboBox.setSelectedItem(prop.getString(PORT_NAME, ""));
-        autoRangeCheckBox.setSelected(prop.getBoolean(AUTO_RANGE_MODE, false));
+        portsComboBox.setSelectedItem(AppProperties.getString(PORT_NAME, ""));
+        autoRangeCheckBox.setSelected(AppProperties.getBoolean(AUTO_RANGE_MODE, false));
         autoRangeMode = autoRangeCheckBox.isSelected();
-        rangeComboBox.setSelectedItem(prop.getString(RANGE, "10V"));
-        periodComboBox.setSelectedItem(prop.getString(PERIOD, "100mS"));
-        switch (prop.getInteger(INPUT, 0)) {
+        rangeComboBox.setSelectedItem(AppProperties.getString(RANGE, "10V"));
+        periodComboBox.setSelectedItem(AppProperties.getString(PERIOD, "100mS"));
+        switch (AppProperties.getInteger(INPUT, 0)) {
             case 0:
                 inputAcRadioButton.setSelected(true);
                 setInputMode(InputMode.AC);
@@ -1697,11 +2218,11 @@ public class MainFrame extends javax.swing.JFrame {
                 setInputMode(InputMode.GND);
                 autoDcCheckBox.setEnabled(true);
         }
-        autoDcCheckBox.setSelected(prop.getBoolean(AUTO_DC, false));
+        autoDcCheckBox.setSelected(AppProperties.getBoolean(AUTO_DC, false));
         autoDcMode = autoDcCheckBox.isSelected();
-        dcOffsetSlider.setValue(prop.getInteger(DC_OFFSET, 125));
+        dcOffsetSlider.setValue(AppProperties.getInteger(DC_OFFSET, 125));
         setDcOffset(dcOffsetSlider.getValue());
-        switch (prop.getInteger(SYNCH, 0)) {
+        switch (AppProperties.getInteger(SYNCH, 0)) {
             case 0:
                 synchAutoRadioButton.setSelected(true);
                 setSynchMode(SynchMode.AUTO);
@@ -1714,7 +2235,7 @@ public class MainFrame extends javax.swing.JFrame {
                 synchNoneRadioButton.setSelected(true);
                 setSynchMode(SynchMode.NONE);
         }
-        switch (prop.getInteger(SYNCH_FRONT, 0)) {
+        switch (AppProperties.getInteger(SYNCH_FRONT, 0)) {
             case 0:
                 synchFrontRadioButton.setSelected(true);
                 setTriggerMode(true);
@@ -1723,22 +2244,22 @@ public class MainFrame extends javax.swing.JFrame {
                 synchCutRadioButton.setSelected(true);
                 setTriggerMode(false);
         }
-        synchLevelSlider.setValue(prop.getInteger(SYNCH_LEVEL, 100));
+        synchLevelSlider.setValue(AppProperties.getInteger(SYNCH_LEVEL, 100));
         setTriggerLevel(synchLevelSlider.getValue());
-        autoFreqCheckBox.setSelected(prop.getBoolean(AUTO_FREQ, false));
+        autoFreqCheckBox.setSelected(AppProperties.getBoolean(AUTO_FREQ, false));
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
-        autoMeasureCheckBox.setSelected(prop.getBoolean(AUTO_MEASURE, false));
+        autoMeasureCheckBox.setSelected(AppProperties.getBoolean(AUTO_MEASURE, false));
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
         Rectangle r = new Rectangle();
-        r.x = prop.getInteger(X, 0);
-        r.y = prop.getInteger(Y, 0);
-        r.width = prop.getInteger(W, 640);
-        r.height = prop.getInteger(H, 480);
+        r.x = AppProperties.getInteger(X, 0);
+        r.y = AppProperties.getInteger(Y, 0);
+        r.width = AppProperties.getInteger(W, 640);
+        r.height = AppProperties.getInteger(H, 480);
         this.setBounds(r);
-        if (prop.getBoolean(MAXIMIZED, true)) {
+        if (AppProperties.getBoolean(MAXIMIZED, true)) {
             setExtendedState(MAXIMIZED_BOTH);
         }
-        colorScheme = prop.getColorScheme();
+        colorScheme = AppProperties.getColorScheme();
         scopeRenderer.setColorScheme(colorScheme);
     }
 
@@ -1746,41 +2267,276 @@ public class MainFrame extends javax.swing.JFrame {
      * Сохранить параметры элементов управления окна в настройки
      */
     void storeFrameToProperties() {
-        prop.setString(PORT_NAME, (String) portsComboBox.getSelectedItem());
-        prop.setBoolean(AUTO_RANGE_MODE, autoRangeCheckBox.isSelected());
-        prop.setString(RANGE, (String) rangeComboBox.getSelectedItem());
-        prop.setString(PERIOD, (String) periodComboBox.getSelectedItem());
+        AppProperties.setString(PORT_NAME, (String) portsComboBox.getSelectedItem());
+        AppProperties.setBoolean(AUTO_RANGE_MODE, autoRangeCheckBox.isSelected());
+        AppProperties.setString(RANGE, (String) rangeComboBox.getSelectedItem());
+        AppProperties.setString(PERIOD, (String) periodComboBox.getSelectedItem());
         if (inputAcRadioButton.isSelected()) {
-            prop.setInteger(INPUT, 0);
+            AppProperties.setInteger(INPUT, 0);
         } else if (inputDcRadioButton.isSelected()) {
-            prop.setInteger(INPUT, 2);
+            AppProperties.setInteger(INPUT, 2);
         } else {
-            prop.setInteger(INPUT, 1);
+            AppProperties.setInteger(INPUT, 1);
         }
-        prop.setBoolean(AUTO_DC, autoDcCheckBox.isSelected());
-        prop.setInteger(DC_OFFSET, dcOffsetSlider.getValue());
+        AppProperties.setBoolean(AUTO_DC, autoDcCheckBox.isSelected());
+        AppProperties.setInteger(DC_OFFSET, dcOffsetSlider.getValue());
         if (synchAutoRadioButton.isSelected()) {
-            prop.setInteger(SYNCH, 0);
+            AppProperties.setInteger(SYNCH, 0);
         } else if (synchManualRadioButton.isSelected()) {
-            prop.setInteger(SYNCH, 2);
+            AppProperties.setInteger(SYNCH, 2);
         } else {
-            prop.setInteger(SYNCH, 1);
+            AppProperties.setInteger(SYNCH, 1);
         }
         if (synchFrontRadioButton.isSelected()) {
-            prop.setInteger(SYNCH_FRONT, 0);
+            AppProperties.setInteger(SYNCH_FRONT, 0);
         } else {
-            prop.setInteger(SYNCH_FRONT, 1);
+            AppProperties.setInteger(SYNCH_FRONT, 1);
         }
-        prop.setInteger(SYNCH_LEVEL, synchLevelSlider.getValue());
-        prop.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
-        prop.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
+        AppProperties.setInteger(SYNCH_LEVEL, synchLevelSlider.getValue());
+        AppProperties.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
+        AppProperties.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
         Rectangle r = this.getBounds();
-        prop.setInteger(X, r.x);
-        prop.setInteger(Y, r.y);
-        prop.setInteger(W, r.width);
-        prop.setInteger(H, r.height);
-        prop.setBoolean(MAXIMIZED, getExtendedState() == MAXIMIZED_BOTH);
-        prop.setColorScheme(colorScheme);
+        AppProperties.setInteger(X, r.x);
+        AppProperties.setInteger(Y, r.y);
+        AppProperties.setInteger(W, r.width);
+        AppProperties.setInteger(H, r.height);
+        AppProperties.setBoolean(MAXIMIZED, getExtendedState() == MAXIMIZED_BOTH);
+        AppProperties.setColorScheme(colorScheme);
     }
+
+    /**
+     * Инициализация панели настроек
+     */
+    private void setupInit() {
+        getAllFontNames();
+        getAllColorChemes();
+        setFontControls();
+        colorSchemeComboBox.setSelectedItem(colorScheme.getName());
+        setSetupListeners();
+        harmCountSpinner.setValue(AppProperties.getHarmonicsCount());
+        harmRenderSpinner.setValue(AppProperties.getHarmonicsRender());
+    }
+
+    /**
+     * Получить название всех шрифтов в системе
+     */
+    private void getAllFontNames() {
+        for (String name : GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()) {
+            guiFontComboBox.addItem(name);
+            valFontComboBox.addItem(name);
+            borderFontComboBox.addItem(name);
+            scopeFontComboBox.addItem(name);
+        }
+    }
+
+    /**
+     * Получить название всех цветовых схем
+     */
+    private void getAllColorChemes() {
+        for (String name : ColorScheme.getNames()) {
+            colorSchemeComboBox.addItem(name);
+        }
+    }
+
+    /**
+     * Установить контролы настройки шрифтов
+     */
+    private void setFontControls() {
+        guiFontComboBox.setSelectedItem(fontScheme.getGuiFont().getName());
+        guiFontBoldCheckBox.setSelected(fontScheme.getGuiFont().isBold());
+        guiFontItalicCheckBox.setSelected(fontScheme.getGuiFont().isItalic());
+        guiFontSizeSpinner.setValue(fontScheme.getGuiFont().getSize());
+
+        borderFontComboBox.setSelectedItem(fontScheme.getBorderFont().getName());
+        borderFontBoldCheckBox.setSelected(fontScheme.getBorderFont().isBold());
+        borderFontItalicCheckBox.setSelected(fontScheme.getBorderFont().isItalic());
+        borderFontSizeSpinner.setValue(fontScheme.getBorderFont().getSize());
+
+        valFontComboBox.setSelectedItem(fontScheme.getValFont().getName());
+        valFontBoldCheckBox.setSelected(fontScheme.getValFont().isBold());
+        valFontItalicCheckBox.setSelected(fontScheme.getValFont().isItalic());
+        valFontSizeSpinner.setValue(fontScheme.getValFont().getSize());
+
+        scopeFontComboBox.setSelectedItem(fontScheme.getScopeFont().getName());
+        scopeFontBoldCheckBox.setSelected(fontScheme.getScopeFont().isBold());
+        scopeFontItalicCheckBox.setSelected(fontScheme.getScopeFont().isItalic());
+        scopeFontSizeSpinner.setValue(fontScheme.getScopeFont().getSize());
+    }
+
+    /**
+     * Цветовая схема, используемая при настройке
+     */
+    private ColorScheme setupColorScheme = AppProperties.getColorScheme();
+    /**
+     * Схема шрифтов, используемая при настройке
+     */
+    private FontScheme setupFontScheme = AppProperties.getFontScheme();
+
+    /**
+     * Создаёт шрифт по содержимому контролов
+     *
+     * @param nameComboBox комбобокс с именем шрифта
+     * @param boldCheckBox чекбокс для отметки жирного шрифта
+     * @param italicCheckBox чекбокс для отметки наклонного шрифта
+     * @param sizeSpinner спиннер для размера шрифта
+     * @return созданный шрифт
+     */
+    private Font makeFont(JComboBox nameComboBox, JCheckBox boldCheckBox, JCheckBox italicCheckBox, JSpinner sizeSpinner) {
+        return new Font((String) nameComboBox.getSelectedItem(),
+                (boldCheckBox.isSelected() ? Font.BOLD : 0)
+                | (italicCheckBox.isSelected() ? Font.ITALIC : 0),
+                (Integer) sizeSpinner.getValue());
+    }
+
+    /**
+     * Перестройка вида образца
+     */
+    private void rebuildSetupView() {
+        setupFontScheme = new FontScheme(
+                makeFont(guiFontComboBox, guiFontBoldCheckBox, guiFontItalicCheckBox, guiFontSizeSpinner),
+                makeFont(valFontComboBox, valFontBoldCheckBox, valFontItalicCheckBox, valFontSizeSpinner),
+                makeFont(borderFontComboBox, borderFontBoldCheckBox, borderFontItalicCheckBox, borderFontSizeSpinner),
+                makeFont(scopeFontComboBox, scopeFontBoldCheckBox, scopeFontItalicCheckBox, scopeFontSizeSpinner));
+        setupColorScheme = ColorScheme.getScheme((String) colorSchemeComboBox.getSelectedItem());
+        ((TitledBorder) demoPanel1.getBorder()).setTitleFont(setupFontScheme.getBorderFont());
+        ((TitledBorder) demoPanel2.getBorder()).setTitleFont(setupFontScheme.getBorderFont());
+        demoCheckBox.setFont(setupFontScheme.getGuiFont());
+        demoButton1.setFont(setupFontScheme.getGuiFont());
+        demoButton2.setFont(setupFontScheme.getGuiFont());
+        demoComboBox.setFont(setupFontScheme.getGuiFont());
+        demoLabel1.setFont(setupFontScheme.getValFont());
+        demoLabel2.setFont(setupFontScheme.getValFont());
+    }
+
+    /**
+     * Настроить слушатели контролов
+     */
+    private void setSetupListeners() {
+        ActionListener al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                rebuildSetupView();
+                demoPanel.repaint();
+            }
+        };
+        guiFontComboBox.addActionListener(al);
+        valFontComboBox.addActionListener(al);
+        borderFontComboBox.addActionListener(al);
+
+        guiFontBoldCheckBox.addActionListener(al);
+        valFontBoldCheckBox.addActionListener(al);
+        borderFontBoldCheckBox.addActionListener(al);
+
+        guiFontItalicCheckBox.addActionListener(al);
+        valFontItalicCheckBox.addActionListener(al);
+        borderFontItalicCheckBox.addActionListener(al);
+
+        ChangeListener cl = new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                rebuildSetupView();
+                demoPanel.repaint();
+            }
+        };
+        guiFontSizeSpinner.addChangeListener(cl);
+        valFontSizeSpinner.addChangeListener(cl);
+        borderFontSizeSpinner.addChangeListener(cl);
+
+        // для цветовой схемы и для шрифта скопа немного другие слушатели
+        al = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                rebuildSetupView();
+                scopeDemoPanel.repaint();
+            }
+        };
+        cl = new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                rebuildSetupView();
+                scopeDemoPanel.repaint();
+            }
+        };
+
+        scopeFontBoldCheckBox.addActionListener(al);
+        scopeFontComboBox.addActionListener(al);
+        scopeFontItalicCheckBox.addActionListener(al);
+        colorSchemeComboBox.addActionListener(al);
+        scopeFontSizeSpinner.addChangeListener(cl);
+    }
+
+    /**
+     * Панель для демонстрации внешнего вида скопа
+     */
+    private final JPanel scopeDemoPanel = new JPanel() {
+
+        @Override
+        public void paint(Graphics g2) {
+            Graphics2D g = (Graphics2D) g2;
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            // залить фон
+            Rectangle r = getBounds();
+            g.setColor(setupColorScheme.getBackgroundColor());
+            g.setFont(setupFontScheme.getScopeFont());
+            g.fillRect(0, 0, r.width, r.height);
+            // вычислить размеры
+            int width = ((r.width - 2 * Const.H_GAP) / 10) * 10;
+            int height = ((r.height - 2 * Const.V_GAP) / 10) * 10;
+            int x_pos = (r.width - width) / 2;
+            int y_pos = (r.height - height) / 2;
+            // нарисовать сетку
+            g.setStroke(ScopeRenderer.NORMAL_STROKE);
+            int time = 0, dtime = 10;
+            String timeStr = "mS";
+            for (int i = 0; i <= width; i += width / 10) {
+                g.setColor(setupColorScheme.getGridColor());
+                g.drawRect(x_pos + i, y_pos, 0, height);
+                Utils.drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + Const.V_GAP / 2, setupColorScheme.getTextColor());
+                time += dtime;
+            }
+            int dvoltage = 20;
+            int voltage = 5 * dvoltage;
+            String voltageStr = "mV";
+            for (int i = 0; i <= height; i += height / 10) {
+                g.setColor(setupColorScheme.getGridColor());
+                g.drawRect(x_pos, y_pos + i, width, 0);
+                Utils.drawCenteredString(g, String.format("%d%s", voltage, voltageStr), x_pos - Const.H_GAP / 2, y_pos + i, setupColorScheme.getTextColor());
+                voltage -= dvoltage;
+            }
+            // нарисовать рамку
+            g.setColor(setupColorScheme.getBorderColor());
+            g.drawRect(x_pos, y_pos, width, height);
+            // нарисовать линейки
+            g.setColor(setupColorScheme.getRulerColor());
+            g.drawRect(x_pos + width / 4, y_pos, 0, height);
+            g.drawRect(x_pos + 3 * width / 4, y_pos, 0, height);
+            g.drawRect(x_pos, y_pos + height / 4, width, 0);
+            g.drawRect(x_pos, y_pos + 3 * height / 4, width, 0);
+            Utils.drawCenteredString(g, "25ms", x_pos + width / 4, Const.V_GAP / 2, setupColorScheme.getTextColor());
+            Utils.drawCenteredString(g, "75mS", x_pos + 3 * width / 4, Const.V_GAP / 2, setupColorScheme.getTextColor());
+            Utils.drawCenteredString(g, "50mV", x_pos + width + Const.H_GAP / 2, y_pos + height / 4, setupColorScheme.getTextColor());
+            Utils.drawCenteredString(g, "-50mV", x_pos + width + Const.H_GAP / 2, y_pos + 3 * height / 4, setupColorScheme.getTextColor());
+            // нарисовать луч
+            g.setColor(setupColorScheme.getRayColor());
+            g.setStroke(ScopeRenderer.RAY_STROKE);
+            ScopeRenderer.Point[] points = new ScopeRenderer.Point[width];
+            // сгенерировать синусоиду
+            double ampl = height / 4;
+            int offset = y_pos + height / 2;
+            double f = 4 * Math.PI / width;
+            for (int i = 0; i < points.length; i++) {
+                points[i] = new ScopeRenderer.Point(x_pos + i, offset + (int) Math.round(ampl * Math.sin(i * f)));
+            }
+            // и нарисовать её
+            for (int i = 0; i < points.length - 1; i++) {
+                int x1 = points[i].x;
+                int y1 = points[i].y;
+                int x2 = points[i + 1].x;
+                int y2 = points[i + 1].y;
+                g.drawLine(x1, y1, x2, y2);
+            }
+        }
+    };
 
 }

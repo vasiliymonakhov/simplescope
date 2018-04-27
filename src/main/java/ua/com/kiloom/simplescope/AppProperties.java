@@ -1,5 +1,6 @@
 package ua.com.kiloom.simplescope;
 
+import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,12 +13,16 @@ import java.util.logging.Logger;
  *
  * @author Vasily Monakhov
  */
-public class AppProperties {
+public abstract class AppProperties {
 
     /**
      * Настройки
      */
-    private final Properties prop = new Properties();
+    private final static Properties prop = new Properties();
+
+    static {
+        load();
+    }
 
     /**
      * Получить число
@@ -26,7 +31,7 @@ public class AppProperties {
      * @param defaultValue значение по-умолчанию
      * @return значение
      */
-    int getInteger(Keys key, int defaultValue) {
+    static int getInteger(Keys key, int defaultValue) {
         return Integer.parseInt(prop.getProperty(key.name(), String.valueOf(defaultValue)));
     }
 
@@ -36,7 +41,7 @@ public class AppProperties {
      * @param key ключ
      * @param value значение
      */
-    void setInteger(Keys key, int value) {
+    static void setInteger(Keys key, int value) {
         prop.setProperty(key.name(), String.valueOf(value));
     }
 
@@ -47,7 +52,7 @@ public class AppProperties {
      * @param defaultValue значение по-умолчанию
      * @return значение
      */
-    boolean getBoolean(Keys key, boolean defaultValue) {
+    static boolean getBoolean(Keys key, boolean defaultValue) {
         return "true".equals(prop.getProperty(key.name(), String.valueOf(defaultValue)));
     }
 
@@ -57,7 +62,7 @@ public class AppProperties {
      * @param key ключ
      * @param value значение
      */
-    void setBoolean(Keys key, boolean value) {
+    static void setBoolean(Keys key, boolean value) {
         prop.setProperty(key.name(), String.valueOf(value));
     }
 
@@ -68,7 +73,7 @@ public class AppProperties {
      * @param defaultValue значение по-умолчанию
      * @return значение
      */
-    String getString(Keys key, String defaultValue) {
+    static String getString(Keys key, String defaultValue) {
         return prop.getProperty(key.name(), defaultValue);
     }
 
@@ -78,7 +83,7 @@ public class AppProperties {
      * @param key ключ
      * @param value значение
      */
-    void setString(Keys key, String value) {
+    static void setString(Keys key, String value) {
         prop.setProperty(key.name(), value);
     }
 
@@ -87,7 +92,7 @@ public class AppProperties {
      *
      * @return цветовая схема
      */
-    ColorScheme getColorScheme() {
+    static ColorScheme getColorScheme() {
         return ColorScheme.getScheme(getString(Keys.COLOR_SCHEME, null));
     }
 
@@ -96,8 +101,64 @@ public class AppProperties {
      *
      * @param value цветовая схема
      */
-    void setColorScheme(ColorScheme value) {
+    static void setColorScheme(ColorScheme value) {
         setString(Keys.COLOR_SCHEME, value.getName());
+    }
+
+    /**
+     * Получить шрифтовую схему
+     *
+     * @return шрифтовая схема
+     */
+    static FontScheme getFontScheme() {
+        return new FontScheme(createFont(Keys.GUI_FONT_NAME, Keys.GUI_FONT_SIZE, Keys.GUI_FONT_BOLD, Keys.GUI_FONT_ITALIC),
+                createFont(Keys.VAL_FONT_NAME, Keys.VAL_FONT_SIZE, Keys.VAL_FONT_BOLD, Keys.VAL_FONT_ITALIC),
+                createFont(Keys.BORDER_FONT_NAME, Keys.BORDER_FONT_SIZE, Keys.BORDER_FONT_BOLD, Keys.BORDER_FONT_ITALIC),
+                createFont(Keys.SCOPE_FONT_NAME, Keys.SCOPE_FONT_SIZE, Keys.SCOPE_FONT_BOLD, Keys.SCOPE_FONT_ITALIC));
+    }
+
+    /**
+     * Сохранить шрифтовую схему
+     *
+     * @param fontScheme новая шрифтовая схема
+     */
+    static void setFontScheme(FontScheme fontScheme) {
+        saveFont(fontScheme.getGuiFont(), Keys.GUI_FONT_NAME, Keys.GUI_FONT_SIZE, Keys.GUI_FONT_BOLD, Keys.GUI_FONT_ITALIC);
+        saveFont(fontScheme.getValFont(), Keys.VAL_FONT_NAME, Keys.VAL_FONT_SIZE, Keys.VAL_FONT_BOLD, Keys.VAL_FONT_ITALIC);
+        saveFont(fontScheme.getBorderFont(), Keys.BORDER_FONT_NAME, Keys.BORDER_FONT_SIZE, Keys.BORDER_FONT_BOLD, Keys.BORDER_FONT_ITALIC);
+        saveFont(fontScheme.getScopeFont(), Keys.SCOPE_FONT_NAME, Keys.SCOPE_FONT_SIZE, Keys.SCOPE_FONT_BOLD, Keys.SCOPE_FONT_ITALIC);
+    }
+
+    /**
+     * Создаёт шрифт из настроек
+     *
+     * @param nameKey ключ имени
+     * @param sizeKey ключ размера
+     * @param boldKey ключ признака жироного
+     * @param italicKey ключ признака наклонного
+     * @return созданный шрифт
+     */
+    private static Font createFont(Keys nameKey, Keys sizeKey, Keys boldKey, Keys italicKey) {
+        return new Font(getString(nameKey, "Dialog"),
+                (getBoolean(boldKey, false) ? Font.BOLD : 0)
+                | (getBoolean(italicKey, false) ? Font.ITALIC : 0),
+                getInteger(sizeKey, 12));
+    }
+
+    /**
+     * Сохраняет шрифт в настройки
+     *
+     * @param font шрифт
+     * @param nameKey ключ имени
+     * @param sizeKey ключ размера
+     * @param boldKey ключ признака жироного
+     * @param italicKey ключ признака наклонного
+     */
+    private static void saveFont(Font font, Keys nameKey, Keys sizeKey, Keys boldKey, Keys italicKey) {
+        setString(nameKey, font.getFamily());
+        setBoolean(boldKey, font.isBold());
+        setBoolean(italicKey, font.isItalic());
+        setInteger(sizeKey, font.getSize());
     }
 
     /**
@@ -108,7 +169,7 @@ public class AppProperties {
     /**
      * Загрузить из файла
      */
-    void load() {
+    private static void load() {
         try (FileInputStream fis = new FileInputStream(PROPERTIES_FILE_NAME)) {
             prop.load(fis);
         } catch (IOException ex) {
@@ -121,7 +182,7 @@ public class AppProperties {
      *
      * @return true если запись успешна
      */
-    boolean save() {
+    static boolean save() {
         try (FileOutputStream fos = new FileOutputStream(PROPERTIES_FILE_NAME)) {
             prop.store(fos, "Simplescope properties");
             return true;
@@ -129,6 +190,22 @@ public class AppProperties {
             Logger.getLogger(AppProperties.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
+    }
+
+    static int getHarmonicsCount() {
+        return getInteger(Keys.HARMONICS_COUNT, Const.HARMONICS_COUNT);
+    }
+
+    static int getHarmonicsRender() {
+        return getInteger(Keys.HARMONICS_RENDER, Const.HARMONICS_COUNT);
+    }
+
+    static void setHarmonicsCount(int cnt) {
+        setInteger(Keys.HARMONICS_COUNT, cnt);
+    }
+
+    static void setHarmonicsRender(int cnt) {
+        setInteger(Keys.HARMONICS_RENDER, cnt);
     }
 
     /**
@@ -207,7 +284,44 @@ public class AppProperties {
         /**
          * Цветовая схема
          */
-        COLOR_SCHEME
+        COLOR_SCHEME,
+        /**
+         * Основной шрифт приложения
+         */
+        GUI_FONT_NAME,
+        GUI_FONT_SIZE,
+        GUI_FONT_BOLD,
+        GUI_FONT_ITALIC,
+        /**
+         * Шрифт для значений
+         */
+        VAL_FONT_NAME,
+        VAL_FONT_SIZE,
+        VAL_FONT_BOLD,
+        VAL_FONT_ITALIC,
+        /**
+         * Шрифт для рамок
+         */
+        BORDER_FONT_NAME,
+        BORDER_FONT_SIZE,
+        BORDER_FONT_BOLD,
+        BORDER_FONT_ITALIC,
+        /**
+         * Шрифт для графиков
+         */
+        SCOPE_FONT_NAME,
+        SCOPE_FONT_SIZE,
+        SCOPE_FONT_BOLD,
+        SCOPE_FONT_ITALIC,
+        /**
+         * Количество вычисляемых гармоник
+         */
+        HARMONICS_COUNT,
+        /**
+         * Количество отображаемых гармоник
+         */
+        HARMONICS_RENDER
+
     }
 
 }

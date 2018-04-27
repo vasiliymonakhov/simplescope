@@ -477,7 +477,7 @@ class Result {
     /**
      * Доля каждой гармоники
      */
-    private final double[] harmonics = new double[Const.HARMONICS_COUNT];
+    private final double[] harmonics = new double[AppProperties.getHarmonicsCount()];
 
     /**
      * Коэффициент гармоник
@@ -497,12 +497,15 @@ class Result {
             Arrays.fill(harmonics, 0);
             return;
         }
+
+        int harmonicsCount = AppProperties.getHarmonicsCount();
+
         // определить количество значений для вычисления
         int count = toT - fromT;
         // шаг изменения фазы синусоиды
         double dfi = 2 * Math.PI / count;
         // перебор заданного количества гармоник
-        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+        for (int i = 0; i < harmonicsCount; i++) {
             // это фаза
             double fi = dfi / 2;
             // приращение фазы на каждом следующем отсчёте в зависимости от порядкового номера гармоники
@@ -522,18 +525,18 @@ class Result {
 
         // вычислить коэффициент гармоник
         double total = 0;
-        for (int i = 1; i < Const.HARMONICS_COUNT; i++) {
+        for (int i = 1; i < harmonicsCount; i++) {
             total += harmonics[i] * harmonics[i];
         }
         kHarm = Math.sqrt(total) / harmonics[0];
 
         // теперь нужно просуммировать значения всех гармоник
         double sum = 0;
-        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+        for (int i = 0; i < harmonicsCount; i++) {
             sum += harmonics[i];
         }
         // здесь вычисляется доля каждой гармоники
-        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+        for (int i = 0; i < harmonicsCount; i++) {
             harmonics[i] /= sum;
         }
     }

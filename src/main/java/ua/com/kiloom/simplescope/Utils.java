@@ -1,5 +1,10 @@
 package ua.com.kiloom.simplescope;
 
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+
 /**
  *
  * @author Vasily Monakhov
@@ -66,10 +71,27 @@ public class Utils {
     /**
      * Превраяет долю в % с точностью 1 знак после запятой.
      *
-     * @param val доля, где 1 соответсвуе 100%
+     * @param val доля, где 1 соответсвует 100%
      * @return строка с процентами
      */
     static String valueToPercent(double val) {
         return String.format("%.1f%%", val * 100d);
     }
+
+    /**
+     * Рисует строку
+     *
+     * @param g графический контекст
+     * @param str строка
+     * @param centerX координата оси абцисс центра надписи
+     * @param centerY координата оси ординат центра надписи
+     * @param faceColor цвет надписи
+     */
+    static void drawCenteredString(Graphics2D g, String str, int centerX, int centerY, Color faceColor) {
+        FontMetrics fm = g.getFontMetrics();
+        Rectangle2D r = fm.getStringBounds(str, g);
+        g.setColor(faceColor);
+        g.drawString(str, (int) (centerX - r.getCenterX()), (int) (centerY - r.getCenterY()));
+    }
+
 }

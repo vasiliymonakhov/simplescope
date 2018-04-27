@@ -80,7 +80,7 @@ class Const {
      * Максимальное расстояние от точки события мыши до ближайшей линейки, при
      * котором линейка прилипает к указателю мыши
      */
-    static final int MOUSE_MAX_DISTANCE_TO_RULER = 20;
+    static final int MOUSE_MAX_DISTANCE_TO_RULER = 30;
 
     /**
      * Количество шагов, которые нужно сделать для определения перегрузки входа
@@ -93,6 +93,19 @@ class Const {
      */
     static final int OVERLOAD_COUNT = 5;
 
+    /**
+     * Тайм-аут последовательного порта, мсек
+     */
+    static final int PORT_TIMEOUT = 1000;
 
+    /**
+     * желаемый отступ для рисования графика по веритикали
+     */
+    final static int V_GAP = 64;
+
+    /**
+     * желаемый отступ для рисования графика по горизонтали
+     */
+    final static int H_GAP = 96;
 
 }

@@ -16,17 +16,12 @@ class FontScheme {
 
     private final Font borderFont;
 
-    private FontScheme(Font scopeFont, Font guiFont, Font valFont, Font borderFont) {
+    FontScheme(Font guiFont, Font valFont, Font borderFont, Font scopeFont) {
         this.scopeFont = scopeFont;
         this.guiFont = guiFont;
         this.valFont = valFont;
         this.borderFont = borderFont;
     }
-
-    final static FontScheme STANDART = new FontScheme(new Font("Noto Sans", Font.BOLD, 13),
-            new Font("Noto Sans", 0, 13),
-            new Font("Noto Sans", 0, 18),
-            new Font("Noto Sans", 0, 9));
 
     /**
      * @return the scopeFont

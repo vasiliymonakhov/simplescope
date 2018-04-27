@@ -1,15 +1,12 @@
 package ua.com.kiloom.simplescope;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.Transparency;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
@@ -25,7 +22,12 @@ class ScopeRenderer {
     /**
      * Цветовая схема скопа
      */
-    private ColorScheme colorScheme = ColorScheme.GREEN_MONO_SCHEME;
+    private ColorScheme colorScheme = AppProperties.getColorScheme();
+
+    /**
+     * Схема шрифтов
+     */
+    private FontScheme fontScheme = AppProperties.getFontScheme();
 
     /**
      * Устанавливает цветовую схему
@@ -35,20 +37,6 @@ class ScopeRenderer {
     void setColorScheme(ColorScheme colorScheme) {
         this.colorScheme = colorScheme;
     }
-
-    /**
-     * Возвращает цветовую схему
-     *
-     * @return цветовая схема
-     */
-    ColorScheme getColorScheme() {
-        return colorScheme;
-    }
-
-    /**
-     * Схема шрифтов
-     */
-    private FontScheme fontScheme = FontScheme.STANDART;
 
     /**
      * Устанавливает новую схему шрифтов
@@ -62,25 +50,17 @@ class ScopeRenderer {
     /**
      * Нажим для рисования прямых
      */
-    private final Stroke normalStroke = new BasicStroke(1);
-
-    /**
-     * Нажим для рисования сетки
-     */
-    private final static float[] dashingPattern = {3f, 3f};
-
-    private final Stroke gridStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
-            BasicStroke.JOIN_MITER, 1.0f, dashingPattern, 2.0f);
+    final static Stroke NORMAL_STROKE = new BasicStroke(1);
 
     /**
      * Нажим для рисования луча
      */
-    private final Stroke rayStroke = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND);
+    final static Stroke RAY_STROKE = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND);
 
     /**
      * Точка на экране
      */
-    private static class Point {
+    static class Point {
 
         /**
          * Ось абцисс, слева направо
@@ -135,16 +115,6 @@ class ScopeRenderer {
     }
 
     /**
-     * желаемый отступ для рисования графика по веритикали
-     */
-    private final static int V_GAP = 64;
-
-    /**
-     * желаемый отступ для рисования графика по горизонтали
-     */
-    private final static int H_GAP = 96;
-
-    /**
      * ширина области, на которой рисуется график
      */
     int width;
@@ -177,8 +147,8 @@ class ScopeRenderer {
      */
     void calculateGeometry(int imageWidth, int imageHeight) {
         // сделать небольшие отступы и чтобы высота и ширина были кратны 10
-        width = ((imageWidth - 2 * H_GAP) / 10) * 10;
-        height = ((imageHeight - 2 * V_GAP) / 10) * 10;
+        width = ((imageWidth - 2 * Const.H_GAP) / 10) * 10;
+        height = ((imageHeight - 2 * Const.V_GAP) / 10) * 10;
         // вычислить координаты левого верхнего угла графика
         x_pos = (imageWidth - width) / 2;
         y_pos = (imageHeight - height) / 2;
@@ -191,7 +161,7 @@ class ScopeRenderer {
      * @param imageHeight высота области рисования
      * @param result набор данных от АЦП устройства
      */
-    void renderScopeAndUpdateRulers(int imageWidth, int imageHeight, Result result) throws InterruptedException {
+    void renderScope(int imageWidth, int imageHeight, Result result) throws InterruptedException {
         this.result = result;
         BufferedImage image = getImage(imageWidth, imageHeight);
         Graphics2D g = (Graphics2D) image.getGraphics();
@@ -204,7 +174,7 @@ class ScopeRenderer {
         calculateGeometry(imageWidth, imageHeight);
         // нарисовать сетку
         drawScopeGrid(g);
-        g.setStroke(normalStroke);
+        g.setStroke(NORMAL_STROKE);
         // нарисовать линейки
         drawRulers(g);
         // нарисовать рамку
@@ -223,14 +193,14 @@ class ScopeRenderer {
      * @param g графический контекст
      */
     private void drawScopeGrid(Graphics2D g) {
-        g.setStroke(gridStroke);
+        g.setStroke(NORMAL_STROKE);
         int time = 0;
         int dtime = result.getTimePerCell();
         String timeStr = result.getTimeString();
         for (int i = 0; i <= width; i += width / 10) {
             g.setColor(colorScheme.getGridColor());
-            g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
-            drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + V_GAP / 2, colorScheme.getTextColor());
+            g.drawRect(x_pos + i, y_pos, 0, height);
+            Utils.drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
             time += dtime;
         }
         int dvoltage = result.getVoltagePerCell();
@@ -238,8 +208,8 @@ class ScopeRenderer {
         String voltageStr = result.getVoltageString();
         for (int i = 0; i <= height; i += height / 10) {
             g.setColor(colorScheme.getGridColor());
-            g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
-            drawCenteredString(g, String.format("%d%s", voltage, voltageStr), x_pos - H_GAP / 2, y_pos + i, colorScheme.getTextColor());
+            g.drawRect(x_pos, y_pos + i, width, 0);
+            Utils.drawCenteredString(g, String.format("%d%s", voltage, voltageStr), x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
             voltage -= dvoltage;
         }
     }
@@ -251,7 +221,7 @@ class ScopeRenderer {
      */
     private void drawRay(Graphics2D g) {
         g.setColor(colorScheme.getRayColor());
-        g.setStroke(rayStroke);
+        g.setStroke(RAY_STROKE);
         Point[] points = convertAdcResultToScopePoints();
         for (int i = 0; i < points.length - 1; i++) {
             int x1 = points[i].x;
@@ -260,22 +230,6 @@ class ScopeRenderer {
             int y2 = points[i + 1].y;
             g.drawLine(x1, y1, x2, y2);
         }
-    }
-
-    /**
-     * Рисует строку
-     *
-     * @param g графический контекст
-     * @param str строка
-     * @param centerX координата оси абцисс центра надписи
-     * @param centerY координата оси ординат центра надписи
-     * @param faceColor цвет надписи
-     */
-    void drawCenteredString(Graphics2D g, String str, int centerX, int centerY, Color faceColor) {
-        FontMetrics fm = g.getFontMetrics();
-        Rectangle2D r = fm.getStringBounds(str, g);
-        g.setColor(faceColor);
-        g.drawString(str, (int) (centerX - r.getCenterX()), (int) (centerY - r.getCenterY()));
     }
 
     /**
@@ -451,17 +405,17 @@ class ScopeRenderer {
         yLowerRuler = (int) Math.round(yScale * (Const.ADC_MAX - lowerRuler) + y_pos);
         // нарисовать линии
         g.setColor(colorScheme.getRulerColor());
-        g.drawLine(xLeftRuler, y_pos, xLeftRuler, y_pos + height);
-        g.drawLine(xRightRuler, y_pos, xRightRuler, y_pos + height);
-        g.drawLine(x_pos, yUpperRuler, x_pos + width, yUpperRuler);
-        g.drawLine(x_pos, yLowerRuler, x_pos + width, yLowerRuler);
+        g.drawRect(xLeftRuler, y_pos, 0, height);
+        g.drawRect(xRightRuler, y_pos, 0, height);
+        g.drawRect(x_pos, yUpperRuler, width, 0);
+        g.drawRect(x_pos, yLowerRuler, width, 0);
 
-        // нанести надписи созначением времени
-        drawCenteredString(g, vRulerToString(leftRuler), xLeftRuler, V_GAP / 2, colorScheme.getTextColor());
-        drawCenteredString(g, vRulerToString(rightRuler), xRightRuler, V_GAP / 2, colorScheme.getTextColor());
+        // нанести надписи со значением времени
+        Utils.drawCenteredString(g, vRulerToString(leftRuler), xLeftRuler, Const.V_GAP / 2, colorScheme.getTextColor());
+        Utils.drawCenteredString(g, vRulerToString(rightRuler), xRightRuler, Const.V_GAP / 2, colorScheme.getTextColor());
         // нанести надписи со значением напряжения
-        drawCenteredString(g, hRulerToString(upperRuler), x_pos + width + H_GAP / 2, yUpperRuler, colorScheme.getTextColor());
-        drawCenteredString(g, hRulerToString(lowerRuler), x_pos + width + H_GAP / 2, yLowerRuler, colorScheme.getTextColor());
+        Utils.drawCenteredString(g, hRulerToString(upperRuler), x_pos + width + Const.H_GAP / 2, yUpperRuler, colorScheme.getTextColor());
+        Utils.drawCenteredString(g, hRulerToString(lowerRuler), x_pos + width + Const.H_GAP / 2, yLowerRuler, colorScheme.getTextColor());
         // записать в результат положение линеек
         updateRulers();
     }
@@ -506,7 +460,7 @@ class ScopeRenderer {
      * @param result набор данных от АЦП устройства
      * @throws InterruptedException
      */
-    void renderHarmAnalyser(int imageWidth, int imageHeight, Result result) throws InterruptedException {
+    void renderHarmAnalyse(int imageWidth, int imageHeight, Result result) throws InterruptedException {
         this.result = result;
         updateRulers();
         result.processHarmonicsData(leftRuler, rightRuler);
@@ -522,7 +476,7 @@ class ScopeRenderer {
         // нарисовать сетку анализатора гармоник
         drawHarmAnalyserGrid(g);
         // нарисовать рамку
-        g.setStroke(normalStroke);
+        g.setStroke(NORMAL_STROKE);
         g.setColor(colorScheme.getBorderColor());
         g.drawRect(x_pos, y_pos, width, height);
         // наристовать столбцы
@@ -536,18 +490,18 @@ class ScopeRenderer {
      * @param g графический контекст
      */
     private void drawHarmAnalyserGrid(Graphics2D g) {
-        g.setStroke(gridStroke);
-        for (int i = 0; i <= width; i += width / Const.HARMONICS_COUNT) {
+        g.setStroke(NORMAL_STROKE);
+        for (int i = 0; i <= width; i += width / AppProperties.getHarmonicsRender()) {
             g.setColor(colorScheme.getGridColor());
-            g.drawLine(x_pos + i, y_pos, x_pos + i, y_pos + height);
+            g.drawRect(x_pos + i, y_pos, 0, height);
         }
         double deltaPercent = 0.1d;
         double percent = 1d;
         for (int i = 0; i <= height; i += height / 10) {
             g.setColor(colorScheme.getGridColor());
-            g.drawLine(x_pos, y_pos + i, x_pos + width, y_pos + i);
+            g.drawRect(x_pos, y_pos + i, width, 0);
             // градуировка с шагом 10% слева
-            drawCenteredString(g, Utils.valueToPercent(percent), x_pos - H_GAP / 2, y_pos + i, colorScheme.getTextColor());
+            Utils.drawCenteredString(g, Utils.valueToPercent(percent), x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
             percent -= deltaPercent;
         }
     }
@@ -559,10 +513,11 @@ class ScopeRenderer {
      */
     private void drawHarmAnalyserBars(Graphics2D g) {
         double[] harms = result.getHarmonics();
+        int harmonicsCount = AppProperties.getHarmonicsRender();
         // ширина клетки
-        int cw = width / Const.HARMONICS_COUNT;
+        int cw = width / harmonicsCount;
         // ширина столбика
-        int bw = (Const.HARMONICS_COUNT - 2) * cw / Const.HARMONICS_COUNT;
+        int bw = 8 * cw / 10;
         // смещение столбиков
         int xl = x_pos + (cw - bw) / 2;
         // смещение центра надписи по горизонтали
@@ -572,7 +527,7 @@ class ScopeRenderer {
         // частота основной гармоники
         double fr = 1 / result.getDeltaT();
         // рисуем столбики
-        for (int i = 0; i < Const.HARMONICS_COUNT; i++) {
+        for (int i = 0; i < harmonicsCount; i++) {
             g.setColor(colorScheme.getGridColor());
             // высота столбика
             int bl = (int) (Math.round(harms[i] * height));
@@ -580,9 +535,9 @@ class ScopeRenderer {
             g.setColor(colorScheme.getRayColor());
             g.drawRect(xl, yl - bl, bw, bl);
             // над столбиком нарисовать величину гармоники в %
-            drawCenteredString(g, Utils.valueToPercent(harms[i]), cx, y_pos + height - bl - V_GAP / 2, colorScheme.getTextColor());
+            Utils.drawCenteredString(g, Utils.valueToPercent(harms[i]), cx, y_pos + height - bl - Const.V_GAP / 2, colorScheme.getTextColor());
             // под столбиком частоту гармоники
-            drawCenteredString(g, Utils.frequencyToString(fr * (i + 1)), cx, y_pos + height + V_GAP / 2, colorScheme.getTextColor());
+            Utils.drawCenteredString(g, Utils.frequencyToString(fr * (i + 1)), cx, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
             // сдвинуть на следующий столбик
             xl += cw;
             cx += cw;

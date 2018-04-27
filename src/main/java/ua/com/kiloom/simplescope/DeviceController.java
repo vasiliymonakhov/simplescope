@@ -10,6 +10,7 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import jssc.SerialPortTimeoutException;
 
 /**
  * Класс для работы с устройством. Осуществляет выбор режимов работы а также
@@ -96,11 +97,14 @@ public class DeviceController {
                 int offset = 2 * timeOffset.get();
                 if (event.getEventValue() >= Const.BYTES_BLOCK_SIZE + offset) {
                     try {
-                        byte[] data = port.readBytes(Const.BYTES_BLOCK_SIZE + offset);
+                        byte[] data = port.readBytes(Const.BYTES_BLOCK_SIZE + offset, Const.PORT_TIMEOUT);
                         bytesQueue.add(data);
                         timeOffset.set(0);
                     } catch (SerialPortException ex) {
                         Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Ошибка чтения данных из устройства!", ex);
+                    } catch (SerialPortTimeoutException ex) {
+                        Logger.getLogger(DeviceController.class.getName()).log(Level.SEVERE, "Тайм-аут последовательного порта!", ex);
+                        stop = true;
                     }
                 }
             }
@@ -116,7 +120,7 @@ public class DeviceController {
                         // бесконечный цикл получения данных
                         Result r;
                         if (bytesQueue.isEmpty()) {
-                            TimeUnit.MILLISECONDS.sleep(10);
+                            TimeUnit.MILLISECONDS.sleep(100);
                         } else {
                             if ((r = processAdcData()) != null) {
                                 adcQueue.add(r);
