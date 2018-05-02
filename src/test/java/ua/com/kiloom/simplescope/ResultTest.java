@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 
 /**
  * Тест класса результата
+ *
  * @author Vasily Monakhov
  */
 public class ResultTest {
@@ -16,8 +17,8 @@ public class ResultTest {
     private byte[] integersToBytes(int[] input) {
         byte[] output = new byte[Const.BYTES_BLOCK_SIZE];
         for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
-            output[i * 2] = (byte)((input[i] >> 8) & 0x00FF);
-            output[i * 2 + 1] = (byte)(input[i] & 0x00FF);
+            output[i * 2] = (byte) ((input[i] >> 8) & 0x00FF);
+            output[i * 2 + 1] = (byte) (input[i] & 0x00FF);
         }
         return output;
     }
@@ -48,7 +49,7 @@ public class ResultTest {
 
     private byte[] makeMeandr() {
         int[] adc = new int[Const.ADC_DATA_BLOCK_SIZE];
-        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i ++) {
+        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
             if ((i / 100) % 2 == 1) {
                 adc[i] = Const.ADC_MIDDLE + 1000;
             } else {
@@ -60,19 +61,19 @@ public class ResultTest {
 
     private byte[] makeSinus() {
         int[] adc = new int[Const.ADC_DATA_BLOCK_SIZE];
-        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i ++) {
-            adc[i] = Const.ADC_MIDDLE + (int)Math.round((Const.ADC_MIDDLE - 1) * Math.sin(i * Math.PI * 8 /Const.ADC_DATA_BLOCK_SIZE));
+        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+            adc[i] = Const.ADC_MIDDLE + (int) Math.round((Const.ADC_MIDDLE - 1) * Math.sin(i * Math.PI * 8 / Const.ADC_DATA_BLOCK_SIZE));
         }
         return integersToBytes(adc);
     }
 
     private byte[] makeMultiSinus() {
         int[] adc = new int[Const.ADC_DATA_BLOCK_SIZE];
-        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i ++) {
-            adc[i] = Const.ADC_MIDDLE + (int)Math.round(400 * Math.sin(i * Math.PI * 4 /Const.ADC_DATA_BLOCK_SIZE) +
-                    300 * Math.sin(i * Math.PI * 8 /Const.ADC_DATA_BLOCK_SIZE) +
-                    200 * Math.sin(i * Math.PI * 12 /Const.ADC_DATA_BLOCK_SIZE) +
-                    100 * Math.sin(i * Math.PI * 16 /Const.ADC_DATA_BLOCK_SIZE));
+        for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+            adc[i] = Const.ADC_MIDDLE + (int) Math.round(400 * Math.sin(i * Math.PI * 4 / Const.ADC_DATA_BLOCK_SIZE)
+                    + 300 * Math.sin(i * Math.PI * 8 / Const.ADC_DATA_BLOCK_SIZE)
+                    + 200 * Math.sin(i * Math.PI * 12 / Const.ADC_DATA_BLOCK_SIZE)
+                    + 100 * Math.sin(i * Math.PI * 16 / Const.ADC_DATA_BLOCK_SIZE));
         }
         return integersToBytes(adc);
     }
@@ -239,6 +240,18 @@ public class ResultTest {
         assertEquals(0, h[7], 0.01);
         assertEquals(0, h[8], 0.01);
         assertEquals(0, h[9], 0.01);
+    }
+
+    public void testOverload() {
+        Result r = new Result(10, 15);
+        assertTrue(r.processADCData(makeFull(), true, true));
+        assertTrue(r.isOverloadSignal());
+        assertTrue(r.processADCData(makeZero(), true, true));
+        assertTrue(r.isOverloadSignal());
+        assertTrue(r.processADCData(makeMiddle(), true, true));
+        assertFalse(r.isOverloadSignal());
+        assertTrue(r.processADCData(makeSinus(), true, true));
+        assertFalse(r.isOverloadSignal());
     }
 
 }
