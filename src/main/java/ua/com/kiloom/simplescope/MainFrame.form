@@ -81,7 +81,7 @@
                     <StringItem index="5" value="2.5V"/>
                     <StringItem index="6" value="5V"/>
                     <StringItem index="7" value="10V"/>
-                    <StringItem index="8" value="20V"/>
+                    <StringItem index="8" value="25V"/>
                     <StringItem index="9" value="50V"/>
                     <StringItem index="10" value="100V"/>
                   </StringArray>

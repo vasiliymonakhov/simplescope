@@ -11,6 +11,8 @@ import java.awt.geom.Rectangle2D;
  */
 public class Utils {
 
+    private final static double EPS = 0.001d;
+
     /**
      * Преобразует напряжение в строку с точностью 2 знака после запятой. Если
      * абсолютная величина напряжения менее 1В, то результат выводится в
@@ -20,13 +22,16 @@ public class Utils {
      * @return результирующая строка
      */
     static String voltageToString(double voltage) {
+        if (Math.abs(voltage) < EPS) {
+            return "0V";
+        }
         String prefix = "";
         double val = voltage;
         if (Math.abs(voltage) < 1) {
             prefix = "m";
             val = voltage * 1000d;
         }
-        return String.format("%.2f%sV", val, prefix);
+        return String.format("%.2f%sV", val, prefix).replace('.', ',');
     }
 
     /**
@@ -48,7 +53,7 @@ public class Utils {
                 val = time * 1000000d;
             }
         }
-        return String.format("%.2f%sS", val, prefix);
+        return String.format("%.2f%sS", val, prefix).replace('.', ',');
     }
 
     /**
@@ -59,13 +64,16 @@ public class Utils {
      * @return результирующая строка
      */
     static String frequencyToString(double freq) {
+        if (Math.abs(freq) < EPS) {
+            return "0Hz";
+        }
         String prefix = "";
         double val = freq;
-        if (freq > 1000d) {
+        if (freq >= 1000d) {
             prefix = "k";
             val = freq / 1000d;
         }
-        return String.format("%.2f%sHz", val, prefix);
+        return String.format("%.2f%sHz", val, prefix).replace('.', ',');
     }
 
     /**
@@ -75,7 +83,13 @@ public class Utils {
      * @return строка с процентами
      */
     static String valueToPercent(double val) {
-        return String.format("%.1f%%", val * 100d);
+        if (Math.abs(val) < EPS) {
+            return "0%";
+        }
+        if (val >= 1) {
+            return String.format("%.0f%%", val * 100d);
+        }
+        return String.format("%.1f%%", val * 100d).replace('.', ',');
     }
 
     /**

@@ -159,39 +159,21 @@ class Result {
     }
 
     /**
-     * Возвращает величину времени на клетку
+     * Возвращает величину времени экрана
      *
      * @return величина времени на клетку
      */
-    int getTimePerCell() {
-        return Const.TIME_PER_CELL[currentTimeIndex];
+    double getTime() {
+        return Const.TIMES[currentTimeIndex];
     }
 
     /**
-     * Возращает единицу времени на клетку
-     *
-     * @return единица времени на клетку
-     */
-    String getTimeString() {
-        return Const.TIME_STRINGS[currentTimeIndex];
-    }
-
-    /**
-     * Возвращает величину напряжения на клетку
+     * Возвращает величину напряжения экрана
      *
      * @return величина напряжения на клетку
      */
-    int getVoltagePerCell() {
-        return Const.VOLTAGE_PER_CELL[currentVoltageIndex];
-    }
-
-    /**
-     * Возвращает единцу напряжения на клетку
-     *
-     * @return единца напряжения на клетку
-     */
-    String getVoltageString() {
-        return Const.VOLTAGE_STRINGS[currentVoltageIndex];
+    double getVoltage() {
+        return Const.VOLTAGES[currentVoltageIndex];
     }
 
     /**

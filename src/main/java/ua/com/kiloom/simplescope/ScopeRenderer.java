@@ -194,22 +194,20 @@ class ScopeRenderer {
      */
     private void drawScopeGrid(Graphics2D g) {
         g.setStroke(NORMAL_STROKE);
-        int time = 0;
-        int dtime = result.getTimePerCell();
-        String timeStr = result.getTimeString();
+        double time = 0;
+        double dtime = result.getTime() / 10;
         for (int i = 0; i <= width; i += width / 10) {
             g.setColor(colorScheme.getGridColor());
             g.drawRect(x_pos + i, y_pos, 0, height);
-            Utils.drawCenteredString(g, String.format("%d%s", time, timeStr), x_pos + i, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
+            Utils.drawCenteredString(g, Utils.timeToString(time), x_pos + i, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
             time += dtime;
         }
-        int dvoltage = result.getVoltagePerCell();
-        int voltage = 5 * dvoltage;
-        String voltageStr = result.getVoltageString();
+        double voltage = result.getVoltage();
+        double dvoltage = voltage / 5;
         for (int i = 0; i <= height; i += height / 10) {
             g.setColor(colorScheme.getGridColor());
             g.drawRect(x_pos, y_pos + i, width, 0);
-            Utils.drawCenteredString(g, String.format("%d%s", voltage, voltageStr), x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
+            Utils.drawCenteredString(g, Utils.voltageToString(voltage), x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
             voltage -= dvoltage;
         }
     }
@@ -539,6 +537,7 @@ class ScopeRenderer {
             // под столбиком частоту гармоники
             Utils.drawCenteredString(g, Utils.frequencyToString(fr * (i + 1)), cx, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
             // сдвинуть на следующий столбик
+            Utils.drawCenteredString(g, String.valueOf(i + 1), cx, y_pos - Const.V_GAP / 2, colorScheme.getTextColor());
             xl += cw;
             cx += cw;
         }

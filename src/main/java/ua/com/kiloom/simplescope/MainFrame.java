@@ -679,7 +679,7 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel4.setLayout(new java.awt.GridBagLayout());
 
         rangeComboBox.setFont(fontScheme.getGuiFont());
-        rangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "50mV", "100mV", "250mV", "500mV", "1V", "2.5V", "5V", "10V", "20V", "50V", "100V" }));
+        rangeComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "50mV", "100mV", "250mV", "500mV", "1V", "2.5V", "5V", "10V", "25V", "50V", "100V" }));
         rangeComboBox.setToolTipText("Выберите предел измерения");
         rangeComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1756,7 +1756,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         setupDemoScopePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         setupDemoScopePanel.setToolTipText("Так будет выглядеть график");
-        setupDemoScopePanel.setLayout(new java.awt.GridLayout());
+        setupDemoScopePanel.setLayout(new java.awt.GridLayout(1, 0));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
