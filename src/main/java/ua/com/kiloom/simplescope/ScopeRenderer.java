@@ -493,13 +493,17 @@ class ScopeRenderer {
             g.setColor(colorScheme.getGridColor());
             g.drawRect(x_pos + i, y_pos, 0, height);
         }
-        double deltaPercent = 0.1d;
-        double percent = 1d;
-        for (int i = 0; i <= height; i += height / 10) {
+        // в dB или %
+        boolean db = AppProperties.isHarmonicsInDb();
+        double deltaPercent = db ? 10 : 0.1d;
+        double percent = db ? 0 : 1d;
+        int div = db ? 6 : 10;
+        for (int i = 0; i <= height; i += height / div) {
             g.setColor(colorScheme.getGridColor());
             g.drawRect(x_pos, y_pos + i, width, 0);
-            // градуировка с шагом 10% слева
-            Utils.drawCenteredString(g, Utils.valueToPercent(percent), x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
+            // градуировка с шагом -10dB или 10% слева
+            String s = db ? Utils.dbToString(percent) : Utils.valueToPercent(percent);
+            Utils.drawCenteredString(g, s, x_pos - Const.H_GAP / 2, y_pos + i, colorScheme.getTextColor());
             percent -= deltaPercent;
         }
     }
@@ -524,20 +528,33 @@ class ScopeRenderer {
         int yl = y_pos + height;
         // частота основной гармоники
         double fr = 1 / result.getDeltaT();
+        // в dB или %
+        boolean db = AppProperties.isHarmonicsInDb();
         // рисуем столбики
         for (int i = 0; i < harmonicsCount; i++) {
             g.setColor(colorScheme.getGridColor());
             // высота столбика
-            int bl = (int) (Math.round(harms[i] * height));
+            int bl;
+            if (db) {
+                if (harms[i] < -60d) {
+                    bl = 0;
+                } else {
+                    bl = (int) (Math.round((60 + harms[i]) / 60 * height));
+                }
+            } else {
+                bl = (int) (Math.round(harms[i] * height));
+            }
             g.fillRect(xl, yl - bl, bw, bl);
             g.setColor(colorScheme.getRayColor());
             g.drawRect(xl, yl - bl, bw, bl);
-            // над столбиком нарисовать величину гармоники в %
-            Utils.drawCenteredString(g, Utils.valueToPercent(harms[i]), cx, y_pos + height - bl - Const.V_GAP / 2, colorScheme.getTextColor());
+            // над столбиком нарисовать величину гармоники в dB или %
+            String s = db ? Utils.dbToString(harms[i]) : Utils.valueToPercent(harms[i]);
+            Utils.drawCenteredString(g, s, cx, y_pos + height - bl - Const.V_GAP / 2, colorScheme.getTextColor());
             // под столбиком частоту гармоники
             Utils.drawCenteredString(g, Utils.frequencyToString(fr * (i + 1)), cx, y_pos + height + Const.V_GAP / 2, colorScheme.getTextColor());
-            // сдвинуть на следующий столбик
+            // сверху написать номер гармоники
             Utils.drawCenteredString(g, String.valueOf(i + 1), cx, y_pos - Const.V_GAP / 2, colorScheme.getTextColor());
+            // сдвинуть на следующий столбик
             xl += cw;
             cx += cw;
         }

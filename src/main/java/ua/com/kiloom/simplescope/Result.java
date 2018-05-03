@@ -255,10 +255,10 @@ class Result {
             // положительный меандр
             // value = ((j /100) % 2 == 0) ? Const.ADC_MIDDLE + 1000 : Const.ADC_MIDDLE;
             // Отладка - синус
-            // value = Const.ADC_MIDDLE + (int)Math.round(-500 * Math.sin(j * Math.PI * 8 /Const.ADC_DATA_BLOCK_SIZE) +
-            //         200 * Math.sin(j * Math.PI * 12 /Const.ADC_DATA_BLOCK_SIZE) +
-            //         400 * Math.sin(j * Math.PI * 16 /Const.ADC_DATA_BLOCK_SIZE) +
-            //         500 * Math.sin(j * Math.PI * 4 /Const.ADC_DATA_BLOCK_SIZE));
+            // value = Const.ADC_MIDDLE + (int) Math.round(400 * Math.sin(i * Math.PI * 4 / Const.ADC_DATA_BLOCK_SIZE)
+            //         + 300 * Math.sin(i * Math.PI * 8 / Const.ADC_DATA_BLOCK_SIZE)
+            //         + 200 * Math.sin(i * Math.PI * 12 / Const.ADC_DATA_BLOCK_SIZE)
+            //        + 100 * Math.sin(i * Math.PI * 16 / Const.ADC_DATA_BLOCK_SIZE));
             // запись сырых данных от АЦП для построения графика
             adcData[j] = value;
             // вычислим мгновенное значение напряжения
@@ -517,9 +517,14 @@ class Result {
         for (int i = 0; i < harmonicsCount; i++) {
             sum += harmonics[i];
         }
+        boolean db = AppProperties.isHarmonicsInDb();
         // здесь вычисляется доля каждой гармоники
         for (int i = 0; i < harmonicsCount; i++) {
-            harmonics[i] /= sum;
+            if (db) {
+                harmonics[i] = 20 * Math.log10(harmonics[i] / sum);
+            } else {
+                harmonics[i] /= sum;
+            }
         }
     }
 
