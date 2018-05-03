@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 
 /**
  * Тест утилит
+ *
  * @author Vasily Monakhov
  */
 public class UtilsTest {

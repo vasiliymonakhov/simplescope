@@ -228,18 +228,32 @@ public class ResultTest {
     public void testHarmonics() {
         Result r = new Result(10, 15);
         assertTrue(r.processADCData(makeMultiSinus(), true, true));
-        r.processHarmonicsData(Const.ADC_DATA_BLOCK_SIZE / 4, 3 * Const.ADC_DATA_BLOCK_SIZE / 4 + 1);
+        AppProperties.setBoolean(AppProperties.Keys.HARMONICS_DECIBELLS, false);
+        r.processHarmonicsData(Const.ADC_DATA_BLOCK_SIZE / 4, 3 * Const.ADC_DATA_BLOCK_SIZE / 4 - 1);
         double[] h = r.getHarmonics();
-        assertEquals(0.40, h[0], 0.01);
-        assertEquals(0.30, h[1], 0.01);
-        assertEquals(0.20, h[2], 0.01);
-        assertEquals(0.10, h[3], 0.01);
-        assertEquals(0, h[4], 0.01);
-        assertEquals(0, h[5], 0.01);
-        assertEquals(0, h[6], 0.01);
-        assertEquals(0, h[7], 0.01);
-        assertEquals(0, h[8], 0.01);
-        assertEquals(0, h[9], 0.01);
+        assertEquals(0.40d, h[0], 0.01d);
+        assertEquals(0.30d, h[1], 0.01d);
+        assertEquals(0.20d, h[2], 0.01d);
+        assertEquals(0.10d, h[3], 0.01d);
+        assertEquals(0, h[4], 0.01d);
+        assertEquals(0, h[5], 0.01d);
+        assertEquals(0, h[6], 0.01d);
+        assertEquals(0, h[7], 0.01d);
+        assertEquals(0, h[8], 0.01d);
+        assertEquals(0, h[9], 0.01d);
+        AppProperties.setBoolean(AppProperties.Keys.HARMONICS_DECIBELLS, true);
+        r.processHarmonicsData(Const.ADC_DATA_BLOCK_SIZE / 4, 3 * Const.ADC_DATA_BLOCK_SIZE / 4 - 1);
+        h = r.getHarmonics();
+        assertEquals(20d * Math.log10(0.4d), h[0], 0.5);
+        assertEquals(20d * Math.log10(0.3d), h[1], 0.5);
+        assertEquals(20d * Math.log10(0.2d), h[2], 0.5);
+        assertEquals(20d * Math.log10(0.1d), h[3], 0.5);
+        assertTrue(h[4] < -60d);
+        assertTrue(h[5] < -60d);
+        assertTrue(h[6] < -60d);
+        assertTrue(h[7] < -60d);
+        assertTrue(h[8] < -60d);
+        assertTrue(h[9] < -60d);
     }
 
     public void testOverload() {
