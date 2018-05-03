@@ -1869,6 +1869,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         textCharsetComboBox.setFont(fontScheme.getGuiFont());
         textCharsetComboBox.setToolTipText("Кодировка текста для файлов с результатами");
+        getAllCharsets();
         textCharsetComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 textCharsetComboBoxActionPerformed(evt);
@@ -2424,7 +2425,6 @@ public class MainFrame extends javax.swing.JFrame {
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
         harmDbCheckBox.setSelected(AppProperties.isHarmonicsInDb());
         imageFormatComboBox.setSelectedItem(AppProperties.getString(IMAGE_FORMAT, "PNG"));
-        textCharsetComboBox.setSelectedItem(AppProperties.getString(TEXT_CHARSET, "UTF-16"));
         harmCountSpinner.setValue(AppProperties.getHarmonicsCount());
         harmRenderSpinner.setValue(AppProperties.getHarmonicsRender());
 
@@ -2463,7 +2463,7 @@ public class MainFrame extends javax.swing.JFrame {
         setFontControls();
         colorSchemeComboBox.setSelectedItem(colorScheme.getName());
         setSetupListeners();
-        getAllCharsets();
+        textCharsetComboBox.setSelectedItem(AppProperties.getString(TEXT_CHARSET, "UTF-16"));
     }
 
     /**
