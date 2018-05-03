@@ -4,6 +4,19 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.RenderedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import static ua.com.kiloom.simplescope.AppProperties.Keys.IMAGE_FORMAT;
+import static ua.com.kiloom.simplescope.AppProperties.Keys.TEXT_CHARSET;
 
 /**
  *
@@ -93,6 +106,16 @@ public class Utils {
     }
 
     /**
+     * Превраяет долю в дБ с точностью 1 знак после запятой.
+     *
+     * @param val доля, где 0 соответсвует 0dB
+     * @return строка децибелами
+     */
+    static String dbToString(double val) {
+        return String.format("%.1fdB", val).replace('.', ',');
+    }
+
+    /**
      * Рисует строку
      *
      * @param g графический контекст
@@ -106,6 +129,127 @@ public class Utils {
         Rectangle2D r = fm.getStringBounds(str, g);
         g.setColor(faceColor);
         g.drawString(str, (int) (centerX - r.getCenterX()), (int) (centerY - r.getCenterY()));
+    }
+
+    /**
+     * Создаёт имя для файла на основе текущей даты
+     * @return имя файла
+     */
+    private static String createFileName() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        return sdf.format(new Date(System.currentTimeMillis()));
+    }
+
+    /**
+     * Сохраняет изображение в файл
+     * @param name имя файла
+     * @param image изображение
+     * @return результат сохранения
+     */
+    static boolean saveImage(RenderedImage image) {
+        String name = createFileName();
+        String format = AppProperties.getString(IMAGE_FORMAT, "PNG");
+        try {
+            ImageIO.write(image, format, new File("image" + name + "." + format.toLowerCase()));
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "Ошибка сохранения изображения", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Сохраняет в текстовый файл данные скопа
+     * @param result результат
+     * @return true если успешно
+     */
+    static boolean saveScopeText(Result result) {
+        String name = createFileName();
+        try (PrintWriter pw = new PrintWriter("scope" + name + ".txt", AppProperties.getString(TEXT_CHARSET, "UTF-16"))) {
+            pw.println("Номер;Значение АЦП;Напряжение");
+            for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+                pw.println("" + (i + 1) + ";" + result.getAdcData()[i] + ";" + voltageToString(result.getVoltages()[i]));
+            }
+            pw.flush();
+            return true;
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "Ошибка записи данных", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Сохраняет в текстовый файл данные анализа гармоник
+     * @param result результат
+     * @return true если успешно
+     */
+    static boolean saveHarmText(Result result) {
+        String name = createFileName();
+        try (PrintWriter pw = new PrintWriter("harm" + name + ".txt", AppProperties.getString(TEXT_CHARSET, "UTF-16"))) {
+            pw.println("Номер;Величина");
+            boolean db = AppProperties.isHarmonicsInDb();
+            for (int i = 0; i < result.getHarmonics().length; i++) {
+                pw.println("" + (i + 1) + ";" + (db ? dbToString(result.getHarmonics()[i]) : valueToPercent(result.getHarmonics()[i])));
+            }
+            pw.flush();
+            return true;
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "Ошибка записи данных", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Сохраняет в веб-страницу данные скопа
+     * @param result результат
+     * @return true если успешно
+     */
+    static boolean saveScopeWebPage(Result result) {
+        String name = createFileName();
+        try (PrintWriter pw = new PrintWriter("scope" + name + ".html", AppProperties.getString(TEXT_CHARSET, "UTF-16"))) {
+            pw.println("<table>");
+            pw.println("  <tr>");
+                pw.println("    <td>Номер</td><td>Значение АЦП</td><td>Напряжение</td>");
+            pw.println("  </tr>");
+            for (int i = 0; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
+                pw.println("  <tr>");
+                pw.println("    <td>" + (i + 1) + "</td><td>" + result.getAdcData()[i] + "</td><td>" + voltageToString(result.getVoltages()[i]) + "</td>");
+                pw.println("  </tr>");
+            }
+            pw.println("</table>");
+            pw.flush();
+            return true;
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "Ошибка записи данных", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Сохраняет в веб-страницу данные анализа гармоник
+     * @param result результат
+     * @return true если успешно
+     */
+    static boolean saveHarmWebPage(Result result) {
+        String name = createFileName();
+        try (PrintWriter pw = new PrintWriter("harm" + name + ".html", AppProperties.getString(TEXT_CHARSET, "UTF-16"))) {
+            pw.println("<table>");
+            pw.println("  <tr>");
+                pw.println("    <td>Номер</td><td>Значение</td>");
+            pw.println("  </tr>");
+            boolean db = AppProperties.isHarmonicsInDb();
+            for (int i = 0; i < result.getHarmonics().length; i++) {
+                pw.println("  <tr>");
+                pw.println("    <td>" + (i + 1) + "</td><td>" + (db ? dbToString(result.getHarmonics()[i]) : valueToPercent(result.getHarmonics()[i])) + "</td>");
+                pw.println("  </tr>");
+            }
+            pw.println("</table>");
+            pw.flush();
+            return true;
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "Ошибка записи данных", ex);
+            return false;
+        }
     }
 
 }

@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBox;
@@ -65,7 +66,7 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             public void windowOpened(WindowEvent e) {
                 searchPorts();
-                setupFrameFromProperties();
+                loadSetupFromProperties();
             }
 
             @Override
@@ -126,7 +127,7 @@ public class MainFrame extends javax.swing.JFrame {
      */
     void enableStepButtons(boolean enable) {
         stepButton.setEnabled(enable);
-        pngButton.setEnabled(enable);
+        imageButton.setEnabled(enable);
         txtButton.setEnabled(enable);
         htmlButton.setEnabled(enable);
     }
@@ -604,7 +605,7 @@ public class MainFrame extends javax.swing.JFrame {
         continuousCheckBox = new javax.swing.JCheckBox();
         stepButton = new javax.swing.JButton();
         jPanel11 = new javax.swing.JPanel();
-        pngButton = new javax.swing.JButton();
+        imageButton = new javax.swing.JButton();
         txtButton = new javax.swing.JButton();
         htmlButton = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
@@ -650,12 +651,6 @@ public class MainFrame extends javax.swing.JFrame {
         scopeFontBoldCheckBox = new javax.swing.JCheckBox();
         scopeFontItalicCheckBox = new javax.swing.JCheckBox();
         scopeFontSizeSpinner = new javax.swing.JSpinner();
-        jPanel22 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        harmCountSpinner = new javax.swing.JSpinner();
-        harmRenderSpinner = new javax.swing.JSpinner();
-        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         demoPanel = new javax.swing.JPanel();
         demoPanel1 = new javax.swing.JPanel();
         demoComboBox = new javax.swing.JComboBox();
@@ -667,6 +662,18 @@ public class MainFrame extends javax.swing.JFrame {
         demoLabel2 = new javax.swing.JLabel();
         setupDemoScopePanel = new javax.swing.JPanel();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        jPanel22 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        harmCountSpinner = new javax.swing.JSpinner();
+        harmRenderSpinner = new javax.swing.JSpinner();
+        harmDbCheckBox = new javax.swing.JCheckBox();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
+        jPanel23 = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        imageFormatComboBox = new javax.swing.JComboBox();
+        jLabel6 = new javax.swing.JLabel();
+        textCharsetComboBox = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Simplescope v3");
@@ -1065,6 +1072,11 @@ public class MainFrame extends javax.swing.JFrame {
 
         portsComboBox.setFont(fontScheme.getGuiFont());
         portsComboBox.setToolTipText("Выберите порт");
+        portsComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                portsComboBoxActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -1152,13 +1164,13 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Сохранить", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         jPanel11.setLayout(new java.awt.GridBagLayout());
 
-        pngButton.setFont(fontScheme.getGuiFont());
-        pngButton.setText("PNG");
-        pngButton.setToolTipText("Сохранить изображение в файл PNG");
-        pngButton.setEnabled(false);
-        pngButton.addActionListener(new java.awt.event.ActionListener() {
+        imageButton.setFont(fontScheme.getGuiFont());
+        imageButton.setText("IMAGE");
+        imageButton.setToolTipText("Сохранить изображение в файл");
+        imageButton.setEnabled(false);
+        imageButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pngButtonActionPerformed(evt);
+                imageButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1167,12 +1179,17 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 0);
-        jPanel11.add(pngButton, gridBagConstraints);
+        jPanel11.add(imageButton, gridBagConstraints);
 
         txtButton.setFont(fontScheme.getGuiFont());
         txtButton.setText("TXT");
         txtButton.setToolTipText("Сохранить данные в тектовый файл");
         txtButton.setEnabled(false);
+        txtButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -1185,6 +1202,11 @@ public class MainFrame extends javax.swing.JFrame {
         htmlButton.setText("HTML");
         htmlButton.setToolTipText("Сохранить как веб-страницу");
         htmlButton.setEnabled(false);
+        htmlButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                htmlButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
@@ -1590,84 +1612,6 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         jPanel16.add(jPanel21, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridheight = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        setupPanel.add(jPanel16, gridBagConstraints);
-
-        jPanel22.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Анализ гармоник", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
-        jPanel22.setLayout(new java.awt.GridBagLayout());
-
-        jLabel1.setFont(fontScheme.getGuiFont());
-        jLabel1.setText("Рассчитывать");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel22.add(jLabel1, gridBagConstraints);
-
-        jLabel2.setFont(fontScheme.getGuiFont());
-        jLabel2.setText("Отображать");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel22.add(jLabel2, gridBagConstraints);
-
-        harmCountSpinner.setFont(fontScheme.getGuiFont());
-        harmCountSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
-        harmCountSpinner.setToolTipText("Выберите количество рассчитываемых гармоник");
-        harmCountSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                harmCountSpinnerStateChanged(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel22.add(harmCountSpinner, gridBagConstraints);
-
-        harmRenderSpinner.setFont(fontScheme.getGuiFont());
-        harmRenderSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
-        harmRenderSpinner.setToolTipText("Выберите количество отображаемых гармоник");
-        harmRenderSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                harmRenderSpinnerStateChanged(evt);
-            }
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
-        jPanel22.add(harmRenderSpinner, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        jPanel22.add(filler2, gridBagConstraints);
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        setupPanel.add(jPanel22, gridBagConstraints);
-
         demoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Образец", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
         demoPanel.setLayout(new java.awt.GridBagLayout());
 
@@ -1774,12 +1718,176 @@ public class MainFrame extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        jPanel16.add(demoPanel, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        setupPanel.add(jPanel16, gridBagConstraints);
+
+        jPanel22.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Анализ гармоник", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel22.setLayout(new java.awt.GridBagLayout());
+
+        jLabel1.setFont(fontScheme.getGuiFont());
+        jLabel1.setLabelFor(harmCountSpinner);
+        jLabel1.setText("Рассчитывать");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(jLabel1, gridBagConstraints);
+
+        jLabel2.setFont(fontScheme.getGuiFont());
+        jLabel2.setLabelFor(harmRenderSpinner);
+        jLabel2.setText("Отображать");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(jLabel2, gridBagConstraints);
+
+        harmCountSpinner.setFont(fontScheme.getGuiFont());
+        harmCountSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
+        harmCountSpinner.setToolTipText("Выберите количество рассчитываемых гармоник");
+        harmCountSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                harmCountSpinnerStateChanged(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(harmCountSpinner, gridBagConstraints);
+
+        harmRenderSpinner.setFont(fontScheme.getGuiFont());
+        harmRenderSpinner.setModel(new javax.swing.SpinnerNumberModel(5, 5, 100, 1));
+        harmRenderSpinner.setToolTipText("Выберите количество отображаемых гармоник");
+        harmRenderSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                harmRenderSpinnerStateChanged(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(harmRenderSpinner, gridBagConstraints);
+
+        harmDbCheckBox.setFont(fontScheme.getGuiFont());
+        harmDbCheckBox.setText("Значения в dB");
+        harmDbCheckBox.setToolTipText("Отображать значения в децибелах, иначе в %");
+        harmDbCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                harmDbCheckBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
         gridBagConstraints.gridwidth = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel22.add(harmDbCheckBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        setupPanel.add(jPanel22, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        setupPanel.add(demoPanel, gridBagConstraints);
+        setupPanel.add(filler2, gridBagConstraints);
+
+        jPanel23.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Сохранение", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, fontScheme.getBorderFont()));
+        jPanel23.setLayout(new java.awt.GridBagLayout());
+
+        jLabel5.setFont(fontScheme.getGuiFont());
+        jLabel5.setLabelFor(imageFormatComboBox);
+        jLabel5.setText("Формат изображения");
+        jLabel5.setToolTipText("Формат файла изображения");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel23.add(jLabel5, gridBagConstraints);
+
+        imageFormatComboBox.setFont(fontScheme.getGuiFont());
+        imageFormatComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "GIF", "JPG", "PNG" }));
+        imageFormatComboBox.setToolTipText("Формат для сохранения изображений");
+        imageFormatComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imageFormatComboBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel23.add(imageFormatComboBox, gridBagConstraints);
+
+        jLabel6.setFont(fontScheme.getGuiFont());
+        jLabel6.setLabelFor(textCharsetComboBox);
+        jLabel6.setText("Кодировка текста");
+        jLabel6.setToolTipText("Кодировка текста файла с результатами");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel23.add(jLabel6, gridBagConstraints);
+
+        textCharsetComboBox.setFont(fontScheme.getGuiFont());
+        textCharsetComboBox.setToolTipText("Кодировка текста для файлов с результатами");
+        textCharsetComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                textCharsetComboBoxActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        jPanel23.add(textCharsetComboBox, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        setupPanel.add(jPanel23, gridBagConstraints);
 
         tabbedPane.addTab("Настройка", setupPanel);
 
@@ -1798,11 +1906,13 @@ public class MainFrame extends javax.swing.JFrame {
     private void inputAcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputAcRadioButtonActionPerformed
         setInputMode(InputMode.AC);
         autoDcCheckBox.setEnabled(true);
+        AppProperties.setInteger(INPUT, 0);
     }//GEN-LAST:event_inputAcRadioButtonActionPerformed
 
     private void inputGndRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputGndRadioButtonActionPerformed
         setInputMode(InputMode.GND);
         autoDcCheckBox.setEnabled(true);
+        AppProperties.setInteger(INPUT, 1);
     }//GEN-LAST:event_inputGndRadioButtonActionPerformed
 
     private void inputDcRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputDcRadioButtonActionPerformed
@@ -1810,42 +1920,52 @@ public class MainFrame extends javax.swing.JFrame {
         autoDcCheckBox.setSelected(false);
         autoDcCheckBox.setEnabled(false);
         autoDcMode = false;
+        AppProperties.setInteger(INPUT, 2);
     }//GEN-LAST:event_inputDcRadioButtonActionPerformed
 
     private void synchAutoRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchAutoRadioButtonActionPerformed
         setSynchMode(SynchMode.AUTO);
+        AppProperties.setInteger(SYNCH, 0);
     }//GEN-LAST:event_synchAutoRadioButtonActionPerformed
 
     private void synchManualRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchManualRadioButtonActionPerformed
         setSynchMode(SynchMode.MANUAL);
+        AppProperties.setInteger(SYNCH, 2);
     }//GEN-LAST:event_synchManualRadioButtonActionPerformed
 
     private void synchNoneRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchNoneRadioButtonActionPerformed
         setSynchMode(SynchMode.NONE);
+        AppProperties.setInteger(SYNCH, 1);
     }//GEN-LAST:event_synchNoneRadioButtonActionPerformed
 
     private void periodComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_periodComboBoxActionPerformed
         setPeriod(periodComboBox.getSelectedIndex());
+        AppProperties.setString(PERIOD, (String) periodComboBox.getSelectedItem());
     }//GEN-LAST:event_periodComboBoxActionPerformed
 
     private void rangeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rangeComboBoxActionPerformed
         setRange(rangeComboBox.getSelectedIndex());
+        AppProperties.setString(RANGE, (String) rangeComboBox.getSelectedItem());
     }//GEN-LAST:event_rangeComboBoxActionPerformed
 
     private void dcOffsetSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dcOffsetSliderStateChanged
         setDcOffset(dcOffsetSlider.getValue());
+        AppProperties.setInteger(DC_OFFSET, dcOffsetSlider.getValue());
     }//GEN-LAST:event_dcOffsetSliderStateChanged
 
     private void synchFrontRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchFrontRadioButtonActionPerformed
         setTriggerMode(true);
+        AppProperties.setInteger(SYNCH_FRONT, 0);
     }//GEN-LAST:event_synchFrontRadioButtonActionPerformed
 
     private void synchCutRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchCutRadioButtonActionPerformed
         setTriggerMode(false);
+        AppProperties.setInteger(SYNCH_FRONT, 1);
     }//GEN-LAST:event_synchCutRadioButtonActionPerformed
 
     private void synchLevelSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_synchLevelSliderStateChanged
         setTriggerLevel(synchLevelSlider.getValue());
+        AppProperties.setInteger(SYNCH_LEVEL, synchLevelSlider.getValue());
     }//GEN-LAST:event_synchLevelSliderStateChanged
 
     /**
@@ -1929,11 +2049,18 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void autoDcCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoDcCheckBoxActionPerformed
         autoDcMode = autoDcCheckBox.isSelected();
+        AppProperties.setBoolean(AUTO_DC, autoDcCheckBox.isSelected());
     }//GEN-LAST:event_autoDcCheckBoxActionPerformed
 
-    private void pngButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pngButtonActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_pngButtonActionPerformed
+    private void imageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageButtonActionPerformed
+        if (currentResult != null) {
+            if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+                Utils.saveImage(currentResult.getScopeImage());
+            } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
+                Utils.saveImage(currentResult.getHarmImage());
+            }
+        }
+    }//GEN-LAST:event_imageButtonActionPerformed
 
     private void scopeParentPanelMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_scopeParentPanelMouseDragged
         int res = scopeRenderer.addMouseClick(evt.getX(), evt.getY());
@@ -1951,6 +2078,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void autoFreqCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoFreqCheckBoxActionPerformed
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
+        AppProperties.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
     }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
     /**
@@ -1998,10 +2126,12 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void autoRangeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoRangeCheckBoxActionPerformed
         autoRangeMode = autoRangeCheckBox.isSelected();
+        AppProperties.setBoolean(AUTO_RANGE_MODE, autoRangeCheckBox.isSelected());
     }//GEN-LAST:event_autoRangeCheckBoxActionPerformed
 
     private void autoMeasureCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoMeasureCheckBoxActionPerformed
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
+        AppProperties.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
     }//GEN-LAST:event_autoMeasureCheckBoxActionPerformed
 
     private void harmCountSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_harmCountSpinnerStateChanged
@@ -2025,6 +2155,42 @@ public class MainFrame extends javax.swing.JFrame {
             stop();
         }
     }//GEN-LAST:event_tabbedPaneStateChanged
+
+    private void harmDbCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_harmDbCheckBoxActionPerformed
+        AppProperties.setHarmonicsInDb(harmDbCheckBox.isSelected());
+    }//GEN-LAST:event_harmDbCheckBoxActionPerformed
+
+    private void imageFormatComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageFormatComboBoxActionPerformed
+        AppProperties.setString(IMAGE_FORMAT, (String) imageFormatComboBox.getSelectedItem());
+    }//GEN-LAST:event_imageFormatComboBoxActionPerformed
+
+    private void textCharsetComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textCharsetComboBoxActionPerformed
+        AppProperties.setString(TEXT_CHARSET, (String) textCharsetComboBox.getSelectedItem());
+    }//GEN-LAST:event_textCharsetComboBoxActionPerformed
+
+    private void portsComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portsComboBoxActionPerformed
+        AppProperties.setString(PORT_NAME, (String) portsComboBox.getSelectedItem());
+    }//GEN-LAST:event_portsComboBoxActionPerformed
+
+    private void txtButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtButtonActionPerformed
+        if (currentResult != null) {
+            if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+                Utils.saveScopeText(currentResult);
+            } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
+                Utils.saveHarmText(currentResult);
+            }
+        }
+    }//GEN-LAST:event_txtButtonActionPerformed
+
+    private void htmlButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_htmlButtonActionPerformed
+        if (currentResult != null) {
+            if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
+                Utils.saveScopeWebPage(currentResult);
+            } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
+                Utils.saveHarmWebPage(currentResult);
+            }
+        }
+    }//GEN-LAST:event_htmlButtonActionPerformed
 
     public static void main(String args[]) {
 
@@ -2073,9 +2239,12 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBox guiFontItalicCheckBox;
     private javax.swing.JSpinner guiFontSizeSpinner;
     private javax.swing.JSpinner harmCountSpinner;
+    private javax.swing.JCheckBox harmDbCheckBox;
     private javax.swing.JPanel harmParentPanel;
     private javax.swing.JSpinner harmRenderSpinner;
     private javax.swing.JButton htmlButton;
+    private javax.swing.JButton imageButton;
+    private javax.swing.JComboBox imageFormatComboBox;
     private javax.swing.JButton incRangeButton;
     private javax.swing.JButton incTimeButton;
     private javax.swing.JRadioButton inputAcRadioButton;
@@ -2083,6 +2252,8 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JRadioButton inputGndRadioButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
@@ -2098,6 +2269,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel20;
     private javax.swing.JPanel jPanel21;
     private javax.swing.JPanel jPanel22;
+    private javax.swing.JPanel jPanel23;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -2108,7 +2280,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel kHarmLabel;
     private javax.swing.JButton leftOffsetButton;
     private javax.swing.JComboBox periodComboBox;
-    private javax.swing.JButton pngButton;
     private javax.swing.JComboBox portsComboBox;
     private javax.swing.JComboBox rangeComboBox;
     private javax.swing.JButton rightOffsetButton;
@@ -2130,6 +2301,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JRadioButton synchManualRadioButton;
     private javax.swing.JRadioButton synchNoneRadioButton;
     private javax.swing.JTabbedPane tabbedPane;
+    private javax.swing.JComboBox textCharsetComboBox;
     private javax.swing.JButton txtButton;
     private javax.swing.JCheckBox valFontBoldCheckBox;
     private javax.swing.JComboBox valFontComboBox;
@@ -2196,7 +2368,7 @@ public class MainFrame extends javax.swing.JFrame {
     /**
      * Задать параметры элементов управления окна из настроек
      */
-    void setupFrameFromProperties() {
+    void loadSetupFromProperties() {
         portsComboBox.setSelectedItem(AppProperties.getString(PORT_NAME, ""));
         autoRangeCheckBox.setSelected(AppProperties.getBoolean(AUTO_RANGE_MODE, false));
         autoRangeMode = autoRangeCheckBox.isSelected();
@@ -2250,6 +2422,12 @@ public class MainFrame extends javax.swing.JFrame {
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
         autoMeasureCheckBox.setSelected(AppProperties.getBoolean(AUTO_MEASURE, false));
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
+        harmDbCheckBox.setSelected(AppProperties.isHarmonicsInDb());
+        imageFormatComboBox.setSelectedItem(AppProperties.getString(IMAGE_FORMAT, "PNG"));
+        textCharsetComboBox.setSelectedItem(AppProperties.getString(TEXT_CHARSET, "UTF-16"));
+        harmCountSpinner.setValue(AppProperties.getHarmonicsCount());
+        harmRenderSpinner.setValue(AppProperties.getHarmonicsRender());
+
         Rectangle r = new Rectangle();
         r.x = AppProperties.getInteger(X, 0);
         r.y = AppProperties.getInteger(Y, 0);
@@ -2267,34 +2445,6 @@ public class MainFrame extends javax.swing.JFrame {
      * Сохранить параметры элементов управления окна в настройки
      */
     void storeFrameToProperties() {
-        AppProperties.setString(PORT_NAME, (String) portsComboBox.getSelectedItem());
-        AppProperties.setBoolean(AUTO_RANGE_MODE, autoRangeCheckBox.isSelected());
-        AppProperties.setString(RANGE, (String) rangeComboBox.getSelectedItem());
-        AppProperties.setString(PERIOD, (String) periodComboBox.getSelectedItem());
-        if (inputAcRadioButton.isSelected()) {
-            AppProperties.setInteger(INPUT, 0);
-        } else if (inputDcRadioButton.isSelected()) {
-            AppProperties.setInteger(INPUT, 2);
-        } else {
-            AppProperties.setInteger(INPUT, 1);
-        }
-        AppProperties.setBoolean(AUTO_DC, autoDcCheckBox.isSelected());
-        AppProperties.setInteger(DC_OFFSET, dcOffsetSlider.getValue());
-        if (synchAutoRadioButton.isSelected()) {
-            AppProperties.setInteger(SYNCH, 0);
-        } else if (synchManualRadioButton.isSelected()) {
-            AppProperties.setInteger(SYNCH, 2);
-        } else {
-            AppProperties.setInteger(SYNCH, 1);
-        }
-        if (synchFrontRadioButton.isSelected()) {
-            AppProperties.setInteger(SYNCH_FRONT, 0);
-        } else {
-            AppProperties.setInteger(SYNCH_FRONT, 1);
-        }
-        AppProperties.setInteger(SYNCH_LEVEL, synchLevelSlider.getValue());
-        AppProperties.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
-        AppProperties.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
         Rectangle r = this.getBounds();
         AppProperties.setInteger(X, r.x);
         AppProperties.setInteger(Y, r.y);
@@ -2313,8 +2463,7 @@ public class MainFrame extends javax.swing.JFrame {
         setFontControls();
         colorSchemeComboBox.setSelectedItem(colorScheme.getName());
         setSetupListeners();
-        harmCountSpinner.setValue(AppProperties.getHarmonicsCount());
-        harmRenderSpinner.setValue(AppProperties.getHarmonicsRender());
+        getAllCharsets();
     }
 
     /**
@@ -2335,6 +2484,16 @@ public class MainFrame extends javax.swing.JFrame {
     private void getAllColorChemes() {
         for (String name : ColorScheme.getNames()) {
             colorSchemeComboBox.addItem(name);
+        }
+
+    }
+
+    /**
+     * Получить имена всех доступных кодировок текста
+     */
+    private void getAllCharsets() {
+        for (String name : Charset.availableCharsets().keySet()) {
+            textCharsetComboBox.addItem(name);
         }
     }
 

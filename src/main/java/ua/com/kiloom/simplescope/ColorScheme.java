@@ -77,7 +77,7 @@ class ColorScheme {
     /**
      * Оттенки оранжевого
      */
-    private final static Color DARK_ORANGE = new Color(128, 128, 0);
+    private final static Color DARK_ORANGE = new Color(192, 192, 0);
     private final static Color ORANGE = Color.ORANGE;
     private final static Color LIGHT_ORANGE = new Color(255, 255, 128);
     /**
@@ -123,12 +123,12 @@ class ColorScheme {
     private final static Map<String, ColorScheme> SCHEMES = new TreeMap<>();
 
     static {
-        GREEN_MONO_SCHEME = new ColorScheme("Зелёная монохромная", BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
-        ORANGE_MONO_SCHEME = new ColorScheme("Оранжевая монохромная", BLACK, DARK_ORANGE, DARK_ORANGE, LIGHT_ORANGE, ORANGE, ORANGE);
-        GRAY_MONO_SCHEME = new ColorScheme("Серая монохромная", BLACK, DARK_GRAY, DARK_GRAY, WHITE, GRAY, GRAY);
-        WHITE_MONO_SCHEME = new ColorScheme("Белая монохромная", WHITE, DARK_GRAY, DARK_GRAY, BLACK, DARK_GRAY, DARK_GRAY);
-        DARK_COLOR_SCHEME = new ColorScheme("Тёмная цветная", BLACK, GREEN, GREEN, WHITE, BLUE, RED);
-        LIGHT_COLOR_SCHEME = new ColorScheme("Светлая цветная", WHITE, GREEN, GREEN, BLACK, BLUE, RED);
+        GREEN_MONO_SCHEME = new ColorScheme("Изумрудная", BLACK, DARK_GREEN, DARK_GREEN, LIGHT_GREEN, GREEN, GREEN);
+        ORANGE_MONO_SCHEME = new ColorScheme("Янтарная", BLACK, DARK_ORANGE, DARK_ORANGE, LIGHT_ORANGE, ORANGE, ORANGE);
+        GRAY_MONO_SCHEME = new ColorScheme("Серая", BLACK, DARK_GRAY, DARK_GRAY, WHITE, GRAY, GRAY);
+        WHITE_MONO_SCHEME = new ColorScheme("Белая", WHITE, DARK_GRAY, DARK_GRAY, BLACK, DARK_GRAY, DARK_GRAY);
+        DARK_COLOR_SCHEME = new ColorScheme("Тёмная", BLACK, GREEN, GREEN, WHITE, BLUE, RED);
+        LIGHT_COLOR_SCHEME = new ColorScheme("Светлая", WHITE, GREEN, GREEN, BLACK, BLUE, RED);
         registerScheme(GREEN_MONO_SCHEME);
         registerScheme(ORANGE_MONO_SCHEME);
         registerScheme(GRAY_MONO_SCHEME);

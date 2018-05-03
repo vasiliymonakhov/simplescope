@@ -192,20 +192,56 @@ public abstract class AppProperties {
         return false;
     }
 
+    /**
+     * Возвращает количество гармоник для расчёта
+     * @return количество гармоник для расчёта
+     */
     static int getHarmonicsCount() {
         return getInteger(Keys.HARMONICS_COUNT, Const.HARMONICS_COUNT);
     }
 
+    /**
+     * Возвращает количество гармоник для отображения
+     * @return количество гармоник для отображения
+     */
     static int getHarmonicsRender() {
         return getInteger(Keys.HARMONICS_RENDER, Const.HARMONICS_COUNT);
     }
 
+    /**
+     * Отображать гармоники в дБ или %
+     * @return true если гармоники отображать в дБ
+     */
+    static boolean isHarmonicsInDb() {
+        return getBoolean(Keys.HARMONICS_DECIBELLS, true);
+    }
+
+    /**
+     * Устанавливает количество гармоник для расчёта. Чем больше, тем точнее, но и больше
+     * требования к вычислительной мощности процессора. Устанавливать в разумных пределах, т.к.
+     * из-за ограничений на размер выборки и разрядность АЦП слишком большие значения уже не
+     * будут давать точности и даже наоборот.
+     * @param cnt количество гармоник для расчёта
+     */
     static void setHarmonicsCount(int cnt) {
         setInteger(Keys.HARMONICS_COUNT, cnt);
     }
 
+    /**
+     * Устанавливает количество гармоник для отображения на графике. Слишком большое количество
+     * может некрасиво отображаться на графике
+     * @param cnt количество гармоник для отображения на графике
+     */
     static void setHarmonicsRender(int cnt) {
         setInteger(Keys.HARMONICS_RENDER, cnt);
+    }
+
+    /**
+     * Устанавливает отображение гармоник в дБ или %
+     * @param val true если гармоники отображать в дБ
+     */
+    static void setHarmonicsInDb(boolean val) {
+        setBoolean(Keys.HARMONICS_DECIBELLS, val);
     }
 
     /**
@@ -320,7 +356,19 @@ public abstract class AppProperties {
         /**
          * Количество отображаемых гармоник
          */
-        HARMONICS_RENDER
+        HARMONICS_RENDER,
+        /**
+         * Отображать шкалу гармоник в децибелах
+         */
+        HARMONICS_DECIBELLS,
+        /**
+         * Формат для сохранения изображений
+         */
+        IMAGE_FORMAT,
+        /**
+         * Кодировка для файлов с результатами
+         */
+        TEXT_CHARSET
 
     }
 
