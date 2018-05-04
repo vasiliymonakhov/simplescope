@@ -541,6 +541,11 @@ public class MainFrame extends javax.swing.JFrame {
     private int overloadCount;
 
     /**
+     * Cчетчик слишком слабого сигнала
+     */
+    private int tooLowCount;
+
+    /**
      * Отрегулировать предел измерения
      */
     private void autoLimitModeAdjust() {
@@ -548,14 +553,20 @@ public class MainFrame extends javax.swing.JFrame {
             if (currentResult != null) {
                 if (currentResult.isOverloadSignal()) {
                     overloadCount++;
+                } else if (currentResult.isTooLowSignal()) {
+                    tooLowCount++;
                 }
                 autoLimitSteps++;
-                if (autoLimitSteps >= Const.OVERLOAD_DETECT_STEPS) {
+                if (autoLimitSteps >= Const.AUTORANGE_DETECT_STEPS) {
                     autoLimitSteps = 0;
-                    if (overloadCount >= Const.OVERLOAD_COUNT) {
+                    if (overloadCount >= Const.AUTORANGE_COUNT) {
                         upRange();
+                        overloadCount = 0;
+                    } else if (tooLowCount >= Const.AUTORANGE_COUNT) {
+                        downRange();
+                        tooLowCount = 0;
                     }
-                    overloadCount = 0;
+
                 }
             }
         }

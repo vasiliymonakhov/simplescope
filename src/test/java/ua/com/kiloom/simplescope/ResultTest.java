@@ -260,12 +260,16 @@ public class ResultTest {
         Result r = new Result(10, 15);
         assertTrue(r.processADCData(makeFull(), true, true));
         assertTrue(r.isOverloadSignal());
+        assertFalse(r.isTooLowSignal());
         assertTrue(r.processADCData(makeZero(), true, true));
         assertTrue(r.isOverloadSignal());
+        assertFalse(r.isTooLowSignal());
         assertTrue(r.processADCData(makeMiddle(), true, true));
         assertFalse(r.isOverloadSignal());
+        assertTrue(r.isTooLowSignal());
         assertTrue(r.processADCData(makeSinus(), true, true));
         assertFalse(r.isOverloadSignal());
+        assertFalse(r.isTooLowSignal());
     }
 
 }

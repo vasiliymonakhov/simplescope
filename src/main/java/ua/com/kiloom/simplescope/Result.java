@@ -212,6 +212,11 @@ class Result {
     private boolean overloadSignal;
 
     /**
+     * Признак слишком слабого сигнала
+     */
+    private boolean tooLowSignal;
+
+    /**
      * Обрабатывает сырые данные от АЦП ввиде массива байтов
      *
      * @param newBlock сырые данные от АЦП ввиде массива байтов
@@ -278,6 +283,18 @@ class Result {
         }
         // и среднеквадратического напряжения
         vRms = Math.sqrt(squareVoltage / j);
+
+        // проверим, не слишком ли слаб сигнал
+        if (currentVoltageIndex > 0) {
+            // ещё есть куда переключать чтобы усилить сигнал
+            // определим предел ниже текущего и возьмём от него 90%
+            double vrange = 0.9d * Const.VOLTAGES[currentVoltageIndex - 1];
+            tooLowSignal = Math.abs(vMax) < vrange && Math.abs(vMin) < vrange;
+        } else {
+            // ниже переключаться некуда
+            tooLowSignal = false;
+        }
+
         // если размер блока меньше, то добить остаток последними значениями
         if (needAppend) {
             for (int i = steps / 2; i < Const.ADC_DATA_BLOCK_SIZE; i++) {
@@ -675,6 +692,15 @@ class Result {
      */
     int getLowerRulerPos() {
         return lowerRulerPos;
+    }
+
+    /**
+     * Не слишком ли слаб входной сигнал
+     *
+     * @return true если входной сигнал слишком слаб
+     */
+    boolean isTooLowSignal() {
+        return tooLowSignal;
     }
 
 }
