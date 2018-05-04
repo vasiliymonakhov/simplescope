@@ -84,7 +84,11 @@ public abstract class AppProperties {
      * @param value значение
      */
     static void setString(Keys key, String value) {
-        prop.setProperty(key.name(), value);
+        if (value != null) {
+            prop.setProperty(key.name(), value);
+        } else {
+            prop.remove(key.name());
+        }
     }
 
     /**
