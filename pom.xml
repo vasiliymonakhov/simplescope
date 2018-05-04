@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ua.com.kiloom</groupId>
     <artifactId>Simplescope</artifactId>
-    <version>3.0.0.40</version>
+    <version>3.0.0.46</version>
     <packaging>jar</packaging>
     <url>http://kiloom.com.ua</url>
     <description>USB scope control software</description>
@@ -22,6 +22,12 @@
             <groupId>org.scream3r</groupId>
             <artifactId>jssc</artifactId>
             <version>2.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
