@@ -302,11 +302,18 @@ class Result {
                 voltages[i] = voltages[i - 1];
             }
         }
+        remeasure();
+        return true;
+    }
+
+    /**
+     * Переизмерить
+     */
+    void remeasure() {
         if (processAutoFreq()) {
             setDeltaT(leftRulerPos, rightRulerPos);
         }
         processAutoMeasure();
-        return true;
     }
 
     /**

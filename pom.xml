@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ua.com.kiloom</groupId>
     <artifactId>Simplescope</artifactId>
-    <version>3.0.0.48</version>
+    <version>3.0.0.50</version>
     <packaging>jar</packaging>
     <url>http://kiloom.com.ua</url>
     <description>USB scope control software</description>
