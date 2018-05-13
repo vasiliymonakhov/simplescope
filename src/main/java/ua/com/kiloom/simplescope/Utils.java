@@ -22,7 +22,7 @@ import static ua.com.kiloom.simplescope.AppProperties.Keys.TEXT_CHARSET;
  * Утилиты
  * @author Vasily Monakhov
  */
-public class Utils {
+abstract class Utils {
 
     private final static double EPS = 0.001d;
 

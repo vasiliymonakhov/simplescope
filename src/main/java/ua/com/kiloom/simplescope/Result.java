@@ -703,4 +703,22 @@ class Result {
         return tooLowSignal;
     }
 
+    /**
+     * Изменить автоопределение частоты
+     *
+     * @param autoFreq the autoFreq to set
+     */
+    void setAutoFreq(boolean autoFreq) {
+        this.autoFreq = autoFreq;
+    }
+
+    /**
+     * Изменить автоизмерение сигнала
+     *
+     * @param autoMeasure the autoMeasure to set
+     */
+    void setAutoMeasure(boolean autoMeasure) {
+        this.autoMeasure = autoMeasure;
+    }
+
 }

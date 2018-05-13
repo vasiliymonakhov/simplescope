@@ -13,7 +13,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.nio.charset.Charset;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -33,6 +35,8 @@ import static ua.com.kiloom.simplescope.AppProperties.Keys.*;
  * @author Vasily Monakhov
  */
 public class MainFrame extends javax.swing.JFrame {
+
+    private final static Logger LOGGER = Logger.getLogger(MainFrame.class.getName());
 
     /**
      * Схема шрифтов
@@ -57,7 +61,7 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     drawResults();
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, "Что-то сломалось.", ex);
                 }
             }
         });
@@ -159,7 +163,7 @@ public class MainFrame extends javax.swing.JFrame {
                     }
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps", ex);
+                LOGGER.log(Level.SEVERE, "OOps", ex);
             }
         }
     };
@@ -207,7 +211,7 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             drawResults();
         } catch (InterruptedException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "OOps!", ex);
+            LOGGER.log(Level.SEVERE, "OOps!", ex);
         }
     }
 
@@ -229,7 +233,7 @@ public class MainFrame extends javax.swing.JFrame {
                 deviceController.open((String) portsComboBox.getSelectedItem());
                 updateDeviceSettings();
             } catch (SerialPortException ex) {
-                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка запуска", ex);
+                LOGGER.log(Level.SEVERE, "Ошибка запуска", ex);
             }
         }
     }
@@ -348,7 +352,7 @@ public class MainFrame extends javax.swing.JFrame {
                     break;
             }
         } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены входа", ex);
+            LOGGER.log(Level.SEVERE, "Ошибка смены входа", ex);
         }
     }
 
@@ -378,7 +382,7 @@ public class MainFrame extends javax.swing.JFrame {
                     break;
             }
         } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены режима синхронизации", ex);
+            LOGGER.log(Level.SEVERE, "Ошибка смены режима синхронизации", ex);
         }
     }
 
@@ -421,7 +425,7 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             deviceController.switchTime(currentPeriod);
         } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены времени развёртки", ex);
+            LOGGER.log(Level.SEVERE, "Ошибка смены времени развёртки", ex);
         }
     }
 
@@ -446,7 +450,7 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             deviceController.switchVoltage(currentRange);
         } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка смены предела измерений", ex);
+            LOGGER.log(Level.SEVERE, "Ошибка смены предела измерений", ex);
         }
     }
 
@@ -466,7 +470,7 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             deviceController.setZeroLevel(dcLevel);
         } catch (SerialPortException ex) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, "Ошибка изменения смещения", ex);
+            LOGGER.log(Level.SEVERE, "Ошибка изменения смещения", ex);
         }
     }
 
@@ -2067,10 +2071,15 @@ public class MainFrame extends javax.swing.JFrame {
     private void imageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageButtonActionPerformed
         if (currentResult != null) {
             if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
-                Utils.saveImage(currentResult.getScopeImage());
+                if (Utils.saveImage(currentResult.getScopeImage())) {
+                    Message.show(this, "Сохранение", "Изображение осциллограммы сохранено");
+                }
             } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
-                Utils.saveImage(currentResult.getHarmImage());
+                if (Utils.saveImage(currentResult.getHarmImage())) {
+                    Message.show(this, "Сохранение", "Изображение спектра гармоник сохранено");
+                }
             }
+
         }
     }//GEN-LAST:event_imageButtonActionPerformed
 
@@ -2079,9 +2088,15 @@ public class MainFrame extends javax.swing.JFrame {
         if (res == 1) {
             autoFreqCheckBox.setSelected(false);
             deviceController.setAutoFreq(false);
+            if (currentResult != null) {
+                currentResult.setAutoFreq(false);
+            }
         } else if (res == 2) {
             autoMeasureCheckBox.setSelected(false);
             deviceController.setAutoMeasure(false);
+            if (currentResult != null) {
+                currentResult.setAutoMeasure(false);
+            }
         }
         if (!continuousMode) {
             redrawAndMakePicture();
@@ -2187,9 +2202,13 @@ public class MainFrame extends javax.swing.JFrame {
     private void txtButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtButtonActionPerformed
         if (currentResult != null) {
             if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
-                Utils.saveScopeText(currentResult);
+                if (Utils.saveScopeText(currentResult)) {
+                    Message.show(this, "Сохранение", "Текст с выборками осциллограммы сохранен");
+                }
             } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
-                Utils.saveHarmText(currentResult);
+                if (Utils.saveHarmText(currentResult)) {
+                    Message.show(this, "Сохранение", "Текст со значениями гармоник сохранен");
+                }
             }
         }
     }//GEN-LAST:event_txtButtonActionPerformed
@@ -2197,19 +2216,40 @@ public class MainFrame extends javax.swing.JFrame {
     private void htmlButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_htmlButtonActionPerformed
         if (currentResult != null) {
             if (tabbedPane.getSelectedComponent() == scopeParentPanel) {
-                Utils.saveScopeWebPage(currentResult);
+                if (Utils.saveScopeWebPage(currentResult)) {
+                    Message.show(this, "Сохранение", "Файл с выборками осциллограммы сохранен");
+                }
             } else if (tabbedPane.getSelectedComponent() == harmParentPanel) {
-                Utils.saveHarmWebPage(currentResult);
+                if (Utils.saveHarmWebPage(currentResult)) {
+                    Message.show(this, "Сохранение", "Файл со значениями гармоник сохранен");
+                }
             }
         }
     }//GEN-LAST:event_htmlButtonActionPerformed
 
     public static void main(String args[]) {
+        final MainFrame mf = new MainFrame();
+        LOGGER.addHandler(new Handler() {
 
+            @Override
+            public void publish(LogRecord record) {
+                if (record.getLevel() == Level.SEVERE) {
+                    Message.show(mf, "Ошибка", record.getMessage());
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() throws SecurityException {
+            }
+        });
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new MainFrame().setVisible(true);
+                mf.setVisible(true);
             }
         });
     }
