@@ -2106,6 +2106,13 @@ public class MainFrame extends javax.swing.JFrame {
     private void autoFreqCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoFreqCheckBoxActionPerformed
         deviceController.setAutoFreq(autoFreqCheckBox.isSelected());
         AppProperties.setBoolean(AUTO_FREQ, autoFreqCheckBox.isSelected());
+        if (currentResult != null) {
+            currentResult.setAutoFreq(autoFreqCheckBox.isSelected());
+            currentResult.remeasure();
+        }
+        if (!continuousMode) {
+            redrawAndMakePicture();
+        }
     }//GEN-LAST:event_autoFreqCheckBoxActionPerformed
 
     /**
@@ -2159,6 +2166,13 @@ public class MainFrame extends javax.swing.JFrame {
     private void autoMeasureCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoMeasureCheckBoxActionPerformed
         deviceController.setAutoMeasure(autoMeasureCheckBox.isSelected());
         AppProperties.setBoolean(AUTO_MEASURE, autoMeasureCheckBox.isSelected());
+        if (currentResult != null) {
+            currentResult.setAutoMeasure(autoMeasureCheckBox.isSelected());
+            currentResult.remeasure();
+        }
+        if (!continuousMode) {
+            redrawAndMakePicture();
+        }
     }//GEN-LAST:event_autoMeasureCheckBoxActionPerformed
 
     private void harmCountSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_harmCountSpinnerStateChanged
