@@ -263,27 +263,6 @@ public class DeviceController {
     }
 
     /**
-     * Переключает в режим осциллоскопа
-     *
-     * @throws SerialPortException
-     */
-    void switchModeToOscilloscope() throws SerialPortException {
-        port.writeByte((byte) 0xDF);
-        port.writeByte((byte) 0xEA);
-    }
-
-    /**
-     * Переключает в режим записи
-     *
-     * @return true если успешно
-     * @throws SerialPortException
-     */
-    void switchModeToLogger() throws SerialPortException {
-        port.writeByte((byte) 0xDC);
-        port.writeByte((byte) 0xDE);
-    }
-
-    /**
      * Отключить синхронизацию
      *
      * @throws SerialPortException

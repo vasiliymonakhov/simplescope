@@ -1,7 +1,7 @@
 package ua.com.kiloom.simplescope;
 
 /**
- *
+ * Константы
  * @author Vasily Monakhov
  */
 class Const {

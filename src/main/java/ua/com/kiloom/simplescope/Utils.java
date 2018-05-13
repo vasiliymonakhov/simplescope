@@ -19,7 +19,7 @@ import static ua.com.kiloom.simplescope.AppProperties.Keys.IMAGE_FORMAT;
 import static ua.com.kiloom.simplescope.AppProperties.Keys.TEXT_CHARSET;
 
 /**
- *
+ * Утилиты
  * @author Vasily Monakhov
  */
 public class Utils {

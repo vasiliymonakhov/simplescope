@@ -30,7 +30,7 @@ import static ua.com.kiloom.simplescope.AppProperties.Keys.*;
 /**
  * Класс главного окна
  *
- * @author vasya
+ * @author Vasily Monakhov
  */
 public class MainFrame extends javax.swing.JFrame {
 
